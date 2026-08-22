@@ -1,43 +1,50 @@
 import { prisma } from "../config/db.js";
 import { PricingUnit, Prisma } from "@prisma/client";
 
-interface GetListingsParams {
-  page: number;
-  limit: number;
+export interface GetListingsParams {
+  page?: number;
+  limit?: number;
   categoryId?: number;
   locationId?: number;
   search?: string;
 }
 
 export class ListingService {
-  static async findAll({ page, limit, categoryId, locationId, search }: GetListingsParams) {
+  static async findAll(params: GetListingsParams) {
+    const page = Math.max(1, Number(params.page) || 1);
+    const limit = Math.max(1, Number(params.limit) || 10);
     const skip = (page - 1) * limit;
 
-    const where: Prisma.ListingWhereInput = {
-      isActive: true,
-      ...(categoryId && { categoryId }),
-      ...(locationId && { locationId }),
-      ...(search && {
-        OR: [
-          { title: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } },
-        ],
-      }),
-    };
+    const where: any = {};
+
+    if (params.categoryId && !isNaN(params.categoryId)) {
+      where.categoryId = Number(params.categoryId);
+    }
+
+    if (params.locationId && !isNaN(params.locationId)) {
+      where.locationId = Number(params.locationId);
+    }
+
+    if (params.search && params.search.trim() !== "") {
+      where.OR = [
+        { title: { contains: params.search, mode: "insensitive" } },
+        { description: { contains: params.search, mode: "insensitive" } },
+      ];
+    }
 
     const [items, total] = await Promise.all([
       prisma.listing.findMany({
         where,
         skip,
         take: limit,
+        orderBy: { createdAt: "desc" },
         include: {
           category: true,
           location: true,
-          propertyDetails: true,
-          vehicleDetails: true,
-          serviceDetails: true,
+          provider: {
+            select: { userId: true, firstName: true, lastName: true, email: true },
+          },
         },
-        orderBy: { createdAt: "desc" },
       }),
       prisma.listing.count({ where }),
     ]);
@@ -52,6 +59,7 @@ export class ListingService {
       },
     };
   }
+
 
   static async findById(listingId: number) {
     return prisma.listing.findUnique({
@@ -85,9 +93,18 @@ export class ListingService {
   }
 
   static async delete(listingId: number, userId: number) {
-    const listing = await prisma.listing.findUnique({ where: { listingId } });
+    const [listing, requester] = await Promise.all([
+      prisma.listing.findUnique({ where: { listingId } }),
+      prisma.user.findUnique({
+        where: { userId },
+        select: { role: true },
+      }),
+    ]);
+
     if (!listing) throw new Error("NOT_FOUND");
-    if (listing.providerId !== userId) throw new Error("UNAUTHORIZED");
+    if (requester?.role !== "admin" && listing.providerId !== userId) {
+      throw new Error("UNAUTHORIZED");
+    }
 
     return prisma.listing.delete({ where: { listingId } });
   }

@@ -8,6 +8,7 @@ import rateLimit from "express-rate-limit";
 import userRoutes from "./routes/userRoutes.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
+import locationRoutes from "./routes/locationRoutes.js";
 import listingRoutes from "./routes/listingRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -24,11 +25,13 @@ app.use(
 );
 
 // Rate Limiting (Prevents Brute-force / Abuse)
+// src/server.ts
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per window
+  max: process.env.NODE_ENV === "development" ? 10000 : 100, // Generous limit for dev
   message: { error: "Too many requests, please try again later." },
 });
+
 app.use("/api", limiter);
 
 // Core Middlewares
@@ -39,6 +42,7 @@ app.use(cookieParser());
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/locations", locationRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);

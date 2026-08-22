@@ -42,6 +42,7 @@ function App() {
   const [healthError, setHealthError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [listings, setListings] = useState<Listing[]>([]);
   
   // Auth Form State
@@ -51,6 +52,8 @@ function App() {
   const [regFirstName, setRegFirstName] = useState('');
   const [regLastName, setRegLastName] = useState('');
   const [regPhone, setRegPhone] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [regTermsAccepted, setRegTermsAccepted] = useState(false);
   const [regRole, setRegRole] = useState<'client' | 'provider'>('client');
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
@@ -67,16 +70,8 @@ function App() {
   const [listPrice, setListPrice] = useState('50');
   const [listUnit, setListUnit] = useState<'per_night' | 'per_day' | 'per_hour' | 'per_service'>('per_day');
   const [listCatId, setListCatId] = useState('');
-  const [listLocId, setListLocId] = useState('1'); // Default to Sidi Bouzid (id: 1)
+  const [listLocId, setListLocId] = useState('');
   const [listError, setListError] = useState<string | null>(null);
-
-  // Static list of locations corresponding to seeded data
-  const locations: Location[] = [
-    { locationId: 1, cityName: 'Sidi Bouzid', country: 'Tunisia' },
-    { locationId: 2, cityName: 'Regueb', country: 'Tunisia' },
-    { locationId: 3, cityName: 'Meknassy', country: 'Tunisia' },
-    { locationId: 4, cityName: 'Sfax', country: 'Tunisia' },
-  ];
 
   // --- API CALLS ---
 
@@ -125,6 +120,22 @@ function App() {
     }
   };
 
+  // Fetch Locations
+  const fetchLocations = async () => {
+    try {
+      const res = await fetch('/api/locations');
+      if (res.ok) {
+        const data = await res.json();
+        setLocations(data);
+        if (data.length > 0) {
+          setListLocId((current) => current || data[0].locationId.toString());
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching locations:', err);
+    }
+  };
+
   // Fetch Listings
   const fetchListings = async () => {
     try {
@@ -144,6 +155,7 @@ function App() {
     checkHealth();
     fetchProfile();
     fetchCategories();
+    fetchLocations();
     fetchListings();
   }, []);
 
@@ -182,10 +194,12 @@ function App() {
         body: JSON.stringify({
           email: authEmail,
           password: authPassword,
+          confirmPassword: regConfirmPassword,
           firstName: regFirstName,
           lastName: regLastName,
           phone: regPhone || undefined,
           role: regRole,
+          termsAccepted: regTermsAccepted,
         }),
       });
       const data = await res.json();
@@ -376,7 +390,7 @@ function App() {
                         />
                       </div>
                       <div style={styles.formGroup}>
-                        <label style={styles.label}>Phone (optional)</label>
+                        <label style={styles.label}>Phone (optional, e.g. +21612345678)</label>
                         <input 
                           type="text" 
                           style={styles.input} 
@@ -395,6 +409,15 @@ function App() {
                           <option value="provider">Provider</option>
                         </select>
                       </div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#555' }}>
+                        <input
+                          type="checkbox"
+                          checked={regTermsAccepted}
+                          onChange={(e) => setRegTermsAccepted(e.target.checked)}
+                          required
+                        />
+                        I accept the terms and privacy policy.
+                      </label>
                     </>
                   )}
 
@@ -419,6 +442,19 @@ function App() {
                       required 
                     />
                   </div>
+
+                  {authMode === 'register' && (
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>Confirm Password</label>
+                      <input
+                        type="password"
+                        style={styles.input}
+                        value={regConfirmPassword}
+                        onChange={(e) => setRegConfirmPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                  )}
 
                   {authError && <p style={styles.errorMessage}>{authError}</p>}
                   {authSuccess && <p style={styles.successMessage}>{authSuccess}</p>}
@@ -555,7 +591,7 @@ function App() {
 
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <div style={{ ...styles.formGroup, flex: 1 }}>
-                    <label style={styles.label}>Price (TND)</label>
+                    <label style={styles.label}>Price (DH)</label>
                     <input 
                       type="number" 
                       style={styles.input}
@@ -606,7 +642,7 @@ function App() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <span style={{ fontWeight: 'bold' }}>{item.title}</span>
                       <span style={styles.priceTag}>
-                        {Number(item.basePrice).toFixed(0)} TND / {item.pricingUnit.replace('per_', '')}
+                        {Number(item.basePrice).toFixed(0)} DH / {item.pricingUnit.replace('per_', '')}
                       </span>
                     </div>
                     {item.description && <p style={{ fontSize: '0.85rem', margin: '5px 0' }}>{item.description}</p>}

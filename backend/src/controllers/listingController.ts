@@ -8,20 +8,18 @@ export class ListingController {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const page = Number(req.query.page as string) || 1;
-      const limit = Number(req.query.limit as string) || 10;
-      const categoryId = req.query.categoryId
-        ? Number(req.query.categoryId)
-        : undefined;
-      const locationId = req.query.locationId
-        ? Number(req.query.locationId)
-        : undefined;
+      const page = req.query.page ? Number(req.query.page) : 1;
+      const limit = req.query.limit ? Number(req.query.limit) : 10;
       const search = req.query.search ? String(req.query.search) : "";
+
       const params: any = { page, limit, search };
-      if (req.query.categoryId)
+
+      if (req.query.categoryId && !isNaN(Number(req.query.categoryId))) {
         params.categoryId = Number(req.query.categoryId);
-      if (req.query.locationId)
+      }
+      if (req.query.locationId && !isNaN(Number(req.query.locationId))) {
         params.locationId = Number(req.query.locationId);
+      }
 
       const result = await ListingService.findAll(params);
       res.json(result);
@@ -84,6 +82,12 @@ export class ListingController {
         res
           .status(403)
           .json({ error: "Forbidden: You do not own this listing" });
+        return;
+      }
+      if (error.code === "P2003") {
+        res.status(409).json({
+          error: "This listing cannot be deleted because it has booking history",
+        });
         return;
       }
       next(error);
