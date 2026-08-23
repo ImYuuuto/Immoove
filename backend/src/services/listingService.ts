@@ -1,212 +1,303 @@
-import { prisma } from "../config/db.js";
-import { ListingStatus, PricingUnit, Prisma } from "@prisma/client";
+import { query, transaction } from '../config/db';
+import { ListingWithRelations, ListingStatus } from '../types/db';
+import {
+  CreateListingDto,
+  GetListingsParams,
+  UpdateListingDto,
+} from '../types/dto';
+import { AppError } from '../utils/errorHandler';
+import { parseNumeric } from '../utils/sqlHelpers';
 
-export interface GetListingsParams {
-  page?: number;
-  limit?: number;
-  categoryId?: number;
-  locationId?: number;
-  search?: string;
-  slug?: string;
-  status?: ListingStatus;
-  featured?: boolean;
-  includeAllStatuses?: boolean;
-  providerId?: number;
+function mapListing(row: any): ListingWithRelations {
+  return {
+    listingId: row.listing_id,
+    providerId: row.provider_id,
+    categoryId: row.category_id,
+    locationId: row.location_id,
+    title: row.title,
+    description: row.description,
+    basePrice: parseNumeric(row.base_price) || 0,
+    pricingUnit: row.pricing_unit,
+    contactName: row.contact_name,
+    contactPhone: row.contact_phone,
+    contactEmail: row.contact_email,
+    status: row.status,
+    isActive: row.is_active,
+    coverImageUrl: row.cover_image_url,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    serviceType: row.service_type,
+    guestCapacity: row.guest_capacity,
+    isFeatured: row.is_featured,
+    images: [],
+    features: [],
+    bookings: [],
+  };
 }
 
-const listingInclude = {
-  category: true,
-  location: true,
-  images: { orderBy: { sortOrder: "asc" as const } },
-  features: { include: { feature: true } },
-  propertyDetails: true,
-  vehicleDetails: true,
-  serviceDetails: true,
-  availabilitySlots: true,
-  provider: {
-    select: { userId: true, firstName: true, lastName: true, email: true, phone: true },
-  },
-  bookings: {
-    where: { review: { isNot: null } },
-    select: { review: { select: { rating: true, comment: true, createdAt: true } } },
-  },
-};
-
-function withRating<T extends { bookings: { review: { rating: number } | null }[] }>(listing: T) {
-  const ratings = listing.bookings
-    .map((b) => b.review?.rating)
-    .filter((r): r is number => typeof r === "number");
-  const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-  const { bookings, ...rest } = listing;
+async function hydrate(
+  listing: ListingWithRelations,
+): Promise<ListingWithRelations> {
+  const [images, features, bookings, metadata] = await Promise.all([
+    query<any>(
+      'SELECT id, listing_id, url, sort_order FROM listing_images WHERE listing_id = $1 ORDER BY sort_order, id',
+      [listing.listingId],
+    ),
+    query<any>(
+      'SELECT f.feature_id, f.name FROM features f JOIN listing_features lf ON lf.feature_id = f.feature_id WHERE lf.listing_id = $1 ORDER BY f.name',
+      [listing.listingId],
+    ),
+    query<any>(
+      'SELECT b.booking_id, b.user_id, b.start_date, b.end_date, b.total, r.rating, r.comment, r.created_at AS review_created_at FROM bookings b LEFT JOIN reviews r ON r.booking_id = b.booking_id WHERE b.listing_id = $1 ORDER BY b.start_date',
+      [listing.listingId],
+    ),
+    query<any>(
+      'SELECT c.category_id, c.name, c.slug, l.location_id, l.name AS location_name, l.lat, l.lng, u.user_id, u.first_name, u.last_name, u.email, u.phone FROM listings x LEFT JOIN categories c ON c.category_id = x.category_id LEFT JOIN locations l ON l.location_id = x.location_id LEFT JOIN users u ON u.user_id = x.provider_id WHERE x.listing_id = $1',
+      [listing.listingId],
+    ),
+  ]);
+  const meta = metadata.rows[0];
   return {
-    ...rest,
-    rating: avg ? Number(avg.toFixed(1)) : null,
-    reviewCount: ratings.length,
+    ...listing,
+    images: images.rows.map((row) => ({
+      id: row.id,
+      listingId: row.listing_id,
+      url: row.url,
+      sortOrder: row.sort_order,
+    })),
+    features: features.rows.map((row) => ({
+      featureId: row.feature_id,
+      name: row.name,
+    })),
+    bookings: bookings.rows.map((row) => ({
+      bookingId: row.booking_id,
+      userId: row.user_id,
+      startDate: row.start_date,
+      endDate: row.end_date,
+      total: parseNumeric(row.total),
+      review:
+        row.rating === null
+          ? null
+          : {
+              rating: row.rating,
+              comment: row.comment,
+              createdAt: row.review_created_at,
+            },
+    })),
+    category: meta?.category_id
+      ? { categoryId: meta.category_id, name: meta.name, slug: meta.slug }
+      : undefined,
+    location: meta?.location_id
+      ? {
+          locationId: meta.location_id,
+          name: meta.location_name,
+          lat: parseNumeric(meta.lat) || 0,
+          lng: parseNumeric(meta.lng) || 0,
+        }
+      : undefined,
+    provider: meta?.user_id
+      ? {
+          userId: meta.user_id,
+          firstName: meta.first_name,
+          lastName: meta.last_name,
+          email: meta.email,
+          phone: meta.phone,
+        }
+      : undefined,
   };
 }
 
 export class ListingService {
-  static async findAll(params: GetListingsParams) {
-    const page = Math.max(1, Number(params.page) || 1);
-    const limit = Math.max(1, Number(params.limit) || 12);
-    const skip = (page - 1) * limit;
-
-    const where: Prisma.ListingWhereInput = {};
-
-    if (params.includeAllStatuses) {
-      if (params.status) where.status = params.status;
-    } else {
-      where.status = "approved";
-      where.isActive = true;
+  static async findAll(filters: GetListingsParams) {
+    const clauses: string[] = [];
+    const params: unknown[] = [];
+    const add = (clause: string, value: unknown) => {
+      params.push(value);
+      clauses.push(clause.replace('?', `$${params.length}`));
+    };
+    if (filters.publicOnly)
+      clauses.push('l.status = \'approved\' AND l.is_active = true');
+    if (filters.categoryId) add('l.category_id = ?', filters.categoryId);
+    if (filters.locationId) add('l.location_id = ?', filters.locationId);
+    if (filters.providerId) add('l.provider_id = ?', filters.providerId);
+    if (filters.slug) add('c.slug = ?', filters.slug);
+    if (filters.status) add('l.status = ?', filters.status);
+    if (filters.featured !== undefined)
+      add('l.is_active = ?', filters.featured);
+    if (filters.search) {
+      params.push(`%${filters.search}%`);
+      clauses.push(
+        `(l.title ILIKE $${params.length} OR l.description ILIKE $${params.length})`,
+      );
     }
-
-    if (params.categoryId && !isNaN(params.categoryId)) {
-      where.categoryId = Number(params.categoryId);
-    }
-
-    if (params.locationId && !isNaN(params.locationId)) {
-      where.locationId = Number(params.locationId);
-    }
-
-    if (params.slug) {
-      where.category = { slug: params.slug };
-    }
-
-    if (params.providerId) {
-      where.providerId = params.providerId;
-    }
-
-    if (params.search && params.search.trim() !== "") {
-      where.OR = [
-        { title: { contains: params.search, mode: "insensitive" } },
-        { description: { contains: params.search, mode: "insensitive" } },
-      ];
-    }
-
-    const [items, total] = await Promise.all([
-      prisma.listing.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: listingInclude,
-      }),
-      prisma.listing.count({ where }),
-    ]);
-
+    const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+    const count = await query<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM listings l LEFT JOIN categories c ON c.category_id = l.category_id ${where}`,
+      params,
+    );
+    const offset = (filters.page - 1) * filters.limit;
+    const rows = await query<any>(
+      `SELECT l.* FROM listings l LEFT JOIN categories c ON c.category_id = l.category_id ${where} ORDER BY l.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, filters.limit, offset],
+    );
+    const items = await Promise.all(
+      rows.rows.map((row) => hydrate(mapListing(row))),
+    );
+    const total = Number(count.rows[0]?.count || 0);
     return {
-      items: items.map(withRating),
+      items,
       pagination: {
         total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page: filters.page,
+        limit: filters.limit,
+        totalPages: Math.ceil(total / filters.limit),
       },
     };
   }
 
-  static async findById(listingId: number, opts?: { staff?: boolean; userId?: number }) {
-    const listing = await prisma.listing.findUnique({
-      where: { listingId },
-      include: listingInclude,
-    });
-    if (!listing) return null;
-
-    const isOwner = opts?.userId === listing.providerId;
-    const isPublic = listing.status === "approved" && listing.isActive;
-    if (!isPublic && !opts?.staff && !isOwner) return null;
-
-    return withRating(listing);
+  static async search(filters: import('../types/dto').ListingSearchParams) {
+    const clauses = ['l.status = \'approved\'', 'l.is_active = true'];
+    const params: unknown[] = [];
+    const add = (sql: string, value: unknown) => { params.push(value); clauses.push(sql.replace('?', `$${params.length}`)); };
+    if (filters.checkIn && filters.checkOut) { params.push(filters.checkOut, filters.checkIn); clauses.push(`NOT EXISTS (SELECT 1 FROM bookings b WHERE b.listing_id = l.listing_id AND b.start_date < $${params.length - 1} AND b.end_date > $${params.length})`); }
+    if (filters.guests) { params.push(filters.guests); clauses.push(`l.guest_capacity >= $${params.length}`); }
+    if (filters.minPrice !== undefined) add('l.base_price >= ?', filters.minPrice);
+    if (filters.maxPrice !== undefined) add('l.base_price <= ?', filters.maxPrice);
+    if (filters.serviceType) add('l.service_type = ?', filters.serviceType);
+    const where = `WHERE ${clauses.join(' AND ')}`;
+    const count = await query<{ count: string }>(`SELECT COUNT(*) AS count FROM listings l ${where}`, params);
+    const offset = (filters.page - 1) * filters.limit;
+    const rows = await query<{ listing_id: number }>(`SELECT l.listing_id FROM listings l ${where} ORDER BY l.is_featured DESC, l.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`, [...params, filters.limit, offset]);
+    const items = await Promise.all(rows.rows.map(row => this.findById(row.listing_id, { publicOnly: true })));
+    const total = Number(count.rows[0]?.count || 0);
+    return { items: items.filter((item): item is ListingWithRelations => item !== null), pagination: { total, page: filters.page, limit: filters.limit, totalPages: Math.ceil(total / filters.limit) } };
   }
 
-  static async create(data: {
-    providerId: number;
-    categoryId: number;
-    locationId: number;
-    title: string;
-    description?: string;
-    basePrice: number;
-    pricingUnit: PricingUnit;
-    contactName?: string;
-    contactPhone?: string;
-    contactEmail?: string;
-    imageUrls?: string[];
-    autoApprove?: boolean;
-  }) {
-    const status: ListingStatus = data.autoApprove ? "approved" : "pending";
-    const urls = (data.imageUrls || []).filter(Boolean);
+  static async featured() {
+    const rows = await query<{ listing_id: number; service_type: string }>('SELECT listing_id, service_type FROM listings WHERE status = \'approved\' AND is_active = true AND is_featured = true ORDER BY created_at DESC');
+    const items = await Promise.all(rows.rows.map(row => this.findById(row.listing_id, { publicOnly: true })));
+    return { rentals: items.filter((item, index) => item && rows.rows[index].service_type === 'VACATION_RENTAL'), dining: items.filter((item, index) => item && rows.rows[index].service_type === 'RESTAURANT_CAFE'), activities: items.filter((item, index) => item && rows.rows[index].service_type === 'ACTIVITY') };
+  }
 
-    return prisma.listing.create({
-      data: {
-        providerId: data.providerId,
-        categoryId: data.categoryId,
-        locationId: data.locationId,
-        title: data.title,
-        description: data.description,
-        basePrice: new Prisma.Decimal(data.basePrice),
-        pricingUnit: data.pricingUnit,
-        contactName: data.contactName,
-        contactPhone: data.contactPhone,
-        contactEmail: data.contactEmail,
-        status,
-        isActive: status === "approved",
-        coverImageUrl: urls[0] || null,
-        images: urls.length
-          ? {
-              create: urls.map((url, i) => ({ url, sortOrder: i })),
-            }
-          : undefined,
-      },
-      include: listingInclude,
+  static async findById(
+    listingId: number,
+    options: { publicOnly?: boolean } = {},
+  ): Promise<ListingWithRelations | null> {
+    const result = await query<any>(
+      `SELECT l.* FROM listings l WHERE l.listing_id = $1${options.publicOnly ? ' AND l.status = \'approved\' AND l.is_active = true' : ''}`,
+      [listingId],
+    );
+    return result.rows[0] ? hydrate(mapListing(result.rows[0])) : null;
+  }
+
+  static async create(data: CreateListingDto): Promise<ListingWithRelations> {
+    const id = await transaction(async (client) => {
+      const inserted = await client.query<{ listing_id: number }>(
+        'INSERT INTO listings (provider_id, category_id, location_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, guest_capacity, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,\'pending\',false) RETURNING listing_id',
+        [
+          data.providerId || null,
+          data.categoryId,
+          data.locationId || null,
+          data.title,
+          data.description || null,
+          data.basePrice,
+          data.pricingUnit || null,
+          data.contactName || null,
+          data.contactPhone || null,
+          data.contactEmail || null,
+          data.coverImageUrl || null,
+          data.serviceType || null,
+          data.guestCapacity || null,
+        ],
+      );
+      const listingId = inserted.rows[0].listing_id;
+      for (const categoryId of data.categoryIds || [])
+        await client.query(
+          'INSERT INTO listing_categories (listing_id, category_id) VALUES ($1,$2)',
+          [listingId, categoryId],
+        );
+      for (const [index, url] of (data.imageUrls || []).entries())
+        await client.query(
+          'INSERT INTO listing_images (listing_id, url, sort_order) VALUES ($1, $2, $3)',
+          [listingId, url, index],
+        );
+      for (const featureId of data.featureIds || [])
+        await client.query(
+          'INSERT INTO listing_features (listing_id, feature_id) VALUES ($1, $2)',
+          [listingId, featureId],
+        );
+      return listingId;
     });
+    const listing = await this.findById(id);
+    if (!listing)
+      throw new AppError(500, 'Created listing could not be loaded');
+    return listing;
   }
 
   static async update(
     listingId: number,
     userId: number,
     role: string,
-    data: Partial<{
-      title: string;
-      description: string;
-      basePrice: number;
-      pricingUnit: PricingUnit;
-      categoryId: number;
-      locationId: number;
-      isActive: boolean;
-      contactName: string;
-      contactPhone: string;
-      contactEmail: string;
-      imageUrls: string[];
-    }>,
-  ) {
-    const listing = await prisma.listing.findUnique({ where: { listingId } });
-    if (!listing) throw new Error("NOT_FOUND");
-    if (role !== "admin" && role !== "moderator" && listing.providerId !== userId) {
-      throw new Error("UNAUTHORIZED");
-    }
-
-    const { imageUrls, basePrice, ...rest } = data;
-
-    return prisma.$transaction(async (tx) => {
-      if (imageUrls) {
-        await tx.listingImage.deleteMany({ where: { listingId } });
-        if (imageUrls.length) {
-          await tx.listingImage.createMany({
-            data: imageUrls.map((url, i) => ({ listingId, url, sortOrder: i })),
-          });
-        }
+    data: UpdateListingDto,
+  ): Promise<ListingWithRelations> {
+    const current = await this.findById(listingId);
+    if (!current) throw new AppError(404, 'Listing not found');
+    if (!['ADMIN', 'admin'].includes(role) && current.providerId !== userId)
+      throw new AppError(403, 'You cannot update this listing');
+    const columns: Record<string, unknown> = {
+      category_id: data.categoryId,
+      location_id: data.locationId,
+      title: data.title,
+      description: data.description,
+      base_price: data.basePrice,
+      pricing_unit: data.pricingUnit,
+      contact_name: data.contactName,
+      contact_phone: data.contactPhone,
+      contact_email: data.contactEmail,
+      cover_image_url: data.coverImageUrl,
+      service_type: data.serviceType,
+      guest_capacity: data.guestCapacity,
+    };
+    await transaction(async (client) => {
+      const entries = Object.entries(columns).filter(
+        ([, value]) => value !== undefined,
+      );
+      if (entries.length)
+        await client.query(
+          `UPDATE listings SET ${entries.map(([key], index) => `${key} = $${index + 2}`).join(', ')}, updated_at = now() WHERE listing_id = $1`,
+          [listingId, ...entries.map(([, value]) => value)],
+        );
+      if (data.imageUrls) {
+        await client.query('DELETE FROM listing_images WHERE listing_id = $1', [
+          listingId,
+        ]);
+        for (const [index, url] of data.imageUrls.entries())
+          await client.query(
+            'INSERT INTO listing_images (listing_id, url, sort_order) VALUES ($1,$2,$3)',
+            [listingId, url, index],
+          );
       }
-
-      return tx.listing.update({
-        where: { listingId },
-        data: {
-          ...rest,
-          ...(basePrice !== undefined ? { basePrice: new Prisma.Decimal(basePrice) } : {}),
-          ...(imageUrls ? { coverImageUrl: imageUrls[0] || null } : {}),
-        },
-        include: listingInclude,
-      });
+      if (data.featureIds) {
+        await client.query(
+          'DELETE FROM listing_features WHERE listing_id = $1',
+          [listingId],
+        );
+        for (const featureId of data.featureIds)
+          await client.query(
+            'INSERT INTO listing_features (listing_id, feature_id) VALUES ($1,$2)',
+            [listingId, featureId],
+          );
+      }
+      if (data.categoryIds) {
+        await client.query('DELETE FROM listing_categories WHERE listing_id = $1', [listingId]);
+        for (const categoryId of data.categoryIds)
+          await client.query(
+            'INSERT INTO listing_categories (listing_id, category_id) VALUES ($1,$2)',
+            [listingId, categoryId],
+          );
+      }
     });
+    return (await this.findById(listingId)) as ListingWithRelations;
   }
 
   static async setStatus(
@@ -215,47 +306,33 @@ export class ListingService {
     status: ListingStatus,
     reason?: string,
   ) {
-    const listing = await prisma.listing.findUnique({ where: { listingId } });
-    if (!listing) throw new Error("NOT_FOUND");
-
-    const updated = await prisma.listing.update({
-      where: { listingId },
-      data: {
-        status,
-        isActive: status === "approved",
-      },
-      include: listingInclude,
+    const result = await transaction(async (client) => {
+      const updated = await client.query<any>(
+        'UPDATE listings SET status = $1, is_active = ($1 = \'approved\'), updated_at = now() WHERE listing_id = $2 RETURNING *',
+        [status, listingId],
+      );
+      if (!updated.rows[0]) throw new AppError(404, 'Listing not found');
+      await client.query(
+        'INSERT INTO audit_logs (actor_id, action, entity_type, entity_id, reason) VALUES ($1, $2, $3, $4, $5)',
+        [actorId, `status:${status}`, 'listing', listingId, reason || null],
+      );
+      return updated.rows[0];
     });
-
-    await prisma.auditLog.create({
-      data: {
-        actorId,
-        action: `listing.${status}`,
-        entityType: "listing",
-        entityId: listingId,
-        reason,
-      },
-    });
-
-    return updated;
+    return this.findById(listingId);
   }
-
-  static async delete(listingId: number, userId: number, role?: string) {
-    const listing = await prisma.listing.findUnique({ where: { listingId } });
-    if (!listing) throw new Error("NOT_FOUND");
-    if (role !== "admin" && role !== "moderator" && listing.providerId !== userId) {
-      throw new Error("UNAUTHORIZED");
-    }
-
-    await prisma.auditLog.create({
-      data: {
-        actorId: userId,
-        action: "listing.deleted",
-        entityType: "listing",
-        entityId: listingId,
-      },
+  static async delete(listingId: number, userId: number, role: string) {
+    const current = await this.findById(listingId);
+    if (!current) throw new AppError(404, 'Listing not found');
+    if (!['ADMIN', 'admin'].includes(role) && current.providerId !== userId)
+      throw new AppError(403, 'You cannot delete this listing');
+    await transaction(async (client) => {
+      await client.query(
+        'INSERT INTO audit_logs (actor_id, action, entity_type, entity_id) VALUES ($1, $2, $3, $4)',
+        [userId, 'delete', 'listing', listingId],
+      );
+      await client.query('DELETE FROM listings WHERE listing_id = $1', [
+        listingId,
+      ]);
     });
-
-    return prisma.listing.delete({ where: { listingId } });
   }
 }

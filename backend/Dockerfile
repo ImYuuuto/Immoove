@@ -1,32 +1,23 @@
-# Base builder stage
-FROM node:20-alpine AS builder
-
+FROM node:20-alpine AS build
 WORKDIR /app
 
-# Install dependencies
 COPY package*.json ./
-COPY prisma ./prisma/
 RUN npm ci
-
-# Copy source and build TypeScript
-COPY . .
-RUN npx prisma generate
+COPY tsconfig.json .eslintrc.js .prettierrc jest.config.js ./
+COPY src ./src
+COPY tests ./tests
+COPY scripts ./scripts
 RUN npm run build
 
-# Production runner stage
-FROM node:20-alpine AS runner
-
+FROM node:20-alpine AS runtime
 WORKDIR /app
-
 ENV NODE_ENV=production
 
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
+COPY --from=build /app/dist ./dist
+COPY src/migrations ./src/migrations
+COPY scripts ./scripts
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/prisma ./prisma
-
-EXPOSE 3000
-
-CMD ["node", "dist/server.js"]
+EXPOSE 4000
+CMD ["sh", "-c", "npm run migrate:node && npm start"]

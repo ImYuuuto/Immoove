@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import * as controller from '../controllers/listingController';
+import { auth, requireAuth, requireStaff } from '../middleware/auth';
+const router = Router();
+router.get('/', controller.list);
+router.get('/:id', controller.get);
+router.post('/', auth, requireAuth, controller.create);
+router.patch('/:id', auth, requireAuth, controller.update);
+router.put('/:id/status', auth, requireStaff, controller.setStatus);
+router.delete('/:id', auth, requireAuth, controller.remove);
+export default router;

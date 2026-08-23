@@ -1,0 +1,55 @@
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import routes from './routes';
+import { auth } from './middleware/auth';
+import { errorHandler, notFound } from './utils/errorHandler';
+export const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
+const rateLimitWindowMs =
+  Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
+const rateLimitMax =
+  Number(process.env.RATE_LIMIT_MAX) || (isProduction ? 100 : 10000);
+const allowedOrigins = new Set(
+  (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean),
+);
+app.disable('x-powered-by');
+app.use(helmet());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+      return callback(new Error('Origin is not allowed'));
+    },
+    credentials: true,
+  }),
+);
+app.use(
+  rateLimit({
+    windowMs: rateLimitWindowMs,
+    limit: rateLimitMax,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }),
+);
+app.use(express.json({ limit: '100kb' }));
+app.use(cookieParser());
+app.use((req, _res, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    const origin = req.header('origin');
+    if (origin && !allowedOrigins.has(origin))
+      return next(new Error('Origin is not allowed'));
+  }
+  next();
+});
+app.use(auth);
+app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+app.use('/api/v1', routes);
+app.use('/api', routes);
+app.use(notFound);
+app.use(errorHandler);

@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import listings from './listings';
+import users from './users';
+import bookings from './bookings';
+import platform from './platform';
+import authRoutes from './auth';
+const router = Router();
+router.use('/auth', authRoutes);
+router.use('/', platform);
+router.use('/listings', listings);
+router.use('/users', users);
+router.use('/bookings', bookings);
+export default router;
