@@ -11,6 +11,9 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import listingRoutes from "./routes/listingRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import savedListingRoutes from "./routes/savedListingRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -46,6 +49,9 @@ app.use("/api/locations", locationRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/saved", savedListingRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "OK", timestamp: new Date() });

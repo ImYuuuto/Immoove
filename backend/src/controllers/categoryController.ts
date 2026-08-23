@@ -36,4 +36,24 @@ export class CategoryController {
       next(error);
     }
   }
+
+  static async update(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const categoryId = Number(req.params.id);
+      const category = await CategoryService.update(categoryId, req.body);
+      res.json(category);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const categoryId = Number(req.params.id);
+      await CategoryService.delete(categoryId);
+      res.json({ message: "Category deleted" });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

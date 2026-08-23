@@ -42,6 +42,10 @@ export class BookingService {
     listingId: number;
     startDatetime: Date;
     endDatetime: Date;
+    guestName?: string;
+    guestPhone?: string;
+    guestCount?: number;
+    message?: string;
   }) {
     const { clientId, listingId, startDatetime, endDatetime } = data;
 
@@ -74,7 +78,7 @@ export class BookingService {
         SELECT booking_id
         FROM bookings
         WHERE listing_id = ${listingId}
-          AND status != 'cancelled'
+          AND status NOT IN ('cancelled', 'declined')
           AND start_datetime < ${endDatetime}
           AND end_datetime > ${startDatetime}
         LIMIT 1
@@ -104,6 +108,10 @@ export class BookingService {
           endDatetime,
           totalPrice: totalPrice,
           status: "pending",
+          guestName: data.guestName,
+          guestPhone: data.guestPhone,
+          guestCount: data.guestCount ?? 1,
+          message: data.message,
         },
         include: {
           listing: {
@@ -174,6 +182,55 @@ export class BookingService {
       where: { bookingId },
       data: { status: "cancelled" },
     });
+  }
+
+  static async getAll(status?: string) {
+    return prisma.booking.findMany({
+      where: status ? { status: status as never } : undefined,
+      orderBy: { createdAt: "desc" },
+      include: {
+        client: {
+          select: { userId: true, firstName: true, lastName: true, email: true, phone: true },
+        },
+        listing: {
+          select: {
+            listingId: true,
+            title: true,
+            pricingUnit: true,
+            category: { select: { name: true } },
+            location: { select: { cityName: true, country: true } },
+          },
+        },
+      },
+    });
+  }
+
+  static async setStatus(bookingId: number, actorId: number, status: "confirmed" | "declined" | "cancelled", reason?: string) {
+    const booking = await prisma.booking.findUnique({ where: { bookingId } });
+    if (!booking) throw new BookingError("Booking not found", 404);
+
+    const updated = await prisma.booking.update({
+      where: { bookingId },
+      data: { status },
+      include: {
+        client: {
+          select: { userId: true, firstName: true, lastName: true, email: true, phone: true },
+        },
+        listing: { select: { listingId: true, title: true } },
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorId,
+        action: `booking.${status}`,
+        entityType: "booking",
+        entityId: bookingId,
+        reason,
+      },
+    });
+
+    return updated;
   }
 }
 

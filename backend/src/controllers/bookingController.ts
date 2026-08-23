@@ -4,10 +4,14 @@ import { BookingService, BookingError } from "../services/bookingService.js";
 export class BookingController {
   static async create(req: Request, res: Response): Promise<void> {
     try {
-      const { listingId, startDatetime, endDatetime } = req.body;
+      const { listingId, startDatetime, endDatetime, guestName, guestPhone, guestCount, message } = req.body;
 
       if (!listingId || !startDatetime || !endDatetime) {
         res.status(400).json({ error: "listingId, startDatetime, and endDatetime are required" });
+        return;
+      }
+      if (!guestName || !guestPhone) {
+        res.status(400).json({ error: "Le nom et le téléphone sont requis" });
         return;
       }
 
@@ -16,6 +20,10 @@ export class BookingController {
         listingId: Number(listingId),
         startDatetime: new Date(startDatetime),
         endDatetime: new Date(endDatetime),
+        guestName: String(guestName),
+        guestPhone: String(guestPhone),
+        guestCount: guestCount ? Number(guestCount) : 1,
+        message: message ? String(message) : undefined,
       });
 
       res.status(201).json(booking);

@@ -17,4 +17,12 @@ export class CategoryService {
   static async create(data: { name: string; slug: string; description?: string }) {
     return prisma.serviceCategory.create({ data });
   }
+
+  static async update(categoryId: number, data: { name?: string; slug?: string; description?: string }) {
+    return prisma.serviceCategory.update({ where: { categoryId }, data });
+  }
+
+  static async delete(categoryId: number) {
+    return prisma.serviceCategory.delete({ where: { categoryId } });
+  }
 }

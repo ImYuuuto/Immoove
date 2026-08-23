@@ -11,7 +11,7 @@ import { UserError } from "../errors/userError.js";
 const JWT_SECRET = process.env.JWT_SECRET || "super_secret_key_change_me_in_production";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
-type UserRole = "client" | "provider" | "admin";
+type UserRole = "client" | "provider" | "moderator" | "admin";
 
 export class UserService {
   static async hashPassword(password: string): Promise<string> {

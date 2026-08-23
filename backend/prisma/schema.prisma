@@ -30,6 +30,9 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   listings     Listing[]
   bookings     Booking[]
+  savedListings SavedListing[]
+  messages     ContactMessage[]
+  auditLogs    AuditLog[]
 
   @@map("users")
 }
@@ -37,6 +40,7 @@ model User {
 enum UserRole {
   client
   provider
+  moderator
   admin
 }
 
@@ -61,21 +65,37 @@ model Listing {
   basePrice       Decimal         @map("base_price") @db.Decimal(10, 2)
   pricingUnit     PricingUnit     @map("pricing_unit")
   isActive        Boolean         @default(true) @map("is_active")
+  status          ListingStatus   @default(pending)
+  coverImageUrl   String?         @map("cover_image_url")
+  contactName     String?         @map("contact_name") @db.VarChar(120)
+  contactPhone    String?         @map("contact_phone") @db.VarChar(30)
+  contactEmail    String?         @map("contact_email") @db.VarChar(150)
   createdAt       DateTime        @default(now()) @map("created_at")
 
-  provider          User              @relation(fields: [providerId], references: [userId], onDelete: Cascade)
-  category          ServiceCategory   @relation(fields: [categoryId], references: [categoryId])
-  location          Location          @relation(fields: [locationId], references: [locationId])
-  propertyDetails   PropertyDetail?
-  vehicleDetails    VehicleDetail?
-  serviceDetails    ServiceDetail?
-  features          ListingFeature[]
+  provider        User             @relation(fields: [providerId], references: [userId], onDelete: Cascade)
+  category        ServiceCategory  @relation(fields: [categoryId], references: [categoryId])
+  location        Location         @relation(fields: [locationId], references: [locationId])
+  propertyDetails PropertyDetail?
+  vehicleDetails  VehicleDetail?
+  serviceDetails  ServiceDetail?
+  features        ListingFeature[]
+  images          ListingImage[]
   availabilitySlots AvailabilitySlot[]
-  bookings          Booking[]
+  bookings        Booking[]
+  savedBy         SavedListing[]
+  messages        ContactMessage[]
 
   @@index([categoryId, locationId, isActive], name: "idx_listings_category_location")
   @@index([providerId], name: "idx_listings_provider")
+  @@index([status], name: "idx_listings_status")
   @@map("listings")
+}
+
+enum ListingStatus {
+  pending
+  approved
+  rejected
+  archived
 }
 
 enum PricingUnit {
@@ -83,6 +103,17 @@ enum PricingUnit {
   per_day
   per_hour
   per_service
+}
+
+model ListingImage {
+  imageId   Int     @id @default(autoincrement()) @map("image_id")
+  listingId Int     @map("listing_id")
+  url       String
+  alt       String? @db.VarChar(255)
+  sortOrder Int     @default(0) @map("sort_order")
+  listing   Listing @relation(fields: [listingId], references: [listingId], onDelete: Cascade)
+
+  @@map("listing_images")
 }
 
 model PropertyDetail {
@@ -133,10 +164,10 @@ model ServiceDetail {
 }
 
 model Feature {
-  featureId  Int              @id @default(autoincrement()) @map("feature_id")
-  categoryId Int              @map("category_id")
-  name       String           @db.VarChar(50)
-  category   ServiceCategory  @relation(fields: [categoryId], references: [categoryId], onDelete: Cascade)
+  featureId  Int             @id @default(autoincrement()) @map("feature_id")
+  categoryId Int             @map("category_id")
+  name       String          @db.VarChar(50)
+  category   ServiceCategory @relation(fields: [categoryId], references: [categoryId], onDelete: Cascade)
   listings   ListingFeature[]
 
   @@map("features")
@@ -146,7 +177,7 @@ model ListingFeature {
   listingId Int     @map("listing_id")
   featureId Int     @map("feature_id")
   listing   Listing @relation(fields: [listingId], references: [listingId], onDelete: Cascade)
-  feature   Feature @relation(fields: [featureId], references: [featureId], onDelete: Cascade)
+  feature  Feature  @relation(fields: [featureId], references: [featureId], onDelete: Cascade)
 
   @@id([listingId, featureId])
   @@map("listing_features")
@@ -172,10 +203,14 @@ model Booking {
   endDatetime   DateTime      @map("end_datetime")
   totalPrice    Decimal       @map("total_price") @db.Decimal(10, 2)
   status        BookingStatus @default(pending)
+  guestName     String?       @map("guest_name") @db.VarChar(120)
+  guestPhone    String?       @map("guest_phone") @db.VarChar(30)
+  guestCount    Int           @default(1) @map("guest_count")
+  message       String?
   createdAt     DateTime      @default(now()) @map("created_at")
 
-  client  User     @relation(fields: [clientId], references: [userId])
-  listing Listing  @relation(fields: [listingId], references: [listingId])
+  client  User    @relation(fields: [clientId], references: [userId])
+  listing Listing @relation(fields: [listingId], references: [listingId])
   payment Payment?
   review  Review?
 
@@ -187,6 +222,7 @@ model Booking {
 enum BookingStatus {
   pending
   confirmed
+  declined
   completed
   cancelled
 }
@@ -219,4 +255,47 @@ model Review {
   booking   Booking  @relation(fields: [bookingId], references: [bookingId], onDelete: Cascade)
 
   @@map("reviews")
+}
+
+model SavedListing {
+  userId    Int      @map("user_id")
+  listingId Int      @map("listing_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [listingId], onDelete: Cascade)
+
+  @@id([userId, listingId])
+  @@map("saved_listings")
+}
+
+model ContactMessage {
+  messageId Int      @id @default(autoincrement()) @map("message_id")
+  userId    Int?     @map("user_id")
+  listingId Int?     @map("listing_id")
+  name      String   @db.VarChar(120)
+  email     String   @db.VarChar(150)
+  phone     String?  @db.VarChar(30)
+  subject   String?  @db.VarChar(180)
+  body      String
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User?    @relation(fields: [userId], references: [userId], onDelete: SetNull)
+  listing Listing? @relation(fields: [listingId], references: [listingId], onDelete: SetNull)
+
+  @@map("contact_messages")
+}
+
+model AuditLog {
+  auditId    Int      @id @default(autoincrement()) @map("audit_id")
+  actorId    Int      @map("actor_id")
+  action     String   @db.VarChar(80)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   Int      @map("entity_id")
+  reason     String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  actor      User     @relation(fields: [actorId], references: [userId])
+
+  @@index([entityType, entityId], name: "idx_audit_entity")
+  @@map("audit_logs")
 }
