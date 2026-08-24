@@ -13,6 +13,7 @@ import UserBookings from '../components/UserBookings';
 import { fallbackListings, fallbackPosts, images } from '../data/content';
 import type { Listing, Post, SearchFilters } from '../types';
 import { request } from '../utils/request';
+import { decodeText } from '../utils/decodeText';
 
 export default function App() {
   const [open, setOpen] =
@@ -312,16 +313,16 @@ export default function App() {
                   />
 
                   <small>
-                    {post.category ||
+                    {decodeText(post.category) ||
                       'IDÉES & INSPIRATION'}
                   </small>
 
                   <h3>
-                    {post.title}
+                    {decodeText(post.title)}
                   </h3>
 
                   <p>
-                    {post.excerpt}
+                    {decodeText(post.excerpt)}
                   </p>
 
                   <a href="#story">

@@ -4,6 +4,7 @@ import type { AuthUser, Language } from '../types';
 import { request } from '../utils/request';
 import { activeLanguage, applyAuthLanguage, applyLanguage, languageText } from '../i18n/language';
 import AuthModal from './AuthModal';
+import ChangePasswordModal from './ChangePasswordModal';
 
 export default function Navbar({
   open,
@@ -15,6 +16,9 @@ export default function Navbar({
   onAnnouncement: () => void;
 }) {
   const [authOpen, setAuthOpen] =
+    useState(false);
+
+  const [passwordOpen, setPasswordOpen] =
     useState(false);
 
   const [message, setMessage] =
@@ -38,6 +42,13 @@ export default function Navbar({
       )
       .catch(() => setUser(null))
       .finally(() => setAuthLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const requireLogin = () => { setUser(null); setPasswordOpen(false); setAuthOpen(true); };
+    window.addEventListener('auth:unauthorized', requireLogin);
+    if (new URLSearchParams(window.location.search).get('login') === '1') setAuthOpen(true);
+    return () => window.removeEventListener('auth:unauthorized', requireLogin);
   }, []);
 
   const changeLanguage = (
@@ -135,6 +146,12 @@ export default function Navbar({
               Admin
             </a>
           )}
+
+        {user && (
+          <a className="mobile-profile-link" href="/profile" onClick={() => setOpen(false)}>
+            Mon profil
+          </a>
+        )}
       </nav>
 
       {/* NAV ACTIONS */}
@@ -252,13 +269,7 @@ export default function Navbar({
             …
           </button>
         ) : user ? (
-          <button
-            className="login"
-            data-auth-action="logout"
-            onClick={logout}
-          >
-            Se déconnecter
-          </button>
+          <div className="account-actions"><a className="account-security" href="/profile">Mon profil</a><button className="account-security" type="button" onClick={() => setPasswordOpen(true)}>Mot de passe</button><button className="login" data-auth-action="logout" onClick={logout}>Se déconnecter</button></div>
         ) : (
           <button
             className="login"
@@ -318,6 +329,16 @@ export default function Navbar({
             setAuthLoading(false);
           }
           }
+        />
+      )}
+
+      {passwordOpen && (
+        <ChangePasswordModal
+          onClose={() => setPasswordOpen(false)}
+          onMessage={(text) => {
+            setMessage(text);
+            window.setTimeout(() => setMessage(''), 3500);
+          }}
         />
       )}
 

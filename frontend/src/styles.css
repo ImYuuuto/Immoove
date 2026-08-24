@@ -296,6 +296,29 @@ img {
   transform: translateY(-2px);
 }
 
+.account-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-security {
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.account-security:hover {
+  color: var(--sand);
+}
+
+.mobile-profile-link {
+  display: none;
+}
+
 
 /* =========================================================
    LANGUAGE PICKER
@@ -2118,6 +2141,17 @@ footer > p {
   transform: translateY(-2px);
 }
 
+.auth-error {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(189, 88, 69, .25);
+  border-radius: 8px;
+  background: rgba(217, 111, 88, .1);
+  color: var(--coral-dark);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 
 /* =========================================================
    TOAST
@@ -2333,6 +2367,14 @@ textarea:focus-visible {
   }
 
   .login {
+    display: none;
+  }
+
+  .nav-links.open .mobile-profile-link {
+    display: block;
+  }
+
+  .account-security {
     display: none;
   }
 

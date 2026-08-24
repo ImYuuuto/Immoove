@@ -1,6 +1,7 @@
 import { Heart, Star } from 'lucide-react';
 import { fallbackListings } from '../data/content';
 import type { Listing } from '../types';
+import { decodeText } from '../utils/decodeText';
 
 export default function ListingCard({
   listing,
@@ -24,7 +25,7 @@ export default function ListingCard({
 
         <img
           src={image}
-          alt={listing.title}
+          alt={decodeText(listing.title)}
         />
         <span className="listing-view">View stay →</span>
 
@@ -63,11 +64,11 @@ export default function ListingCard({
         </div>
 
         <h3>
-          {listing.title}
+          {decodeText(listing.title)}
         </h3>
 
         <p>
-          {listing.description ||
+          {decodeText(listing.description) ||
             'Une adresse choisie pour vos vacances.'}
         </p>
 

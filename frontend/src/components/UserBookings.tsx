@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import type { BookingDraft } from '../types';
+import type { BookingRecord } from '../types';
 import { request } from '../utils/request';
 
-type Booking = BookingDraft & { bookingId: number; userId: number };
+type Booking = BookingRecord;
 
 export default function UserBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
