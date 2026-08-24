@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - '${POSTGRES_PORT:-5432}:5432'
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-sidibouzid}
       POSTGRES_USER: ${POSTGRES_USER:-sidibouzid}
@@ -29,6 +29,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       ALLOW_DEV_AUTH: 'false'
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://localhost:5174}
+      REQUEST_BODY_LIMIT_BYTES: ${REQUEST_BODY_LIMIT_BYTES:-102400}
+      PASSWORD_RATE_LIMIT_MAX: ${PASSWORD_RATE_LIMIT_MAX:-5}
+      PASSWORD_RATE_LIMIT_WINDOW_MS: ${PASSWORD_RATE_LIMIT_WINDOW_MS:-900000}
     ports:
       - '${PORT:-4000}:4000'
 

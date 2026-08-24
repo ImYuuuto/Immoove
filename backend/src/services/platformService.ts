@@ -1,5 +1,6 @@
 import { query, transaction } from '../config/db';
 import { AppError } from '../utils/errorHandler';
+import { sanitizeOptionalText, sanitizeRequiredText } from '../utils/sanitize';
 
 export class PlatformService {
   static async listAnnouncements() {
@@ -21,10 +22,10 @@ export class PlatformService {
       [
         data.requesterId,
         data.serviceType,
-        data.title,
-        data.description || null,
-        data.address,
-        data.contactPhone || null,
+        sanitizeRequiredText(data.title, 'title'),
+        sanitizeOptionalText(data.description) || null,
+        sanitizeRequiredText(data.address, 'address'),
+        sanitizeOptionalText(data.contactPhone) || null,
       ],
     );
     return result.rows[0];
@@ -38,7 +39,7 @@ export class PlatformService {
     return transaction(async (client) => {
       const result = await client.query<any>(
         'UPDATE announcement_requests SET status = $1, reviewed_by = $2, review_reason = $3, updated_at = now() WHERE request_id = $4 RETURNING *',
-        [status, reviewerId, reason || null, requestId],
+        [status, reviewerId, sanitizeOptionalText(reason) || null, requestId],
       );
       if (!result.rows[0])
         throw new AppError(404, 'Announcement request not found');
@@ -49,7 +50,7 @@ export class PlatformService {
           `announcement:${status.toLowerCase()}`,
           'announcement_request',
           requestId,
-          reason || null,
+          sanitizeOptionalText(reason) || null,
         ],
       );
       return result.rows[0];
@@ -90,7 +91,7 @@ export class PlatformService {
   static async toggleFavorite(userId: number, listingId: number) {
     return transaction(async (client) => {
       const listing = await client.query(
-        "SELECT 1 FROM listings WHERE status = 'approved' AND is_active = true AND listing_id = $1",
+        'SELECT 1 FROM listings WHERE status = \'approved\' AND is_active = true AND listing_id = $1',
         [listingId],
       );
       if (!listing.rowCount) throw new AppError(404, 'Listing not found');
@@ -108,7 +109,7 @@ export class PlatformService {
   }
   static async getFavorites(userId: number) {
     const result = await query<any>(
-      "SELECT l.* FROM favorites f JOIN listings l ON l.listing_id = f.listing_id WHERE f.user_id = $1 AND l.status = 'approved' AND l.is_active = true ORDER BY f.created_at DESC",
+      'SELECT l.* FROM favorites f JOIN listings l ON l.listing_id = f.listing_id WHERE f.user_id = $1 AND l.status = \'approved\' AND l.is_active = true ORDER BY f.created_at DESC',
       [userId],
     );
     return result.rows;

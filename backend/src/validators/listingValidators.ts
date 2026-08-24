@@ -55,7 +55,6 @@ export const createBookingSchema = z
     userId: id.optional(),
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
-    total: z.coerce.number().positive(),
   })
   .refine((value) => value.endDate > value.startDate, {
     message: 'endDate must be after startDate',
@@ -67,6 +66,8 @@ export const updateBookingSchema = z
     userId: id.optional(),
     startDate: z.coerce.date().optional(),
     endDate: z.coerce.date().optional(),
-    total: z.coerce.number().positive().optional(),
   })
-  .refine((value) => Object.keys(value).length > 0, 'At least one field is required');
+  .refine(
+    (value) => Object.keys(value).length > 0,
+    'At least one field is required',
+  );

@@ -14,6 +14,15 @@ const rateLimitWindowMs =
   Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
 const rateLimitMax =
   Number(process.env.RATE_LIMIT_MAX) || (isProduction ? 100 : 10000);
+const requestBodyLimitBytes = Number(
+  process.env.REQUEST_BODY_LIMIT_BYTES || 100 * 1024,
+);
+if (
+  !Number.isSafeInteger(requestBodyLimitBytes) ||
+  requestBodyLimitBytes <= 0
+) {
+  throw new Error('REQUEST_BODY_LIMIT_BYTES must be a positive integer');
+}
 const allowedOrigins = new Set(
   (process.env.CORS_ORIGIN || '')
     .split(',')
@@ -40,7 +49,7 @@ app.use(
     legacyHeaders: false,
   }),
 );
-app.use(express.json({ limit: '100kb' }));
+app.use(express.json({ limit: requestBodyLimitBytes }));
 app.use(cookieParser());
 app.use((req, _res, next) => {
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {

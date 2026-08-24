@@ -7,6 +7,7 @@ import {
 } from '../types/dto';
 import { AppError } from '../utils/errorHandler';
 import { parseNumeric } from '../utils/sqlHelpers';
+import { sanitizeOptionalText, sanitizeRequiredText } from '../utils/sanitize';
 
 function mapListing(row: any): ListingWithRelations {
   return {
@@ -158,25 +159,76 @@ export class ListingService {
   static async search(filters: import('../types/dto').ListingSearchParams) {
     const clauses = ['l.status = \'approved\'', 'l.is_active = true'];
     const params: unknown[] = [];
-    const add = (sql: string, value: unknown) => { params.push(value); clauses.push(sql.replace('?', `$${params.length}`)); };
-    if (filters.checkIn && filters.checkOut) { params.push(filters.checkOut, filters.checkIn); clauses.push(`NOT EXISTS (SELECT 1 FROM bookings b WHERE b.listing_id = l.listing_id AND b.start_date < $${params.length - 1} AND b.end_date > $${params.length})`); }
-    if (filters.guests) { params.push(filters.guests); clauses.push(`l.guest_capacity >= $${params.length}`); }
-    if (filters.minPrice !== undefined) add('l.base_price >= ?', filters.minPrice);
-    if (filters.maxPrice !== undefined) add('l.base_price <= ?', filters.maxPrice);
+    const add = (sql: string, value: unknown) => {
+      params.push(value);
+      clauses.push(sql.replace('?', `$${params.length}`));
+    };
+    if (filters.checkIn && filters.checkOut) {
+      params.push(filters.checkOut, filters.checkIn);
+      clauses.push(
+        `NOT EXISTS (SELECT 1 FROM bookings b WHERE b.listing_id = l.listing_id AND b.start_date < $${params.length - 1} AND b.end_date > $${params.length})`,
+      );
+    }
+    if (filters.guests) {
+      params.push(filters.guests);
+      clauses.push(`l.guest_capacity >= $${params.length}`);
+    }
+    if (filters.minPrice !== undefined)
+      add('l.base_price >= ?', filters.minPrice);
+    if (filters.maxPrice !== undefined)
+      add('l.base_price <= ?', filters.maxPrice);
     if (filters.serviceType) add('l.service_type = ?', filters.serviceType);
     const where = `WHERE ${clauses.join(' AND ')}`;
-    const count = await query<{ count: string }>(`SELECT COUNT(*) AS count FROM listings l ${where}`, params);
+    const count = await query<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM listings l ${where}`,
+      params,
+    );
     const offset = (filters.page - 1) * filters.limit;
-    const rows = await query<{ listing_id: number }>(`SELECT l.listing_id FROM listings l ${where} ORDER BY l.is_featured DESC, l.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`, [...params, filters.limit, offset]);
-    const items = await Promise.all(rows.rows.map(row => this.findById(row.listing_id, { publicOnly: true })));
+    const rows = await query<{ listing_id: number }>(
+      `SELECT l.listing_id FROM listings l ${where} ORDER BY l.is_featured DESC, l.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, filters.limit, offset],
+    );
+    const items = await Promise.all(
+      rows.rows.map((row) =>
+        this.findById(row.listing_id, { publicOnly: true }),
+      ),
+    );
     const total = Number(count.rows[0]?.count || 0);
-    return { items: items.filter((item): item is ListingWithRelations => item !== null), pagination: { total, page: filters.page, limit: filters.limit, totalPages: Math.ceil(total / filters.limit) } };
+    return {
+      items: items.filter(
+        (item): item is ListingWithRelations => item !== null,
+      ),
+      pagination: {
+        total,
+        page: filters.page,
+        limit: filters.limit,
+        totalPages: Math.ceil(total / filters.limit),
+      },
+    };
   }
 
   static async featured() {
-    const rows = await query<{ listing_id: number; service_type: string }>('SELECT listing_id, service_type FROM listings WHERE status = \'approved\' AND is_active = true AND is_featured = true ORDER BY created_at DESC');
-    const items = await Promise.all(rows.rows.map(row => this.findById(row.listing_id, { publicOnly: true })));
-    return { rentals: items.filter((item, index) => item && rows.rows[index].service_type === 'VACATION_RENTAL'), dining: items.filter((item, index) => item && rows.rows[index].service_type === 'RESTAURANT_CAFE'), activities: items.filter((item, index) => item && rows.rows[index].service_type === 'ACTIVITY') };
+    const rows = await query<{ listing_id: number; service_type: string }>(
+      'SELECT listing_id, service_type FROM listings WHERE status = \'approved\' AND is_active = true AND is_featured = true ORDER BY created_at DESC',
+    );
+    const items = await Promise.all(
+      rows.rows.map((row) =>
+        this.findById(row.listing_id, { publicOnly: true }),
+      ),
+    );
+    return {
+      rentals: items.filter(
+        (item, index) =>
+          item && rows.rows[index].service_type === 'VACATION_RENTAL',
+      ),
+      dining: items.filter(
+        (item, index) =>
+          item && rows.rows[index].service_type === 'RESTAURANT_CAFE',
+      ),
+      activities: items.filter(
+        (item, index) => item && rows.rows[index].service_type === 'ACTIVITY',
+      ),
+    };
   }
 
   static async findById(
@@ -198,12 +250,12 @@ export class ListingService {
           data.providerId || null,
           data.categoryId,
           data.locationId || null,
-          data.title,
-          data.description || null,
+          sanitizeRequiredText(data.title, 'title'),
+          sanitizeOptionalText(data.description) || null,
           data.basePrice,
-          data.pricingUnit || null,
-          data.contactName || null,
-          data.contactPhone || null,
+          sanitizeOptionalText(data.pricingUnit) || null,
+          sanitizeOptionalText(data.contactName) || null,
+          sanitizeOptionalText(data.contactPhone) || null,
           data.contactEmail || null,
           data.coverImageUrl || null,
           data.serviceType || null,
@@ -242,17 +294,23 @@ export class ListingService {
   ): Promise<ListingWithRelations> {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
-    if (!['ADMIN', 'admin', 'moderator', 'staff'].includes(role) && current.providerId !== userId)
+    if (
+      !['ADMIN', 'admin', 'moderator', 'staff'].includes(role) &&
+      current.providerId !== userId
+    )
       throw new AppError(403, 'You cannot update this listing');
     const columns: Record<string, unknown> = {
       category_id: data.categoryId,
       location_id: data.locationId,
-      title: data.title,
-      description: data.description,
+      title:
+        data.title === undefined
+          ? undefined
+          : sanitizeRequiredText(data.title, 'title'),
+      description: sanitizeOptionalText(data.description),
       base_price: data.basePrice,
-      pricing_unit: data.pricingUnit,
-      contact_name: data.contactName,
-      contact_phone: data.contactPhone,
+      pricing_unit: sanitizeOptionalText(data.pricingUnit),
+      contact_name: sanitizeOptionalText(data.contactName),
+      contact_phone: sanitizeOptionalText(data.contactPhone),
       contact_email: data.contactEmail,
       cover_image_url: data.coverImageUrl,
       service_type: data.serviceType,
@@ -289,7 +347,10 @@ export class ListingService {
           );
       }
       if (data.categoryIds) {
-        await client.query('DELETE FROM listing_categories WHERE listing_id = $1', [listingId]);
+        await client.query(
+          'DELETE FROM listing_categories WHERE listing_id = $1',
+          [listingId],
+        );
         for (const categoryId of data.categoryIds)
           await client.query(
             'INSERT INTO listing_categories (listing_id, category_id) VALUES ($1,$2)',
@@ -314,7 +375,13 @@ export class ListingService {
       if (!updated.rows[0]) throw new AppError(404, 'Listing not found');
       await client.query(
         'INSERT INTO audit_logs (actor_id, action, entity_type, entity_id, reason) VALUES ($1, $2, $3, $4, $5)',
-        [actorId, `status:${status}`, 'listing', listingId, reason || null],
+        [
+          actorId,
+          `status:${status}`,
+          'listing',
+          listingId,
+          sanitizeOptionalText(reason) || null,
+        ],
       );
       return updated.rows[0];
     });
@@ -323,7 +390,10 @@ export class ListingService {
   static async delete(listingId: number, userId: number, role: string) {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
-    if (!['ADMIN', 'admin', 'moderator', 'staff'].includes(role) && current.providerId !== userId)
+    if (
+      !['ADMIN', 'admin', 'moderator', 'staff'].includes(role) &&
+      current.providerId !== userId
+    )
       throw new AppError(403, 'You cannot delete this listing');
     await transaction(async (client) => {
       await client.query(

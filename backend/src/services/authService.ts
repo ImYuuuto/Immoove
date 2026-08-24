@@ -6,6 +6,7 @@ import {
 } from 'node:crypto';
 import { query } from '../config/db';
 import { AppError } from '../utils/errorHandler';
+import { sanitizeOptionalText, sanitizeRequiredText } from '../utils/sanitize';
 
 const scrypt = promisify(scryptCallback);
 const KEY_LENGTH = 64;
@@ -43,15 +44,18 @@ export class AuthService {
     phone?: string;
   }) {
     const passwordHash = await hashPassword(data.password);
+    const firstName = sanitizeRequiredText(data.first_name, 'first_name');
+    const lastName = sanitizeRequiredText(data.last_name, 'last_name');
+    const phone = sanitizeOptionalText(data.phone);
     try {
       const result = await query<any>(
         'INSERT INTO users (first_name, last_name, email, password_hash, phone, role) VALUES ($1,$2,$3,$4,$5,$6) RETURNING user_id, first_name, last_name, email, phone, role, session_version',
         [
-          data.first_name,
-          data.last_name,
+          firstName,
+          lastName,
           data.email,
           passwordHash,
-          data.phone || null,
+          phone || null,
           'CLIENT',
         ],
       );

@@ -1,5 +1,15 @@
 import { query, transaction } from '../config/db';
 import { AppError } from '../utils/errorHandler';
+
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function billableUnits(startDate: string | Date, endDate: string | Date) {
+  return Math.ceil(
+    (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+      MILLISECONDS_PER_DAY,
+  );
+}
+
 export class BookingService {
   private static map(row: any) {
     return {
@@ -33,7 +43,6 @@ export class BookingService {
     userId: number;
     startDate: string | Date;
     endDate: string | Date;
-    total: number;
   }) {
     if (new Date(data.endDate) <= new Date(data.startDate))
       throw new AppError(400, 'endDate must be after startDate');
@@ -54,9 +63,10 @@ export class BookingService {
       );
       if (conflict.rowCount)
         throw new AppError(409, 'Listing is already booked for these dates');
+      const units = billableUnits(data.startDate, data.endDate);
       const result = await client.query<any>(
-        'INSERT INTO bookings (listing_id, user_id, start_date, end_date, total) VALUES ($1,$2,$3,$4,$5) RETURNING booking_id, listing_id, user_id, start_date, end_date, total, created_at',
-        [data.listingId, data.userId, data.startDate, data.endDate, data.total],
+        'INSERT INTO bookings (listing_id, user_id, start_date, end_date, total) VALUES ($1,$2,$3,$4,(SELECT base_price * $5 FROM listings WHERE listing_id = $1)) RETURNING booking_id, listing_id, user_id, start_date, end_date, total, created_at',
+        [data.listingId, data.userId, data.startDate, data.endDate, units],
       );
       if (!result.rows[0])
         throw new AppError(500, 'Booking could not be created');
@@ -67,7 +77,12 @@ export class BookingService {
 
   static async update(
     bookingId: number,
-    data: Partial<{ listingId: number; userId: number; startDate: Date; endDate: Date; total: number }>,
+    data: Partial<{
+      listingId: number;
+      userId: number;
+      startDate: Date;
+      endDate: Date;
+    }>,
   ) {
     return transaction(async (client) => {
       const currentResult = await client.query<any>(
@@ -80,11 +95,13 @@ export class BookingService {
       const userId = data.userId ?? current.user_id;
       const startDate = data.startDate ?? current.start_date;
       const endDate = data.endDate ?? current.end_date;
-      const total = data.total ?? Number(current.total);
       if (new Date(endDate) <= new Date(startDate))
         throw new AppError(400, 'endDate must be after startDate');
-      const listing = await client.query<{ status: string; is_active: boolean }>(
-        'SELECT status, is_active FROM listings WHERE listing_id = $1',
+      const listing = await client.query<{
+        status: string;
+        is_active: boolean;
+      }>(
+        'SELECT status, is_active FROM listings WHERE listing_id = $1 FOR UPDATE',
         [listingId],
       );
       if (!listing.rows[0]) throw new AppError(404, 'Listing not found');
@@ -94,17 +111,22 @@ export class BookingService {
         'SELECT 1 FROM bookings WHERE listing_id = $1 AND booking_id <> $2 AND start_date < $4 AND end_date > $3 LIMIT 1',
         [listingId, bookingId, startDate, endDate],
       );
-      if (conflict.rowCount) throw new AppError(409, 'Listing is already booked for these dates');
+      if (conflict.rowCount)
+        throw new AppError(409, 'Listing is already booked for these dates');
+      const units = billableUnits(startDate, endDate);
       const result = await client.query<any>(
-        'UPDATE bookings SET listing_id = $1, user_id = $2, start_date = $3, end_date = $4, total = $5 WHERE booking_id = $6 RETURNING booking_id, listing_id, user_id, start_date, end_date, total, created_at',
-        [listingId, userId, startDate, endDate, total, bookingId],
+        'UPDATE bookings SET listing_id = $1, user_id = $2, start_date = $3, end_date = $4, total = (SELECT base_price * $5 FROM listings WHERE listing_id = $1) WHERE booking_id = $6 RETURNING booking_id, listing_id, user_id, start_date, end_date, total, created_at',
+        [listingId, userId, startDate, endDate, units, bookingId],
       );
       return this.map(result.rows[0]);
     });
   }
 
   static async delete(bookingId: number) {
-    const result = await query('DELETE FROM bookings WHERE booking_id = $1 RETURNING booking_id', [bookingId]);
+    const result = await query(
+      'DELETE FROM bookings WHERE booking_id = $1 RETURNING booking_id',
+      [bookingId],
+    );
     if (!result.rowCount) throw new AppError(404, 'Booking not found');
   }
 }
