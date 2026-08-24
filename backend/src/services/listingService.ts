@@ -7,7 +7,11 @@ import {
 } from '../types/dto';
 import { AppError } from '../utils/errorHandler';
 import { parseNumeric } from '../utils/sqlHelpers';
-import { sanitizeOptionalText, sanitizeRequiredText } from '../utils/sanitize';
+import {
+  decodeStoredText,
+  sanitizeOptionalText,
+  sanitizeRequiredText,
+} from '../utils/sanitize';
 
 function mapListing(row: any): ListingWithRelations {
   return {
@@ -15,8 +19,10 @@ function mapListing(row: any): ListingWithRelations {
     providerId: row.provider_id,
     categoryId: row.category_id,
     locationId: row.location_id,
-    title: row.title,
-    description: row.description,
+    title: decodeStoredText(row.title),
+    description: row.description
+      ? decodeStoredText(row.description)
+      : row.description,
     basePrice: parseNumeric(row.base_price) || 0,
     pricingUnit: row.pricing_unit,
     contactName: row.contact_name,
@@ -109,6 +115,27 @@ async function hydrate(
 }
 
 export class ListingService {
+  static async findMine(userId: number) {
+    const result = await query<any>(
+      'SELECT listing_id, provider_id, title, description, base_price, guest_capacity, cover_image_url, service_type, status, created_at FROM listings WHERE provider_id = $1 ORDER BY created_at DESC',
+      [userId],
+    );
+    return result.rows.map((row) => ({
+      listingId: row.listing_id,
+      providerId: row.provider_id,
+      title: decodeStoredText(row.title),
+      description: row.description
+        ? decodeStoredText(row.description)
+        : row.description,
+      basePrice: parseNumeric(row.base_price) || 0,
+      guestCapacity: row.guest_capacity,
+      coverImageUrl: row.cover_image_url,
+      serviceType: row.service_type,
+      status: row.status,
+      createdAt: row.created_at,
+    }));
+  }
+
   static async findAll(filters: GetListingsParams) {
     const clauses: string[] = [];
     const params: unknown[] = [];
@@ -294,10 +321,8 @@ export class ListingService {
   ): Promise<ListingWithRelations> {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
-    if (
-      !['ADMIN', 'admin', 'moderator', 'staff'].includes(role) &&
-      current.providerId !== userId
-    )
+    const staff = ['ADMIN', 'admin', 'moderator', 'staff'].includes(role);
+    if (!staff && current.providerId !== userId)
       throw new AppError(403, 'You cannot update this listing');
     const columns: Record<string, unknown> = {
       category_id: data.categoryId,
@@ -315,6 +340,8 @@ export class ListingService {
       cover_image_url: data.coverImageUrl,
       service_type: data.serviceType,
       guest_capacity: data.guestCapacity,
+      status: staff ? undefined : 'pending',
+      is_active: staff ? undefined : false,
     };
     await transaction(async (client) => {
       const entries = Object.entries(columns).filter(

@@ -7,10 +7,11 @@ import { AdminSidebar } from './components/AdminSidebar';
 import { AnnouncementsView, BookingsView, ListingsView, OverviewView, UsersView } from './components/AdminViews';
 import { useAdminData } from './hooks/useAdminData';
 import type { View } from './types';
-
-const titles: Record<View, string> = { overview: 'Vue d’ensemble', listings: 'Annonces', announcements: 'Demandes de publication', bookings: 'Réservations', users: 'Utilisateurs' };
+import { useAdminCopy } from './adminI18n';
 
 export default function AdminDashboard() {
+  const copy = useAdminCopy();
+  const titles: Record<View, string> = { overview: copy.overview, listings: copy.listings, announcements: copy.publicationRequests, bookings: copy.bookings, users: copy.users };
   const [view, setView] = useState<View>('overview');
   const [mobileNav, setMobileNav] = useState(false);
   const { user, users, userPagination, listings, announcements, bookings, error, loading, load, runAction, searchUsers, clearError } = useAdminData();
@@ -27,14 +28,14 @@ export default function AdminDashboard() {
   const deleteBooking = (id: number) => runAction(() => api(`/bookings/${id}`, { method: 'DELETE' }));
   const logout = async () => { await api('/auth/logout', { method: 'POST' }).catch(() => undefined); window.location.assign('/'); };
 
-  if (loading) return <div className="admin-loading">Chargement de votre espace sécurisé...</div>;
-  if (error && !user) return <div className="admin-denied"><ShieldAlert size={42} /><h1>Accès refusé</h1><p>{error}</p><a href="/">Retour à l’accueil</a></div>;
+  if (loading) return <div className="admin-loading">{copy.loading}</div>;
+  if (error && !user) return <div className="admin-denied"><ShieldAlert size={42} /><h1>{copy.denied}</h1><p>{error}</p><a href="/">{copy.backHome}</a></div>;
 
   return <div className="admin-shell">
     <AdminSidebar view={view} setView={setView} pendingListings={pendingListings} pendingAnnouncements={pendingAnnouncements} open={mobileNav} onNavigate={() => setMobileNav(false)} onLogout={logout} />
-    <button className="admin-menu" onClick={() => setMobileNav((open) => !open)} aria-label="Menu administrateur"><Menu /></button>
+    <button className="admin-menu" onClick={() => setMobileNav((open) => !open)} aria-label={copy.menu}><Menu /></button>
     <main className="admin-main">
-      <header className="admin-header"><div><small>BOUZID ESCAPES / ADMIN</small><h1>{titles[view]}</h1></div><div className="admin-user"><span>{user?.role}</span><b>Admin #{user?.userId}</b></div></header>
+      <header className="admin-header"><div><small>BOUZID ESCAPES / ADMIN</small><h1>{titles[view]}</h1></div><div className="admin-user"><span>{user?.role}</span><b>{copy.admin} #{user?.userId}</b></div></header>
       {error && <div className="admin-error">{error}<button onClick={() => clearError()}><X size={15} /></button></div>}
       {view === 'overview' && <OverviewView listings={listings} announcements={announcements} bookings={bookings} onView={setView} />}
       {view === 'listings' && <ListingsView listings={listings} onStatus={updateListing} onUpdate={editListing} onDelete={deleteListing} onRefresh={() => void load()} />}

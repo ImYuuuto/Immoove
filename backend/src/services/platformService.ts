@@ -1,6 +1,7 @@
 import { query, transaction } from '../config/db';
 import { AppError } from '../utils/errorHandler';
 import { sanitizeOptionalText, sanitizeRequiredText } from '../utils/sanitize';
+import { ListingService } from './listingService';
 
 export class PlatformService {
   static async listAnnouncements() {
@@ -108,10 +109,15 @@ export class PlatformService {
     });
   }
   static async getFavorites(userId: number) {
-    const result = await query<any>(
-      'SELECT l.* FROM favorites f JOIN listings l ON l.listing_id = f.listing_id WHERE f.user_id = $1 AND l.status = \'approved\' AND l.is_active = true ORDER BY f.created_at DESC',
+    const result = await query<{ listing_id: number }>(
+      'SELECT l.listing_id FROM favorites f JOIN listings l ON l.listing_id = f.listing_id WHERE f.user_id = $1 AND l.status = \'approved\' AND l.is_active = true ORDER BY f.created_at DESC',
       [userId],
     );
-    return result.rows;
+    const listings = await Promise.all(
+      result.rows.map((row) =>
+        ListingService.findById(row.listing_id, { publicOnly: true }),
+      ),
+    );
+    return listings.filter((listing) => listing !== null);
   }
 }

@@ -7,5 +7,5 @@ export type Announcement = { service_type: ServiceType; title: string; descripti
 export type ListingSubmission = { categoryId: number; locationId?: number; title: string; description?: string; basePrice: number; pricingUnit?: string; contactName?: string; contactPhone?: string; contactEmail?: string; coverImageUrl?: string; serviceType?: ServiceType; guestCapacity?: number };
 export type BookingDraft = { listingId: number; startDate: string; endDate: string };
 export type BookingRecord = BookingDraft & { bookingId: number; userId: number; total: number };
-export type AuthUser = { userId: number; role: string; email?: string };
+export type AuthUser = { userId: number; role: string; email?: string; firstName?: string; lastName?: string; avatarUrl?: string | null };
 export type Language = 'fr' | 'ar' | 'en';

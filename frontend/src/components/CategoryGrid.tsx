@@ -1,28 +1,30 @@
 import { images } from '../data/content';
 import Heading from './Heading';
+import { useLanguage } from '../i18n/language';
 
 export default function CategoryGrid({
   onAnnouncement,
 }: {
   onAnnouncement: () => void;
 }) {
+  const { text } = useLanguage();
   const cards = [
     {
       className: 'large',
       image: images.stay,
-      number: '01 / STAY', icon: '🏡', title: 'Villas', text: 'Des maisons choisies pour les jours qui durent.',
+      number: '01 / STAY', icon: '🏡', title: text.villas, text: text.villasText,
     },
 
     {
       image: images.explore,
-      number: '02 / EXPLORE', icon: '🌊', title: 'Activities', text: 'Des expériences au rythme de la côte.',
+      number: '02 / EXPLORE', icon: '🌊', title: text.activities, text: text.activitiesText,
     },
 
     {
       image: images.food,
-      number: '03 / TASTE', icon: '🍽', title: 'Restaurants', text: 'De belles tables, sans se presser.',
+      number: '03 / TASTE', icon: '🍽', title: text.restaurants, text: text.restaurantsText,
     },
-    { image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85', number: '04 / SWIM', icon: '🏖', title: 'Beach', text: 'L’océan du matin au soir.' },
+    { image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85', number: '04 / SWIM', icon: '🏖', title: text.beach, text: text.beachText },
   ];
 
   return (
@@ -31,12 +33,12 @@ export default function CategoryGrid({
       id="categories"
     >
       <Heading
-        eyebrow="Tout commence ici"
+        eyebrow={text.categoriesEyebrow}
         title={
           <>
-            Une belle raison
+            {text.categoriesLine1}
             <br />
-            de rester<span>.</span>
+            {text.categoriesLine2}<span>.</span>
           </>
         }
       />
@@ -74,7 +76,7 @@ export default function CategoryGrid({
         ))}
 
       </div>
-      <button className="discover-host-link" onClick={onAnnouncement}>Vous avez une belle adresse ? Partagez-la avec nous →</button>
+      <button className="discover-host-link" onClick={onAnnouncement}>{text.shareAddress}</button>
     </section>
   );
 }

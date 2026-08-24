@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react';
 import { ArrowUpRight, X } from 'lucide-react';
 import type { AuthUser } from '../types';
 import { request } from '../utils/request';
+import { useLanguage } from '../i18n/language';
 
 export default function AuthModal({
   onClose,
@@ -12,6 +13,7 @@ export default function AuthModal({
   onMessage: (message: string) => void;
   onAuthenticated: (user: AuthUser) => void;
 }) {
+  const { text } = useLanguage();
   const [registerMode, setRegisterMode] =
     useState(false);
 
@@ -63,8 +65,8 @@ export default function AuthModal({
 
       onMessage(
         registerMode
-          ? 'Votre compte a été créé.'
-          : 'Connexion réussie.',
+          ? text.accountCreated
+          : text.loginSuccess,
       );
 
       onClose();
@@ -72,7 +74,7 @@ export default function AuthModal({
       onMessage(
         error instanceof Error
           ? error.message
-          : 'Connexion impossible.',
+          : text.loginFailed,
       );
     }
   };
@@ -93,33 +95,33 @@ export default function AuthModal({
           type="button"
           className="modal-close"
           onClick={onClose}
-          aria-label="Fermer"
+          aria-label={text.close}
         >
           <X />
         </button>
 
         <small className="eyebrow">
-          BOUZID ESCAPES
+          {text.authEyebrow}
         </small>
 
         <h2>
           {registerMode
-            ? 'Créer un compte'
-            : 'Bienvenue à nouveau'}
+            ? text.registerTitle
+            : text.loginTitle}
         </h2>
 
         <p>
           {registerMode
-            ? 'Rejoignez la communauté Bouzid.'
-            : 'Connectez-vous pour enregistrer vos adresses favorites.'}
+            ? text.registerText
+            : text.loginText}
         </p>
 
         {registerMode && (
           <div className="auth-names">
             <input
               required
-              aria-label="Prénom"
-              placeholder="Prénom"
+              aria-label={text.firstName}
+              placeholder={text.firstName}
               value={form.first_name}
               onChange={(event) =>
                 update(
@@ -131,8 +133,8 @@ export default function AuthModal({
 
             <input
               required
-              aria-label="Nom"
-              placeholder="Nom"
+              aria-label={text.lastName}
+              placeholder={text.lastName}
               value={form.last_name}
               onChange={(event) =>
                 update(
@@ -146,9 +148,9 @@ export default function AuthModal({
 
         <input
           required
-          aria-label="Adresse e-mail"
+          aria-label={text.email}
           type="email"
-          placeholder="Adresse e-mail"
+          placeholder={text.email}
           value={form.email}
           onChange={(event) =>
             update(
@@ -163,7 +165,7 @@ export default function AuthModal({
           aria-label="Mot de passe"
           minLength={12}
           type="password"
-          placeholder="Mot de passe (12 caractères minimum)"
+          placeholder={text.password}
           value={form.password}
           onChange={(event) =>
             update(
@@ -178,8 +180,8 @@ export default function AuthModal({
           type="submit"
         >
           {registerMode
-            ? 'Créer mon compte'
-            : 'Se connecter'}
+            ? text.register
+            : text.login}
 
           <ArrowUpRight size={17} />
         </button>
@@ -192,8 +194,8 @@ export default function AuthModal({
           }
         >
           {registerMode
-            ? 'J’ai déjà un compte'
-            : 'Créer un compte'}
+            ? text.switchLogin
+            : text.switchRegister}
         </button>
       </form>
     </div>

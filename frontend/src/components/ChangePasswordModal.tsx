@@ -1,8 +1,10 @@
 import { type FormEvent, useState } from 'react';
 import { KeyRound, X } from 'lucide-react';
 import { ApiError, redirectToLogin, request } from '../utils/request';
+import { useLanguage } from '../i18n/language';
 
 export default function ChangePasswordModal({ onClose, onMessage }: { onClose: () => void; onMessage: (message: string) => void }) {
+  const { text } = useLanguage();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -11,7 +13,7 @@ export default function ChangePasswordModal({ onClose, onMessage }: { onClose: (
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (newPassword !== confirmPassword) { onMessage('Les nouveaux mots de passe ne correspondent pas.'); return; }
+    if (newPassword !== confirmPassword) { onMessage(text.passwordMismatch); return; }
     setSubmitting(true);
     setCooldownMessage('');
     try {
@@ -24,10 +26,10 @@ export default function ChangePasswordModal({ onClose, onMessage }: { onClose: (
         setSubmitting(false);
         return;
       }
-      onMessage(error instanceof Error ? error.message : 'Impossible de modifier le mot de passe.');
+      onMessage(error instanceof Error ? error.message : text.passwordFailed);
       setSubmitting(false);
     }
   };
 
-  return <div className="modal-backdrop" onMouseDown={onClose}><form className="modal auth-modal" onSubmit={submit} onMouseDown={(event) => event.stopPropagation()}><button type="button" className="modal-close" onClick={onClose} aria-label="Fermer"><X /></button><small className="eyebrow">SÉCURITÉ DU COMPTE</small><h2>Modifier le mot de passe</h2><p>Vous devrez vous reconnecter sur tous vos appareils.</p>{cooldownMessage && <div className="auth-error" role="alert">{cooldownMessage}</div>}<input required type="password" autoComplete="current-password" placeholder="Mot de passe actuel" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} /><input required type="password" minLength={12} autoComplete="new-password" placeholder="Nouveau mot de passe" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /><input required type="password" minLength={12} autoComplete="new-password" placeholder="Confirmer le nouveau mot de passe" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /><button className="light-button" type="submit" disabled={submitting}><KeyRound size={17} />{submitting ? 'Modification…' : 'Modifier le mot de passe'}</button></form></div>;
+  return <div className="modal-backdrop" onMouseDown={onClose}><form className="modal auth-modal" onSubmit={submit} onMouseDown={(event) => event.stopPropagation()}><button type="button" className="modal-close" onClick={onClose} aria-label={text.close}><X /></button><small className="eyebrow">{text.security}</small><h2>{text.changePassword}</h2><p>{text.reconnectAll}</p>{cooldownMessage && <div className="auth-error" role="alert">{cooldownMessage}</div>}<input required type="password" autoComplete="current-password" placeholder={text.currentPassword} value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} /><input required type="password" minLength={12} autoComplete="new-password" placeholder={text.newPassword} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /><input required type="password" minLength={12} autoComplete="new-password" placeholder={text.confirmPassword} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /><button className="light-button" type="submit" disabled={submitting}><KeyRound size={17} />{submitting ? text.changing : text.changePassword}</button></form></div>;
 }

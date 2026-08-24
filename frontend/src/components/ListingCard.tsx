@@ -2,6 +2,7 @@ import { Heart, Star } from 'lucide-react';
 import { fallbackListings } from '../data/content';
 import type { Listing } from '../types';
 import { decodeText } from '../utils/decodeText';
+import { useLanguage } from '../i18n/language';
 
 export default function ListingCard({
   listing,
@@ -12,6 +13,7 @@ export default function ListingCard({
   onFavorite: (id?: number) => void;
   onBook: (listing: Listing) => void;
 }) {
+  const { language, text } = useLanguage();
   const image =
     listing.coverImageUrl ||
     listing.images?.[0]?.url ||
@@ -27,10 +29,10 @@ export default function ListingCard({
           src={image}
           alt={decodeText(listing.title)}
         />
-        <span className="listing-view">View stay →</span>
+        <span className="listing-view">{text.viewStay}</span>
 
         <span>
-          SÉLECTION
+          {text.selection}
         </span>
 
         <button
@@ -39,7 +41,7 @@ export default function ListingCard({
               listing.listingId,
             )
           }
-          aria-label="Ajouter aux favoris"
+          aria-label={text.addFavorite}
         >
           <Heart size={18} />
         </button>
@@ -53,13 +55,13 @@ export default function ListingCard({
               size={13}
               fill="currentColor"
             />
-            5.00 · Excellent
+            5.00 · {text.excellent}
           </span>
 
           <span>
             {listing.guestCapacity ||
               4}{' '}
-            voyageurs
+            {text.guestsPlural}
           </span>
         </div>
 
@@ -69,21 +71,20 @@ export default function ListingCard({
 
         <p>
           {decodeText(listing.description) ||
-            'Une adresse choisie pour vos vacances.'}
+            text.listingFallback}
         </p>
 
         <b>
-          À partir de{' '}
+          {text.from}{' '}
           {Number(
             listing.basePrice || 0,
           ).toLocaleString(
-            'fr-FR',
+            language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-GB' : 'fr-FR',
           )}{' '}
           MAD
 
           <i>
-            {' '}
-            / nuit
+            {' '}/ {text.night}
           </i>
         </b>
 
@@ -93,7 +94,7 @@ export default function ListingCard({
           disabled={!listing.listingId}
           onClick={() => onBook(listing)}
         >
-          Réserver
+          {text.book}
         </button>
       </div>
     </article>

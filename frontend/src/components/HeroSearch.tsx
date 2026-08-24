@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import type { SearchFilters, ServiceType } from '../types';
+import { useLanguage } from '../i18n/language';
 
 export default function HeroSearch({
   onSearch,
@@ -9,6 +10,7 @@ export default function HeroSearch({
     filters: SearchFilters,
   ) => void;
 }) {
+  const { text } = useLanguage();
   const [filters, setFilters] =
     useState<SearchFilters>({});
 
@@ -32,12 +34,12 @@ export default function HeroSearch({
     >
       <label>
         <small>
-          DATES DU SÉJOUR
+          {text.dates}
         </small>
 
         <input
           type="date"
-          aria-label="Date d’arrivée"
+          aria-label={text.arrivalDate}
           onChange={(e) =>
             update(
               'check_in',
@@ -49,7 +51,7 @@ export default function HeroSearch({
 
       <label>
         <small>
-          VOYAGEURS
+          {text.guests}
         </small>
 
         <select
@@ -62,30 +64,30 @@ export default function HeroSearch({
           }
         >
           <option value="">
-            Ajouter des voyageurs
+            {text.addGuests}
           </option>
 
           <option value="1">
-            1 voyageur
+            1 {text.guest}
           </option>
 
           <option value="2">
-            2 voyageurs
+            2 {text.guestsPlural}
           </option>
 
           <option value="4">
-            4 voyageurs
+            4 {text.guestsPlural}
           </option>
 
           <option value="6">
-            6 voyageurs
+            6 {text.guestsPlural}
           </option>
         </select>
       </label>
 
       <label>
         <small>
-          SERVICE
+          {text.service}
         </small>
 
         <select
@@ -100,24 +102,24 @@ export default function HeroSearch({
           }
         >
           <option value="">
-            Tous les services
+            {text.allServices}
           </option>
 
           <option value="VACATION_RENTAL">
-            Locations de vacances
+            {text.stay}
           </option>
 
           <option value="RESTAURANT_CAFE">
-            Restaurants & Cafés
+            {text.dining}
           </option>
 
           <option value="ACTIVITY">
-            Activités & Loisirs
+            {text.explore}
           </option>
         </select>
       </label>
 
-      <button aria-label="Rechercher">
+      <button aria-label={text.search}>
         <Search size={23} />
       </button>
     </form>

@@ -38,4 +38,6 @@ Booking creation and update requests never accept a `total`. The server locks th
 
 User-controlled plain-text fields are sanitized at the service boundary before database writes. Unsafe HTML tags and attributes are stripped, dangerous script/style content is discarded, and remaining HTML-sensitive entities are encoded. SQL values continue to use PostgreSQL parameters rather than string escaping. Passwords, validated emails, validated URLs, enums, and search-only values are not passed through the HTML sanitizer.
 
+Authenticated profile endpoints are `GET`, `PATCH`, and `DELETE /api/v1/profile`. Profile updates accept `{ "firstName": string, "lastName": string }`. Profile deletion is transactional, clears authentication cookies, and cascades through user-owned listings, bookings, reviews, favorites, announcements, blog posts, and listing dependencies; retained audit/reviewer references are set to null. `GET /api/v1/listings/mine` returns every listing owned by the authenticated user. Regular-owner listing edits reset the listing to `pending` and inactive until staff approves it again. Favorite listing responses use the same camelCase mapping as the listing API.
+
 Development admin sample: `amina@example.com` / `BouzidAdmin2026!`. Change or remove this credential before using a non-development environment.

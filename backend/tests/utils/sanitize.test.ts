@@ -3,6 +3,7 @@ import {
   sanitizeOptionalText,
   sanitizeRequiredText,
   sanitizeText,
+  decodeStoredText,
 } from '../../src/utils/sanitize';
 
 describe('stored text sanitization', () => {
@@ -28,5 +29,11 @@ describe('stored text sanitization', () => {
 
   test('preserves missing optional values', () => {
     expect(sanitizeOptionalText()).toBeUndefined();
+  });
+
+  test('decodes stored entities for ordinary API text responses', () => {
+    expect(decodeStoredText('Fish &amp; chips &gt; everything')).toBe(
+      'Fish & chips > everything',
+    );
   });
 });

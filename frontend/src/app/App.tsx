@@ -14,8 +14,10 @@ import { fallbackListings, fallbackPosts, images } from '../data/content';
 import type { Listing, Post, SearchFilters } from '../types';
 import { request } from '../utils/request';
 import { decodeText } from '../utils/decodeText';
+import { formatTranslation, useLanguage } from '../i18n/language';
 
 export default function App() {
+  const { text } = useLanguage();
   const [open, setOpen] =
     useState(false);
 
@@ -88,13 +90,13 @@ export default function App() {
       setListings(result.items);
 
       notify(
-        `${result.items.length} adresse(s) trouvée(s).`,
+        formatTranslation(text.searchFound, { count: result.items.length }),
       );
     } catch (error) {
       notify(
         error instanceof Error
           ? error.message
-          : 'Recherche indisponible.',
+          : text.searchUnavailable,
       );
     }
 
@@ -110,7 +112,7 @@ export default function App() {
   ) => {
     if (!id) {
       return notify(
-        'Cette adresse de démonstration n’est pas encore enregistrée.',
+        text.demoFavorite,
       );
     }
 
@@ -131,13 +133,13 @@ export default function App() {
       );
 
       notify(
-        'Favori mis à jour.',
+        text.favoriteUpdated,
       );
     } catch (error) {
       notify(
         error instanceof Error
           ? error.message
-          : 'Connectez-vous pour enregistrer cette adresse.',
+          : text.favoriteLogin,
       );
     }
   };
@@ -177,31 +179,30 @@ export default function App() {
 
   <div className="hero-copy">
     <small className="eyebrow">
-      L’ESCALE SOLAIRE DE LA CÔTE MAROCAINE
+      {text.eyebrow}
     </small>
 
     <h1>
-      Là où l’été
+      {text.heroLine1}
       <br />
-      <em>vous attend.</em>
+      <em>{text.heroLine2}</em>
     </h1>
 
     <p>
-      Entre ciel, sable et océan, trouvez votre prochain
-      séjour d’exception à Sidi Bouzid.
+      {text.heroText}
     </p>
 
     <a className="light-button" href="#escapes">
-      Préparer mon séjour
+      {text.prepare}
       <ArrowUpRight size={18} />
     </a>
   </div>
 
   <HeroSearch onSearch={search} />
-  <a className="scroll-indicator" href="#categories">SCROLL TO EXPLORE <ArrowDown size={14} /></a>
+  <a className="scroll-indicator" href="#categories">{text.scroll} <ArrowDown size={14} /></a>
 </section>
 
-        <section className="premium-stats"><article><strong>120<span>+</span></strong><p>Beautiful<br />addresses</p></article><article><strong>35<span>+</span></strong><p>Local<br />experiences</p></article><article><strong>4.9<small>/5</small></strong><p>Guest<br />rating</p></article></section>
+        <section className="premium-stats"><article><strong>120<span>+</span></strong><p>{text.statsAddresses}</p></article><article><strong>35<span>+</span></strong><p>{text.statsExperiences}</p></article><article><strong>4.9<small>/5</small></strong><p>{text.statsRating}</p></article></section>
 
         {/* CATEGORIES */}
 
@@ -220,19 +221,19 @@ export default function App() {
           <div className="heading-row">
 
             <Heading
-              eyebrow="Sélection Bouzid"
+              eyebrow={text.selected}
               title={
                 <>
-                  Évasions sélectionnées
+                  {text.escapesLine1}
                   <br />
-                  pour vous
+                  {text.escapesLine2}
                   <span>.</span>
                 </>
               }
             />
 
             <a href="#categories">
-              Voir toutes les adresses
+              {text.allAddresses}
               <ArrowUpRight size={16} />
             </a>
           </div>
@@ -275,19 +276,19 @@ export default function App() {
           <div className="heading-row">
 
             <Heading
-              eyebrow="Le petit journal"
+              eyebrow={text.journal}
               title={
                 <>
-                  Inspiration & conseils
+                  {text.inspirationLine1}
                   <br />
-                  de voyage
+                  {text.inspirationLine2}
                   <span>.</span>
                 </>
               }
             />
 
             <a href="#story">
-              Tous les articles
+              {text.allArticles}
               <ArrowUpRight size={16} />
             </a>
           </div>
@@ -314,7 +315,7 @@ export default function App() {
 
                   <small>
                     {decodeText(post.category) ||
-                      'IDÉES & INSPIRATION'}
+                      text.ideas}
                   </small>
 
                   <h3>
@@ -326,7 +327,7 @@ export default function App() {
                   </p>
 
                   <a href="#story">
-                    Continuer la lecture
+                    {text.read}
                     <ArrowUpRight size={14} />
                   </a>
                 </article>
@@ -342,22 +343,22 @@ export default function App() {
         >
           <img
             src="https://images.unsplash.com/photo-1470214304380-aadaedcfff1b?auto=format&fit=crop&w=2000&q=85"
-            alt="Paysage côtier"
+            alt={text.coastalLandscape}
           />
 
           <div>
 
             <small className="eyebrow">
-              POUR LES BELLES ADRESSES
+              {text.hosts}
             </small>
 
             <h2>
-              Et si votre adresse devenait leur prochaine destination de rêve
+              {text.hostTitle}
               <span>?</span>
             </h2>
 
             <p>
-              Rejoignez une communauté qui aime découvrir, séjourner et partager local.
+              {text.hostText}
             </p>
 
             <button
@@ -366,7 +367,7 @@ export default function App() {
                 setModal(true)
               }
             >
-              Ajouter mon adresse
+              {text.addAddress}
               <ArrowUpRight size={18} />
             </button>
 
@@ -382,24 +383,24 @@ export default function App() {
         <div className="footer-main">
           <div className="footer-intro">
             <a className="brand" href="#top"><b>B</b> bouzid<span>.</span></a>
-            <p>Des séjours qui ont le goût du soleil, pensés avec soin depuis la côte marocaine.</p>
+            <p>{text.footerText}</p>
           </div>
           <nav aria-label="Footer navigation">
-            <small>EXPLORER</small>
-            <a href="#categories">Séjours</a>
-            <a href="#escapes">Nos adresses</a>
-            <a href="#story">Le journal</a>
+            <small>{text.exploreFooter}</small>
+            <a href="#categories">{text.stays}</a>
+            <a href="#escapes">{text.ourAddresses}</a>
+            <a href="#story">{text.journal}</a>
           </nav>
           <div className="footer-location">
-            <small>NOUS TROUVER</small>
+            <small>{text.findUs}</small>
             <p>Sidi Bouzid<br />El Jadida, Maroc</p>
-            <a href="#host">Proposer mon adresse →</a>
+            <a href="#host">{text.proposeAddress}</a>
           </div>
         </div>
         <div className="footer-bottom">
           <span>© 2026 Bouzid Escapes</span>
-          <span>Mentions légales &amp; CGU</span>
-          <span>Made with care in Sidi Bouzid</span>
+          <span>{text.legal}</span>
+          <span>{text.madeWithCare}</span>
         </div>
       </footer>
 

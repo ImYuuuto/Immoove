@@ -4,6 +4,7 @@ import { auth, requireAuth, requireStaff } from '../middleware/auth';
 const router = Router();
 router.use(auth);
 router.get('/', controller.list);
+router.get('/mine', requireAuth, controller.mine);
 router.get('/:id', controller.get);
 router.post('/', requireAuth, controller.create);
 router.patch('/:id', requireAuth, controller.update);

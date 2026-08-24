@@ -41,4 +41,42 @@ describe('ListingService', () => {
     expect(mockedQuery.mock.calls[0][1]).toEqual([1, '%Stay%']);
     expect(mockedQuery.mock.calls[1][1]).toEqual([1, '%Stay%', 5, 5]);
   });
+
+  it('returns only current-user listings in camelCase without status filtering', async () => {
+    mockedQuery.mockResolvedValueOnce({
+      rows: [
+        {
+          listing_id: 10,
+          provider_id: 1,
+          title: 'Mine &amp; yours',
+          description: 'Description',
+          base_price: '500',
+          guest_capacity: 4,
+          cover_image_url: null,
+          service_type: 'VACATION_RENTAL',
+          status: 'rejected',
+          created_at: '2026-08-24T12:00:00.000Z',
+        },
+      ],
+    } as never);
+
+    const items = await ListingService.findMine(1);
+
+    expect(mockedQuery).toHaveBeenCalledWith(
+      expect.stringContaining('provider_id = $1'),
+      [1],
+    );
+    expect(items[0]).toEqual({
+      listingId: 10,
+      providerId: 1,
+      title: 'Mine & yours',
+      description: 'Description',
+      basePrice: 500,
+      guestCapacity: 4,
+      coverImageUrl: null,
+      serviceType: 'VACATION_RENTAL',
+      status: 'rejected',
+      createdAt: '2026-08-24T12:00:00.000Z',
+    });
+  });
 });

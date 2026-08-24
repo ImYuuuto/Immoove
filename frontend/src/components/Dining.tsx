@@ -1,7 +1,9 @@
 import { ArrowUpRight } from 'lucide-react';
 import Heading from './Heading';
+import { useLanguage } from '../i18n/language';
 
 export default function Dining() {
+  const { text } = useLanguage();
   const venues = [
     [
       'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1200&q=85',
@@ -29,19 +31,19 @@ export default function Dining() {
 
         <Heading
           light
-          eyebrow="À table"
+          eyebrow={text.atTable}
           title={
             <>
-              Nos tables
+              {text.tablesLine1}
               <br />
-              coup de cœur
+              {text.tablesLine2}
               <span>.</span>
             </>
           }
         />
 
         <p>
-          Une cuisine généreuse, des terrasses qui s’attardent et le goût des bons moments.
+          {text.diningText}
         </p>
       </div>
 
@@ -73,10 +75,9 @@ export default function Dining() {
         className="outline-button"
         href="#dining"
       >
-        Explorer davantage
+        {text.exploreMore}
         <ArrowUpRight size={17} />
       </a>
     </section>
   );
 }
-

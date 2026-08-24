@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, Menu, X } from 'lucide-react';
 import type { AuthUser, Language } from '../types';
 import { request } from '../utils/request';
-import { activeLanguage, applyAuthLanguage, applyLanguage, languageText } from '../i18n/language';
+import { useLanguage } from '../i18n/language';
 import AuthModal from './AuthModal';
-import ChangePasswordModal from './ChangePasswordModal';
 
 export default function Navbar({
   open,
@@ -15,10 +14,8 @@ export default function Navbar({
   setOpen: (value: boolean) => void;
   onAnnouncement: () => void;
 }) {
+  const { language, text, setLanguage } = useLanguage();
   const [authOpen, setAuthOpen] =
-    useState(false);
-
-  const [passwordOpen, setPasswordOpen] =
     useState(false);
 
   const [message, setMessage] =
@@ -37,15 +34,16 @@ export default function Navbar({
     request<{ user: AuthUser }>(
       '/auth/session',
     )
-      .then((result) =>
-        setUser(result.user),
-      )
+      .then(async (session) => {
+        const profile = await request<{ user: AuthUser }>('/profile').catch(() => null);
+        setUser(profile?.user || session.user);
+      })
       .catch(() => setUser(null))
       .finally(() => setAuthLoading(false));
   }, []);
 
   useEffect(() => {
-    const requireLogin = () => { setUser(null); setPasswordOpen(false); setAuthOpen(true); };
+    const requireLogin = () => { setUser(null); setAuthOpen(true); };
     window.addEventListener('auth:unauthorized', requireLogin);
     if (new URLSearchParams(window.location.search).get('login') === '1') setAuthOpen(true);
     return () => window.removeEventListener('auth:unauthorized', requireLogin);
@@ -54,29 +52,8 @@ export default function Navbar({
   const changeLanguage = (
     language: Language,
   ) => {
-    applyLanguage(language);
-    applyAuthLanguage(language);
+    setLanguage(language);
     setLanguageOpen(false);
-  };
-
-  const logout = async () => {
-    await request(
-      '/auth/logout',
-      {
-        method: 'POST',
-      },
-    ).catch(() => undefined);
-
-    setUser(null);
-
-    setMessage(
-      'Vous êtes déconnecté.',
-    );
-
-    window.setTimeout(
-      () => setMessage(''),
-      3500,
-    );
   };
 
   return (
@@ -107,7 +84,7 @@ export default function Navbar({
             setOpen(false)
           }
         >
-          {languageText().discover}
+          {text.discover}
         </a>
 
         <a
@@ -116,7 +93,7 @@ export default function Navbar({
             setOpen(false)
           }
         >
-          {languageText().about}
+          {text.about}
         </a>
 
         <button
@@ -125,11 +102,11 @@ export default function Navbar({
               onAnnouncement();
               return;
             }
-            setMessage('Connectez-vous pour publier une annonce.');
+            setMessage(text.loginRequiredPublish);
             setAuthOpen(true);
           }}
         >
-          {languageText().services}
+          {text.services}
         </button>
 
         {user &&
@@ -143,13 +120,13 @@ export default function Navbar({
                 setOpen(false)
               }
             >
-              Admin
+              {text.admin}
             </a>
           )}
 
         {user && (
           <a className="mobile-profile-link" href="/profile" onClick={() => setOpen(false)}>
-            Mon profil
+            {text.profile}
           </a>
         )}
       </nav>
@@ -180,7 +157,7 @@ export default function Navbar({
             aria-haspopup="menu"
           >
             <span>
-              {activeLanguage.toUpperCase()}
+              {language.toUpperCase()}
             </span>
 
             <ChevronDown
@@ -199,7 +176,7 @@ export default function Navbar({
                 type="button"
                 role="menuitem"
                 className={
-                  activeLanguage === 'fr'
+                  language === 'fr'
                     ? 'selected'
                     : ''
                 }
@@ -220,7 +197,7 @@ export default function Navbar({
                 type="button"
                 role="menuitem"
                 className={
-                  activeLanguage === 'en'
+                  language === 'en'
                     ? 'selected'
                     : ''
                 }
@@ -241,7 +218,7 @@ export default function Navbar({
                 type="button"
                 role="menuitem"
                 className={
-                  activeLanguage === 'ar'
+                  language === 'ar'
                     ? 'selected'
                     : ''
                 }
@@ -262,14 +239,20 @@ export default function Navbar({
           )}
         </div>
 
-        {/* LOGIN */}
+        {/* AUTH / PROFILE */}
 
         {authLoading ? (
-          <button className="login" type="button" disabled aria-label="Vérification de la session">
+          <button className="login" type="button" disabled aria-label={text.sessionCheck}>
             …
           </button>
         ) : user ? (
-          <div className="account-actions"><a className="account-security" href="/profile">Mon profil</a><button className="account-security" type="button" onClick={() => setPasswordOpen(true)}>Mot de passe</button><button className="login" data-auth-action="logout" onClick={logout}>Se déconnecter</button></div>
+          <a className="nav-profile-avatar" href="/profile" aria-label="Ouvrir mon profil">
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt="Photo de profil" />
+            ) : (
+              <span>{user.firstName?.trim().charAt(0).toUpperCase() || user.email?.trim().charAt(0).toUpperCase() || 'U'}</span>
+            )}
+          </a>
         ) : (
           <button
             className="login"
@@ -277,16 +260,9 @@ export default function Navbar({
             onClick={() => {
               setAuthOpen(true);
 
-              window.setTimeout(
-                () =>
-                  applyAuthLanguage(
-                    activeLanguage,
-                  ),
-                0,
-              );
             }}
           >
-            {languageText().login}
+            {text.login}
           </button>
         )}
 
@@ -329,16 +305,6 @@ export default function Navbar({
             setAuthLoading(false);
           }
           }
-        />
-      )}
-
-      {passwordOpen && (
-        <ChangePasswordModal
-          onClose={() => setPasswordOpen(false)}
-          onMessage={(text) => {
-            setMessage(text);
-            window.setTimeout(() => setMessage(''), 3500);
-          }}
         />
       )}
 

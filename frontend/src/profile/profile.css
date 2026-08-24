@@ -2,6 +2,7 @@
 .profile-topbar { height: 82px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(6,43,59,.1); }
 .profile-topbar .brand { color: var(--navy); }
 .profile-topbar > a:last-child { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700; }
+.profile-login { padding: 10px 17px; border: 1px solid var(--navy); border-radius: 999px; background: var(--navy); color: white; font-weight: 700; }
 .profile-hero { display: flex; align-items: center; gap: 24px; padding: 55px 0 38px; }
 .profile-avatar { width: 104px; height: 104px; flex: 0 0 auto; display: grid; place-items: center; overflow: hidden; border: 5px solid white; border-radius: 50%; background: linear-gradient(135deg, var(--coral), var(--navy)); color: white; box-shadow: var(--shadow-md); font: 600 34px 'Playfair Display', serif; }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }

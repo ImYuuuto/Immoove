@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import type { BookingRecord } from '../types';
 import { request } from '../utils/request';
+import { useLanguage } from '../i18n/language';
 
 type Booking = BookingRecord;
 
 export default function UserBookings() {
+  const { language, text } = useLanguage();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<Booking | null>(null);
 
@@ -19,7 +21,6 @@ export default function UserBookings() {
 
   if (!bookings.length) return null;
 
-  return <section className="section user-bookings"><Heading /><div className="user-booking-grid">{bookings.map((booking) => <article key={booking.bookingId}><small>RÉSERVATION #{booking.bookingId}</small><h3>Annonce #{booking.listingId}</h3><p>{new Date(booking.startDate).toLocaleDateString('fr-FR')} → {new Date(booking.endDate).toLocaleDateString('fr-FR')}</p><b>{Number(booking.total).toLocaleString('fr-FR')} MAD</b><button onClick={() => void showDetails(booking.bookingId)}>Voir le détail</button>{selected?.bookingId === booking.bookingId && <div className="booking-detail">Voyageur #{selected.userId}</div>}</article>)}</div></section>;
+  const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-GB' : 'fr-FR';
+  return <section className="section user-bookings"><div className="section-heading"><div><small className="eyebrow">{text.mySpace}</small><h2>{text.myBookings}<span>.</span></h2></div></div><div className="user-booking-grid">{bookings.map((booking) => <article key={booking.bookingId}><small>{text.booking} #{booking.bookingId}</small><h3>{text.listing} #{booking.listingId}</h3><p>{new Date(booking.startDate).toLocaleDateString(locale)} → {new Date(booking.endDate).toLocaleDateString(locale)}</p><b>{Number(booking.total).toLocaleString(locale)} MAD</b><button onClick={() => void showDetails(booking.bookingId)}>{text.viewDetails}</button>{selected?.bookingId === booking.bookingId && <div className="booking-detail">{text.traveler} #{selected.userId}</div>}</article>)}</div></section>;
 }
-
-function Heading() { return <div className="section-heading"><div><small className="eyebrow">MON ESPACE</small><h2>Mes réservations<span>.</span></h2></div></div>; }

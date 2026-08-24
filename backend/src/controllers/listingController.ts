@@ -18,9 +18,17 @@ export const list: RequestHandler = async (req, res, next) => {
       await ListingService.findAll({
         ...parse(listingQuerySchema, req.query),
         publicOnly:
-          !req.user || !['ADMIN', 'admin', 'moderator', 'staff'].includes(req.user.role),
+          !req.user ||
+          !['ADMIN', 'admin', 'moderator', 'staff'].includes(req.user.role),
       }),
     );
+  } catch (error) {
+    next(error);
+  }
+};
+export const mine: RequestHandler = async (req, res, next) => {
+  try {
+    res.json({ items: await ListingService.findMine(req.user!.userId) });
   } catch (error) {
     next(error);
   }
@@ -31,7 +39,8 @@ export const get: RequestHandler = async (req, res, next) => {
       parse(listingIdSchema, req.params).id,
       {
         publicOnly:
-          !req.user || !['ADMIN', 'admin', 'moderator', 'staff'].includes(req.user.role),
+          !req.user ||
+          !['ADMIN', 'admin', 'moderator', 'staff'].includes(req.user.role),
       },
     );
     if (!listing) throw new AppError(404, 'Listing not found');
