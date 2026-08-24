@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import * as controller from '../controllers/authController';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 const authRateLimit = rateLimit({
@@ -13,5 +14,7 @@ const authRateLimit = rateLimit({
 router.post('/register', authRateLimit, controller.register);
 router.post('/login', authRateLimit, controller.login);
 router.post('/logout', controller.logout);
+router.patch('/password', requireAuth, controller.changePassword);
 router.get('/session', controller.session);
+router.get('/csrf-token', controller.csrfToken);
 export default router;

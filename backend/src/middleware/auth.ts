@@ -2,6 +2,7 @@ import { RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../utils/errorHandler';
 import { COOKIE_NAME } from '../controllers/authController';
+import { query } from '../config/db';
 export interface AuthUser {
   userId: number;
   role: string;
@@ -16,13 +17,14 @@ const roles = [
   'moderator',
   'admin',
 ];
-export const auth: RequestHandler = (req, _res, next) => {
+export const auth: RequestHandler = async (req, _res, next) => {
   const authorization = req.header('authorization');
   const cookieToken = req.cookies?.[COOKIE_NAME];
   const secret = process.env.JWT_SECRET;
-  const token = authorization?.startsWith('Bearer ')
+  const bearerToken = authorization?.startsWith('Bearer ')
     ? authorization.slice(7)
-    : cookieToken;
+    : undefined;
+  const token = bearerToken || cookieToken;
   if (token && secret) {
     try {
       const payload = jwt.verify(token, secret, {
@@ -32,12 +34,26 @@ export const auth: RequestHandler = (req, _res, next) => {
       if (
         typeof payload === 'object' &&
         Number.isInteger(payload.userId) &&
+        Number.isInteger(payload.sessionVersion) &&
         typeof payload.role === 'string' &&
         roles.includes(payload.role)
       ) {
-        req.user = { userId: payload.userId as number, role: payload.role };
+        const result = await query<{ session_version: number; role: string }>(
+          'SELECT session_version, role FROM users WHERE user_id = $1',
+          [payload.userId],
+        );
+        const user = result.rows[0];
+        if (
+          user &&
+          user.session_version === payload.sessionVersion &&
+          user.role === payload.role
+        ) {
+          req.user = { userId: payload.userId as number, role: payload.role };
+          req.authenticationSource = bearerToken ? 'bearer' : 'cookie';
+        }
       }
-    } catch {
+    } catch (error) {
+      if (!(error instanceof jwt.JsonWebTokenError)) return next(error);
       /* Protected routes reject invalid credentials. */
     }
   } else if (
@@ -50,6 +66,7 @@ export const auth: RequestHandler = (req, _res, next) => {
       Number.isInteger(id) && id > 0 && role && roles.includes(role)
         ? { userId: id, role }
         : undefined;
+    if (req.user) req.authenticationSource = 'development';
   }
   next();
 };
@@ -79,6 +96,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
+      authenticationSource?: 'bearer' | 'cookie' | 'development';
     }
   }
 }

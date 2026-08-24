@@ -11,6 +11,7 @@ require('dotenv').config();
       '002-seed-data.sql',
       '003-platform-features.sql',
       '004-reset-dev-admin-password.sql',
+      '005-add-session-version.sql',
     ])
       await client.query(
         fs.readFileSync(

@@ -1,10 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import routes from './routes';
 import { auth } from './middleware/auth';
+import { csrfProtection } from './middleware/csrf';
 import { errorHandler, notFound } from './utils/errorHandler';
 export const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
@@ -20,6 +22,7 @@ const allowedOrigins = new Set(
 );
 app.disable('x-powered-by');
 app.use(helmet());
+app.use(compression());
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -48,6 +51,7 @@ app.use((req, _res, next) => {
   next();
 });
 app.use(auth);
+app.use(csrfProtection);
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/v1', routes);
 app.use('/api', routes);
