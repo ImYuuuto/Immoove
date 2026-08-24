@@ -8,7 +8,7 @@
     "start": "node dist/src/index.js",
     "lint": "eslint . --ext .ts",
     "test": "jest --runInBand",
-    "migrate": "psql $DATABASE_URL -f src/migrations/001-create-schema.sql && psql $DATABASE_URL -f src/migrations/002-seed-data.sql && psql $DATABASE_URL -f src/migrations/003-platform-features.sql && psql $DATABASE_URL -f src/migrations/004-reset-dev-admin-password.sql && psql $DATABASE_URL -f src/migrations/005-add-session-version.sql && psql $DATABASE_URL -f src/migrations/006-profile-ownership.sql",
+    "migrate": "psql $DATABASE_URL -f src/migrations/001-create-schema.sql && psql $DATABASE_URL -f src/migrations/002-seed-data.sql && psql $DATABASE_URL -f src/migrations/003-platform-features.sql && psql $DATABASE_URL -f src/migrations/004-reset-dev-admin-password.sql && psql $DATABASE_URL -f src/migrations/005-add-session-version.sql && psql $DATABASE_URL -f src/migrations/006-profile-ownership.sql && psql $DATABASE_URL -f src/migrations/007-booking-contact.sql",
     "migrate:node": "node ./scripts/run-migrations.js"
   },
   "dependencies": {

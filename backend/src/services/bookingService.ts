@@ -1,13 +1,28 @@
 import { query, transaction } from '../config/db';
 import { AppError } from '../utils/errorHandler';
+import { decodeStoredText, sanitizeRequiredText } from '../utils/sanitize';
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
 
-function billableUnits(startDate: string | Date, endDate: string | Date) {
-  return Math.ceil(
-    (new Date(endDate).getTime() - new Date(startDate).getTime()) /
-      MILLISECONDS_PER_DAY,
-  );
+export function billableUnits(
+  startDate: string | Date,
+  endDate: string | Date,
+  pricingUnit?: string | null,
+  serviceType?: string | null,
+) {
+  const duration = new Date(endDate).getTime() - new Date(startDate).getTime();
+  const unit = (pricingUnit || '').toLowerCase();
+  if (unit.includes('hour') || unit.includes('heure'))
+    return Math.ceil(duration / MILLISECONDS_PER_HOUR);
+  if (
+    unit.includes('service') ||
+    unit.includes('fixed') ||
+    unit.includes('session') ||
+    (!unit && ['RESTAURANT_CAFE', 'ACTIVITY'].includes(serviceType || ''))
+  )
+    return 1;
+  return Math.ceil(duration / MILLISECONDS_PER_DAY);
 }
 
 export class BookingService {
@@ -19,13 +34,21 @@ export class BookingService {
       startDate: row.start_date,
       endDate: row.end_date,
       total: Number(row.total),
+      firstName: row.contact_first_name
+        ? decodeStoredText(row.contact_first_name)
+        : null,
+      lastName: row.contact_last_name
+        ? decodeStoredText(row.contact_last_name)
+        : null,
+      email: row.contact_email,
+      phone: row.contact_phone ? decodeStoredText(row.contact_phone) : null,
       createdAt: row.created_at,
     };
   }
 
   static async findAll(userId?: number) {
     const result = await query<any>(
-      'SELECT booking_id, listing_id, user_id, start_date, end_date, total, created_at FROM bookings WHERE ($1::int IS NULL OR user_id = $1) ORDER BY created_at DESC',
+      'SELECT booking_id, listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone, created_at FROM bookings WHERE ($1::int IS NULL OR user_id = $1) ORDER BY created_at DESC',
       [userId || null],
     );
     return result.rows.map(this.map);
@@ -33,7 +56,7 @@ export class BookingService {
 
   static async findById(bookingId: number) {
     const result = await query<any>(
-      'SELECT booking_id, listing_id, user_id, start_date, end_date, total, created_at FROM bookings WHERE booking_id = $1',
+      'SELECT booking_id, listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone, created_at FROM bookings WHERE booking_id = $1',
       [bookingId],
     );
     return result.rows[0] ? this.map(result.rows[0]) : null;
@@ -43,6 +66,10 @@ export class BookingService {
     userId: number;
     startDate: string | Date;
     endDate: string | Date;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
   }) {
     if (new Date(data.endDate) <= new Date(data.startDate))
       throw new AppError(400, 'endDate must be after startDate');
@@ -50,8 +77,10 @@ export class BookingService {
       const listing = await client.query<{
         status: string;
         is_active: boolean;
+        pricing_unit: string | null;
+        service_type: string | null;
       }>(
-        'SELECT status, is_active FROM listings WHERE listing_id = $1 FOR UPDATE',
+        'SELECT status, is_active, pricing_unit, service_type FROM listings WHERE listing_id = $1 FOR UPDATE',
         [data.listingId],
       );
       if (!listing.rows[0]) throw new AppError(404, 'Listing not found');
@@ -63,10 +92,25 @@ export class BookingService {
       );
       if (conflict.rowCount)
         throw new AppError(409, 'Listing is already booked for these dates');
-      const units = billableUnits(data.startDate, data.endDate);
+      const units = billableUnits(
+        data.startDate,
+        data.endDate,
+        listing.rows[0].pricing_unit,
+        listing.rows[0].service_type,
+      );
       const result = await client.query<any>(
-        'INSERT INTO bookings (listing_id, user_id, start_date, end_date, total) VALUES ($1,$2,$3,$4,(SELECT base_price * $5 FROM listings WHERE listing_id = $1)) RETURNING booking_id, listing_id, user_id, start_date, end_date, total, created_at',
-        [data.listingId, data.userId, data.startDate, data.endDate, units],
+        'INSERT INTO bookings (listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone) VALUES ($1,$2,$3,$4,(SELECT base_price * $5 FROM listings WHERE listing_id = $1),$6,$7,$8,$9) RETURNING booking_id, listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone, created_at',
+        [
+          data.listingId,
+          data.userId,
+          data.startDate,
+          data.endDate,
+          units,
+          sanitizeRequiredText(data.firstName, 'firstName'),
+          sanitizeRequiredText(data.lastName, 'lastName'),
+          data.email.toLowerCase(),
+          sanitizeRequiredText(data.phone, 'phone'),
+        ],
       );
       if (!result.rows[0])
         throw new AppError(500, 'Booking could not be created');
@@ -100,8 +144,10 @@ export class BookingService {
       const listing = await client.query<{
         status: string;
         is_active: boolean;
+        pricing_unit: string | null;
+        service_type: string | null;
       }>(
-        'SELECT status, is_active FROM listings WHERE listing_id = $1 FOR UPDATE',
+        'SELECT status, is_active, pricing_unit, service_type FROM listings WHERE listing_id = $1 FOR UPDATE',
         [listingId],
       );
       if (!listing.rows[0]) throw new AppError(404, 'Listing not found');
@@ -113,7 +159,12 @@ export class BookingService {
       );
       if (conflict.rowCount)
         throw new AppError(409, 'Listing is already booked for these dates');
-      const units = billableUnits(startDate, endDate);
+      const units = billableUnits(
+        startDate,
+        endDate,
+        listing.rows[0].pricing_unit,
+        listing.rows[0].service_type,
+      );
       const result = await client.query<any>(
         'UPDATE bookings SET listing_id = $1, user_id = $2, start_date = $3, end_date = $4, total = (SELECT base_price * $5 FROM listings WHERE listing_id = $1) WHERE booking_id = $6 RETURNING booking_id, listing_id, user_id, start_date, end_date, total, created_at',
         [listingId, userId, startDate, endDate, units, bookingId],

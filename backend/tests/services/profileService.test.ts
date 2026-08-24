@@ -26,6 +26,7 @@ describe('ProfileService', () => {
           first_name: 'Yassine &amp; Co',
           last_name: 'Example',
           email: 'yassine@example.com',
+          phone: null,
           role: 'user',
           avatar_url: null,
         },
@@ -37,6 +38,7 @@ describe('ProfileService', () => {
       firstName: 'Yassine & Co',
       lastName: 'Example',
       email: 'yassine@example.com',
+      phone: null,
       role: 'user',
       avatarUrl: null,
     });
@@ -50,6 +52,7 @@ describe('ProfileService', () => {
           first_name: 'New &amp; safe',
           last_name: 'Name',
           email: 'yassine@example.com',
+          phone: '+216 12 345 678',
           role: 'user',
           avatar_url: null,
         },

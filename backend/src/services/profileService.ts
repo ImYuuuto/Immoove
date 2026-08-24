@@ -7,6 +7,7 @@ type ProfileRow = {
   first_name: string;
   last_name: string;
   email: string;
+  phone: string | null;
   role: string;
   avatar_url: string | null;
 };
@@ -17,6 +18,7 @@ function mapProfile(row: ProfileRow) {
     firstName: decodeStoredText(row.first_name || ''),
     lastName: decodeStoredText(row.last_name || ''),
     email: row.email,
+    phone: row.phone ? decodeStoredText(row.phone) : null,
     role: row.role,
     avatarUrl: row.avatar_url,
   };
@@ -25,7 +27,7 @@ function mapProfile(row: ProfileRow) {
 export class ProfileService {
   static async get(userId: number) {
     const result = await query<ProfileRow>(
-      'SELECT user_id, first_name, last_name, email, role, avatar_url FROM users WHERE user_id = $1',
+      'SELECT user_id, first_name, last_name, email, phone, role, avatar_url FROM users WHERE user_id = $1',
       [userId],
     );
     if (!result.rows[0]) throw new AppError(404, 'Profile not found');
@@ -34,7 +36,7 @@ export class ProfileService {
 
   static async update(userId: number, firstName: string, lastName: string) {
     const result = await query<ProfileRow>(
-      'UPDATE users SET first_name = $1, last_name = $2 WHERE user_id = $3 RETURNING user_id, first_name, last_name, email, role, avatar_url',
+      'UPDATE users SET first_name = $1, last_name = $2 WHERE user_id = $3 RETURNING user_id, first_name, last_name, email, phone, role, avatar_url',
       [
         sanitizeRequiredText(firstName, 'firstName'),
         sanitizeRequiredText(lastName, 'lastName'),

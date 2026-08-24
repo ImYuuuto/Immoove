@@ -38,14 +38,18 @@ function mapListing(row: any): ListingWithRelations {
     isFeatured: row.is_featured,
     images: [],
     features: [],
+    amenities: [],
     bookings: [],
+    availability: [],
+    reviews: [],
+    rating: { average: null, count: 0 },
   };
 }
 
 async function hydrate(
   listing: ListingWithRelations,
 ): Promise<ListingWithRelations> {
-  const [images, features, bookings, metadata] = await Promise.all([
+  const [images, features, bookings, reviews, metadata] = await Promise.all([
     query<any>(
       'SELECT id, listing_id, url, sort_order FROM listing_images WHERE listing_id = $1 ORDER BY sort_order, id',
       [listing.listingId],
@@ -55,15 +59,40 @@ async function hydrate(
       [listing.listingId],
     ),
     query<any>(
-      'SELECT b.booking_id, b.user_id, b.start_date, b.end_date, b.total, r.rating, r.comment, r.created_at AS review_created_at FROM bookings b LEFT JOIN reviews r ON r.booking_id = b.booking_id WHERE b.listing_id = $1 ORDER BY b.start_date',
+      'SELECT booking_id, start_date, end_date FROM bookings WHERE listing_id = $1 ORDER BY start_date',
       [listing.listingId],
     ),
     query<any>(
-      'SELECT c.category_id, c.name, c.slug, l.location_id, l.name AS location_name, l.lat, l.lng, u.user_id, u.first_name, u.last_name, u.email, u.phone FROM listings x LEFT JOIN categories c ON c.category_id = x.category_id LEFT JOIN locations l ON l.location_id = x.location_id LEFT JOIN users u ON u.user_id = x.provider_id WHERE x.listing_id = $1',
+      'SELECT r.review_id, r.rating, r.comment, r.created_at, u.user_id, u.first_name, u.last_name FROM reviews r JOIN bookings b ON b.booking_id = r.booking_id LEFT JOIN users u ON u.user_id = b.user_id WHERE b.listing_id = $1 ORDER BY r.created_at DESC',
+      [listing.listingId],
+    ),
+    query<any>(
+      'SELECT c.category_id, c.name, c.slug, l.location_id, l.name AS location_name, l.lat, l.lng, u.user_id, u.first_name, u.last_name FROM listings x LEFT JOIN categories c ON c.category_id = x.category_id LEFT JOIN locations l ON l.location_id = x.location_id LEFT JOIN users u ON u.user_id = x.provider_id WHERE x.listing_id = $1',
       [listing.listingId],
     ),
   ]);
   const meta = metadata.rows[0];
+  const amenities = features.rows.map((row) => ({
+    featureId: row.feature_id,
+    name: decodeStoredText(row.name),
+  }));
+  const mappedReviews = reviews.rows.map((row) => ({
+    reviewId: row.review_id,
+    rating: row.rating,
+    comment: row.comment ? decodeStoredText(row.comment) : row.comment,
+    createdAt: row.created_at,
+    user: row.user_id
+      ? {
+          userId: row.user_id,
+          firstName: decodeStoredText(row.first_name || ''),
+          lastName: decodeStoredText(row.last_name || ''),
+        }
+      : null,
+  }));
+  const ratingTotal = mappedReviews.reduce(
+    (total, review) => total + review.rating,
+    0,
+  );
   return {
     ...listing,
     images: images.rows.map((row) => ({
@@ -72,25 +101,22 @@ async function hydrate(
       url: row.url,
       sortOrder: row.sort_order,
     })),
-    features: features.rows.map((row) => ({
-      featureId: row.feature_id,
-      name: row.name,
-    })),
+    features: amenities,
+    amenities,
     bookings: bookings.rows.map((row) => ({
       bookingId: row.booking_id,
-      userId: row.user_id,
       startDate: row.start_date,
       endDate: row.end_date,
-      total: parseNumeric(row.total),
-      review:
-        row.rating === null
-          ? null
-          : {
-              rating: row.rating,
-              comment: row.comment,
-              createdAt: row.review_created_at,
-            },
     })),
+    availability: bookings.rows.map((row) => ({
+      startDate: row.start_date,
+      endDate: row.end_date,
+    })),
+    reviews: mappedReviews,
+    rating: {
+      average: mappedReviews.length ? ratingTotal / mappedReviews.length : null,
+      count: mappedReviews.length,
+    },
     category: meta?.category_id
       ? { categoryId: meta.category_id, name: meta.name, slug: meta.slug }
       : undefined,
@@ -105,10 +131,15 @@ async function hydrate(
     provider: meta?.user_id
       ? {
           userId: meta.user_id,
-          firstName: meta.first_name,
-          lastName: meta.last_name,
-          email: meta.email,
-          phone: meta.phone,
+          firstName: decodeStoredText(meta.first_name || ''),
+          lastName: decodeStoredText(meta.last_name || ''),
+        }
+      : undefined,
+    owner: meta?.user_id
+      ? {
+          userId: meta.user_id,
+          firstName: decodeStoredText(meta.first_name || ''),
+          lastName: decodeStoredText(meta.last_name || ''),
         }
       : undefined,
   };

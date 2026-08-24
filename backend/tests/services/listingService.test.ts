@@ -79,4 +79,81 @@ describe('ListingService', () => {
       createdAt: '2026-08-24T12:00:00.000Z',
     });
   });
+
+  it('hydrates public detail with amenities, reviews, rating, and private availability', async () => {
+    mockedQuery
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            listing_id: 10,
+            provider_id: 1,
+            category_id: 2,
+            title: 'Service',
+            description: 'Description',
+            base_price: '25',
+            pricing_unit: 'hour',
+            status: 'approved',
+            is_active: true,
+          },
+        ],
+      } as never)
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 1,
+            listing_id: 10,
+            url: 'https://example.com/1.jpg',
+            sort_order: 0,
+          },
+        ],
+      } as never)
+      .mockResolvedValueOnce({
+        rows: [{ feature_id: 3, name: 'Wi-Fi' }],
+      } as never)
+      .mockResolvedValueOnce({
+        rows: [
+          { booking_id: 8, start_date: '2026-09-01', end_date: '2026-09-02' },
+        ],
+      } as never)
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            review_id: 4,
+            rating: 5,
+            comment: 'Great &amp; clean',
+            created_at: '2026-08-20',
+            user_id: 2,
+            first_name: 'Previous',
+            last_name: 'Guest',
+          },
+        ],
+      } as never)
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            category_id: 2,
+            name: 'Activities',
+            slug: 'activities',
+            user_id: 1,
+            first_name: 'Owner',
+            last_name: 'Name',
+          },
+        ],
+      } as never);
+
+    const item = await ListingService.findById(10);
+
+    expect(item?.amenities).toEqual([{ featureId: 3, name: 'Wi-Fi' }]);
+    expect(item?.availability).toEqual([
+      { startDate: '2026-09-01', endDate: '2026-09-02' },
+    ]);
+    expect(item?.bookings[0]).not.toHaveProperty('userId');
+    expect(item?.reviews[0].comment).toBe('Great & clean');
+    expect(item?.rating).toEqual({ average: 5, count: 1 });
+    expect(item?.owner).toEqual({
+      userId: 1,
+      firstName: 'Owner',
+      lastName: 'Name',
+    });
+  });
 });

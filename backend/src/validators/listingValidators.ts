@@ -55,6 +55,10 @@ export const createBookingSchema = z
     userId: id.optional(),
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
+    firstName: z.string().trim().min(1).max(100),
+    lastName: z.string().trim().min(1).max(100),
+    email: z.string().trim().email().max(255),
+    phone: z.string().trim().min(3).max(50),
   })
   .refine((value) => value.endDate > value.startDate, {
     message: 'endDate must be after startDate',

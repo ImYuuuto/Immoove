@@ -37,13 +37,18 @@ export const get: RequestHandler = async (req, res, next) => {
   try {
     const listing = await ListingService.findById(
       parse(listingIdSchema, req.params).id,
-      {
-        publicOnly:
-          !req.user ||
-          !['ADMIN', 'admin', 'moderator', 'staff'].includes(req.user.role),
-      },
     );
     if (!listing) throw new AppError(404, 'Listing not found');
+    const staff =
+      req.user &&
+      ['ADMIN', 'admin', 'moderator', 'staff'].includes(req.user.role);
+    const owner = req.user?.userId === listing.providerId;
+    if (
+      (!listing.isActive || listing.status !== 'approved') &&
+      !staff &&
+      !owner
+    )
+      throw new AppError(404, 'Listing not found');
     res.json({ item: listing });
   } catch (error) {
     next(error);

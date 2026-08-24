@@ -74,11 +74,8 @@ export interface ListingImage {
 }
 export interface BookingWithReview {
   bookingId: number;
-  userId: number;
   startDate?: string;
   endDate?: string;
-  total?: number;
-  review?: { rating: number; comment?: string; createdAt: string } | null;
 }
 export interface Feature {
   featureId: number;
@@ -86,12 +83,20 @@ export interface Feature {
 }
 export interface ListingWithRelations extends Listing {
   images: ListingImage[];
+  amenities: Feature[];
   category?: Category;
   location?: Location;
   features: Feature[];
   bookings: BookingWithReview[];
-  provider?: Pick<
-    User,
-    'userId' | 'firstName' | 'lastName' | 'email' | 'phone'
-  >;
+  availability: Array<{ startDate: string; endDate: string }>;
+  reviews: Array<{
+    reviewId: number;
+    rating: number;
+    comment?: string;
+    createdAt: string;
+    user: Pick<User, 'userId' | 'firstName' | 'lastName'> | null;
+  }>;
+  rating: { average: number | null; count: number };
+  provider?: Pick<User, 'userId' | 'firstName' | 'lastName'>;
+  owner?: Pick<User, 'userId' | 'firstName' | 'lastName'>;
 }

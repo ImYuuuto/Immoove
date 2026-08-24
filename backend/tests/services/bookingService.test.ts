@@ -1,6 +1,9 @@
 import { PoolClient } from 'pg';
 import { transaction } from '../../src/config/db';
-import { BookingService } from '../../src/services/bookingService';
+import {
+  billableUnits,
+  BookingService,
+} from '../../src/services/bookingService';
 import {
   createBookingSchema,
   updateBookingSchema,
@@ -30,18 +33,43 @@ describe('BookingService server-side pricing', () => {
       endDate: '2026-09-03T12:00:00.000Z',
     };
     expect(
-      createBookingSchema.parse({ listingId: 4, total: 0.01, ...dates }),
+      createBookingSchema.parse({
+        listingId: 4,
+        total: 0.01,
+        firstName: 'Yassine',
+        lastName: 'Example',
+        email: 'yassine@example.com',
+        phone: '+216 12 345 678',
+        ...dates,
+      }),
     ).not.toHaveProperty('total');
     expect(
       updateBookingSchema.parse({ total: 0.01, ...dates }),
     ).not.toHaveProperty('total');
   });
 
+  test('calculates night, hour, and fixed-service billing units', () => {
+    const start = '2026-09-01T12:00:00.000Z';
+    const end = '2026-09-01T14:30:00.000Z';
+
+    expect(billableUnits(start, end, 'night')).toBe(1);
+    expect(billableUnits(start, end, 'hour')).toBe(3);
+    expect(billableUnits(start, end, 'service')).toBe(1);
+    expect(billableUnits(start, end, null, 'ACTIVITY')).toBe(1);
+  });
+
   test('creates a booking using database price multiplied by billable days', async () => {
     const query = jest
       .fn()
       .mockResolvedValueOnce({
-        rows: [{ status: 'approved', is_active: true }],
+        rows: [
+          {
+            status: 'approved',
+            is_active: true,
+            pricing_unit: 'night',
+            service_type: 'VACATION_RENTAL',
+          },
+        ],
       })
       .mockResolvedValueOnce({ rowCount: 0 })
       .mockResolvedValueOnce({
@@ -64,6 +92,10 @@ describe('BookingService server-side pricing', () => {
       userId: 7,
       startDate: '2026-09-01T12:00:00.000Z',
       endDate: '2026-09-03T12:00:00.000Z',
+      firstName: 'Yassine',
+      lastName: 'Example',
+      email: 'YASSINE@example.com',
+      phone: '+216 12 345 678',
       total: 0.01,
     } as never);
 
@@ -74,6 +106,10 @@ describe('BookingService server-side pricing', () => {
       '2026-09-01T12:00:00.000Z',
       '2026-09-03T12:00:00.000Z',
       2,
+      'Yassine',
+      'Example',
+      'yassine@example.com',
+      '+216 12 345 678',
     ]);
     expect(result.total).toBe(170);
   });
@@ -93,7 +129,14 @@ describe('BookingService server-side pricing', () => {
         ],
       })
       .mockResolvedValueOnce({
-        rows: [{ status: 'approved', is_active: true }],
+        rows: [
+          {
+            status: 'approved',
+            is_active: true,
+            pricing_unit: 'night',
+            service_type: 'VACATION_RENTAL',
+          },
+        ],
       })
       .mockResolvedValueOnce({ rowCount: 0 })
       .mockResolvedValueOnce({
