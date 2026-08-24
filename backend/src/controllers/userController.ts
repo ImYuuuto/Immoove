@@ -1,18 +1,28 @@
 import { RequestHandler } from 'express';
 import { UserService } from '../services/userService';
-export const list: RequestHandler = async (_req, res, next) => {
+import { userIdSchema, userQuerySchema, userRoleSchema } from '../validators/userValidators';
+export const list: RequestHandler = async (req, res, next) => {
   try {
-    res.json({ items: await UserService.findAll() });
+    res.json(await UserService.findAll(userQuerySchema.parse(req.query)));
   } catch (error) {
     next(error);
   }
 };
 export const get: RequestHandler = async (req, res, next) => {
   try {
-    const user = await UserService.findById(Number(req.params.id));
+    const user = await UserService.findById(userIdSchema.parse(req.params).id);
     if (!user)
       return res.status(404).json({ error: { message: 'User not found' } });
     res.json({ item: user });
+  } catch (error) {
+    next(error);
+  }
+};
+export const setRole: RequestHandler = async (req, res, next) => {
+  try {
+    const { id } = userIdSchema.parse(req.params);
+    const { role } = userRoleSchema.parse(req.body);
+    res.json({ item: await UserService.setRole(id, role, req.user!.userId) });
   } catch (error) {
     next(error);
   }

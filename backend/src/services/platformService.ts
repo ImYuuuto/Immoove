@@ -90,7 +90,7 @@ export class PlatformService {
   static async toggleFavorite(userId: number, listingId: number) {
     return transaction(async (client) => {
       const listing = await client.query(
-        "SELECT 1 FROM listings WHERE listing_id = 'approved' AND is_active = true AND listing_id = $1",
+        "SELECT 1 FROM listings WHERE status = 'approved' AND is_active = true AND listing_id = $1",
         [listingId],
       );
       if (!listing.rowCount) throw new AppError(404, 'Listing not found');

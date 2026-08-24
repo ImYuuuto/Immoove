@@ -31,7 +31,7 @@ export const get: RequestHandler = async (req, res, next) => {
       parse(listingIdSchema, req.params).id,
       {
         publicOnly:
-          !req.user || !['admin', 'moderator', 'staff'].includes(req.user.role),
+          !req.user || !['ADMIN', 'admin', 'moderator', 'staff'].includes(req.user.role),
       },
     );
     if (!listing) throw new AppError(404, 'Listing not found');

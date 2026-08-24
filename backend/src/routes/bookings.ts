@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import * as controller from '../controllers/bookingController';
-import { auth, requireAuth } from '../middleware/auth';
+import { auth, requireAuth, requireRoles } from '../middleware/auth';
 const router = Router();
 router.use(auth);
 router.get('/', requireAuth, controller.list);
+router.get('/:id', requireAuth, controller.get);
 router.post('/', requireAuth, controller.create);
+router.patch('/:id', requireRoles('ADMIN', 'admin'), controller.update);
+router.delete('/:id', requireRoles('ADMIN', 'admin'), controller.remove);
 export default router;

@@ -242,7 +242,7 @@ export class ListingService {
   ): Promise<ListingWithRelations> {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
-    if (!['ADMIN', 'admin'].includes(role) && current.providerId !== userId)
+    if (!['ADMIN', 'admin', 'moderator', 'staff'].includes(role) && current.providerId !== userId)
       throw new AppError(403, 'You cannot update this listing');
     const columns: Record<string, unknown> = {
       category_id: data.categoryId,
@@ -323,7 +323,7 @@ export class ListingService {
   static async delete(listingId: number, userId: number, role: string) {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
-    if (!['ADMIN', 'admin'].includes(role) && current.providerId !== userId)
+    if (!['ADMIN', 'admin', 'moderator', 'staff'].includes(role) && current.providerId !== userId)
       throw new AppError(403, 'You cannot delete this listing');
     await transaction(async (client) => {
       await client.query(
