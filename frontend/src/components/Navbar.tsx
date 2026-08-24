@@ -301,6 +301,11 @@ export default function Navbar({
           onAuthenticated={(
             nextUser,
           ) => {
+            const next = new URLSearchParams(window.location.search).get('next');
+            if (next?.startsWith('/') && !next.startsWith('//')) {
+              window.location.assign(next);
+              return;
+            }
             setUser(nextUser);
             setAuthLoading(false);
           }

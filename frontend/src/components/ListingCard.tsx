@@ -29,7 +29,7 @@ export default function ListingCard({
           src={image}
           alt={decodeText(listing.title)}
         />
-        <span className="listing-view">{text.viewStay}</span>
+        {listing.listingId ? <a className="listing-view" href={`/listings/${listing.listingId}`}>{text.viewStay}</a> : <span className="listing-view">{text.viewStay}</span>}
 
         <span>
           {text.selection}
@@ -65,9 +65,7 @@ export default function ListingCard({
           </span>
         </div>
 
-        <h3>
-          {decodeText(listing.title)}
-        </h3>
+        <h3>{listing.listingId ? <a href={`/listings/${listing.listingId}`}>{decodeText(listing.title)}</a> : decodeText(listing.title)}</h3>
 
         <p>
           {decodeText(listing.description) ||

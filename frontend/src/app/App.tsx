@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowUpRight, MapPin } from 'lucide-react';
 import AnnouncementModal from '../components/AnnouncementModal';
-import BookingModal from '../components/BookingModal';
 import CategoryGrid from '../components/CategoryGrid';
 import Dining from '../components/Dining';
 import Heading from '../components/Heading';
@@ -23,9 +22,6 @@ export default function App() {
 
   const [modal, setModal] =
     useState(false);
-
-  const [bookingListing, setBookingListing] =
-    useState<Listing | null>(null);
 
   const [message, setMessage] =
     useState('');
@@ -246,7 +242,7 @@ export default function App() {
                 <ListingCard
                   listing={listing}
                   onFavorite={favorite}
-                  onBook={setBookingListing}
+                  onBook={(item) => item.listingId && window.location.assign(`/listings/${item.listingId}`)}
                   key={
                     listing.listingId ||
                     listing.title
@@ -411,14 +407,6 @@ export default function App() {
           onClose={() =>
             setModal(false)
           }
-          onMessage={notify}
-        />
-      )}
-
-      {bookingListing && (
-        <BookingModal
-          listing={bookingListing}
-          onClose={() => setBookingListing(null)}
           onMessage={notify}
         />
       )}

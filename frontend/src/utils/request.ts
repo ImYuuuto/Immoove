@@ -31,6 +31,15 @@ export function clearLocalSession() {
 
 export function redirectToLogin() {
   clearLocalSession();
+  const checkoutPath = window.location.pathname.startsWith('/checkout/')
+    ? `${window.location.pathname}${window.location.search}`
+    : null;
+  const listingId = window.location.pathname.match(/^\/listings\/(\d+)/)?.[1];
+  if (checkoutPath || listingId) {
+    const next = checkoutPath || `/checkout/${listingId}`;
+    window.location.assign(`/?login=1&next=${encodeURIComponent(next)}`);
+    return;
+  }
   if (window.location.pathname === '/' || window.location.pathname === '/profile') {
     window.dispatchEvent(new CustomEvent('auth:unauthorized'));
   } else {
