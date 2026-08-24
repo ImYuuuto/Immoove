@@ -23,6 +23,9 @@ export default function Navbar({
   const [user, setUser] =
     useState<AuthUser | null>(null);
 
+  const [authLoading, setAuthLoading] =
+    useState(true);
+
   const [languageOpen, setLanguageOpen] =
     useState(false);
 
@@ -33,7 +36,8 @@ export default function Navbar({
       .then((result) =>
         setUser(result.user),
       )
-      .catch(() => setUser(null));
+      .catch(() => setUser(null))
+      .finally(() => setAuthLoading(false));
   }, []);
 
   const changeLanguage = (
@@ -105,7 +109,14 @@ export default function Navbar({
         </a>
 
         <button
-          onClick={onAnnouncement}
+          onClick={() => {
+            if (user) {
+              onAnnouncement();
+              return;
+            }
+            setMessage('Connectez-vous pour publier une annonce.');
+            setAuthOpen(true);
+          }}
         >
           {languageText().services}
         </button>
@@ -236,9 +247,14 @@ export default function Navbar({
 
         {/* LOGIN */}
 
-        {user ? (
+        {authLoading ? (
+          <button className="login" type="button" disabled aria-label="Vérification de la session">
+            …
+          </button>
+        ) : user ? (
           <button
             className="login"
+            data-auth-action="logout"
             onClick={logout}
           >
             Se déconnecter
@@ -246,6 +262,7 @@ export default function Navbar({
         ) : (
           <button
             className="login"
+            data-auth-action="login"
             onClick={() => {
               setAuthOpen(true);
 
@@ -296,8 +313,10 @@ export default function Navbar({
           }}
           onAuthenticated={(
             nextUser,
-          ) =>
-            setUser(nextUser)
+          ) => {
+            setUser(nextUser);
+            setAuthLoading(false);
+          }
           }
         />
       )}
@@ -312,4 +331,3 @@ export default function Navbar({
     </header>
   );
 }
-

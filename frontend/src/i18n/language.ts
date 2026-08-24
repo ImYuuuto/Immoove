@@ -376,7 +376,7 @@ export function applyLanguage(language: Language) {
   );
 
   text(
-    '.login',
+    '.login[data-auth-action="login"]',
     t.login,
   );
 
@@ -534,4 +534,3 @@ export function applyLanguage(language: Language) {
 /* =========================================================
    AUTH MODAL
    ========================================================= */
-

@@ -1378,6 +1378,46 @@ img {
   font-size: 14px;
 }
 
+.booking-button {
+  width: 100%;
+  margin-top: 18px;
+  padding: 11px 16px;
+  border: 1px solid var(--navy);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--navy);
+  font-weight: 700;
+  transition: var(--transition);
+}
+
+.booking-button:hover:not(:disabled) {
+  background: var(--navy);
+  color: white;
+}
+
+.booking-button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.user-booking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.user-booking-grid article {
+  padding: 22px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.user-booking-grid h3 { margin: 10px 0; }
+.user-booking-grid p { color: var(--muted); }
+.user-booking-grid button { display: block; margin-top: 16px; border: 0; background: none; color: var(--coral); font-weight: 700; }
+.booking-detail { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); }
+
 .listing-info i {
   color: var(--muted);
 

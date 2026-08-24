@@ -66,8 +66,8 @@ CREATE TABLE IF NOT EXISTS listing_features (
 
 CREATE TABLE IF NOT EXISTS bookings (
     booking_id serial PRIMARY KEY,
-    listing_id int REFERENCES listings (listing_id),
-    user_id int REFERENCES users (user_id),
+    listing_id int REFERENCES listings (listing_id) ON DELETE CASCADE,
+    user_id int REFERENCES users (user_id) ON DELETE CASCADE,
     start_date timestamptz,
     end_date timestamptz,
     total numeric,
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS reviews (
 
 CREATE TABLE IF NOT EXISTS audit_logs (
     id serial PRIMARY KEY,
-    actor_id int REFERENCES users (user_id),
+    actor_id int REFERENCES users (user_id) ON DELETE SET NULL,
     action text,
     entity_type text,
     entity_id int,

@@ -5,9 +5,11 @@ import type { Listing } from '../types';
 export default function ListingCard({
   listing,
   onFavorite,
+  onBook,
 }: {
   listing: Listing;
   onFavorite: (id?: number) => void;
+  onBook: (listing: Listing) => void;
 }) {
   const image =
     listing.coverImageUrl ||
@@ -82,8 +84,16 @@ export default function ListingCard({
             / nuit
           </i>
         </b>
+
+        <button
+          className="booking-button"
+          type="button"
+          disabled={!listing.listingId}
+          onClick={() => onBook(listing)}
+        >
+          Réserver
+        </button>
       </div>
     </article>
   );
 }
-

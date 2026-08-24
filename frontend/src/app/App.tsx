@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import AnnouncementModal from '../components/AnnouncementModal';
+import BookingModal from '../components/BookingModal';
 import CategoryGrid from '../components/CategoryGrid';
 import Dining from '../components/Dining';
 import Heading from '../components/Heading';
 import HeroSearch from '../components/HeroSearch';
 import ListingCard from '../components/ListingCard';
 import Navbar from '../components/Navbar';
+import UserBookings from '../components/UserBookings';
 import { fallbackListings, fallbackPosts, images } from '../data/content';
 import type { Listing, Post, SearchFilters } from '../types';
 import { request } from '../utils/request';
@@ -17,6 +19,9 @@ export default function App() {
 
   const [modal, setModal] =
     useState(false);
+
+  const [bookingListing, setBookingListing] =
+    useState<Listing | null>(null);
 
   const [message, setMessage] =
     useState('');
@@ -234,6 +239,7 @@ export default function App() {
                 <ListingCard
                   listing={listing}
                   onFavorite={favorite}
+                  onBook={setBookingListing}
                   key={
                     listing.listingId ||
                     listing.title
@@ -247,6 +253,8 @@ export default function App() {
         {/* DINING */}
 
         <Dining />
+
+        <UserBookings />
 
         {/* JOURNAL */}
 
@@ -399,6 +407,14 @@ export default function App() {
         />
       )}
 
+      {bookingListing && (
+        <BookingModal
+          listing={bookingListing}
+          onClose={() => setBookingListing(null)}
+          onMessage={notify}
+        />
+      )}
+
       {/* TOAST */}
 
       {message && (
@@ -410,4 +426,3 @@ export default function App() {
     </div>
   );
 }
-

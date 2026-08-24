@@ -121,3 +121,21 @@ CREATE TABLE IF NOT EXISTS favorites (
     created_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (user_id, listing_id)
 );
+
+-- Upgrade foreign keys created by older schema versions. User-owned bookings
+-- are removed with their user, while listings and audit history are retained
+-- through their existing nullable references.
+ALTER TABLE bookings DROP CONSTRAINT IF EXISTS bookings_user_id_fkey;
+ALTER TABLE bookings
+ADD CONSTRAINT bookings_user_id_fkey
+FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE;
+
+ALTER TABLE bookings DROP CONSTRAINT IF EXISTS bookings_listing_id_fkey;
+ALTER TABLE bookings
+ADD CONSTRAINT bookings_listing_id_fkey
+FOREIGN KEY (listing_id) REFERENCES listings (listing_id) ON DELETE CASCADE;
+
+ALTER TABLE audit_logs DROP CONSTRAINT IF EXISTS audit_logs_actor_id_fkey;
+ALTER TABLE audit_logs
+ADD CONSTRAINT audit_logs_actor_id_fkey
+FOREIGN KEY (actor_id) REFERENCES users (user_id) ON DELETE SET NULL;

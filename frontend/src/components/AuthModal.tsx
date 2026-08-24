@@ -57,7 +57,9 @@ export default function AuthModal({
           },
         );
 
-      onAuthenticated(result.user);
+      const session = await request<{ user: AuthUser }>('/auth/session');
+
+      onAuthenticated(session.user || result.user);
 
       onMessage(
         registerMode
