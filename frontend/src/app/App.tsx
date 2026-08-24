@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, MapPin } from 'lucide-react';
 import AnnouncementModal from '../components/AnnouncementModal';
 import BookingModal from '../components/BookingModal';
 import CategoryGrid from '../components/CategoryGrid';
@@ -7,6 +7,7 @@ import Dining from '../components/Dining';
 import Heading from '../components/Heading';
 import HeroSearch from '../components/HeroSearch';
 import ListingCard from '../components/ListingCard';
+import { EditorialSection, Newsletter, WhyBouzid } from '../components/LuxurySections';
 import Navbar from '../components/Navbar';
 import UserBookings from '../components/UserBookings';
 import { fallbackListings, fallbackPosts, images } from '../data/content';
@@ -171,6 +172,7 @@ export default function App() {
   </video>
 
   <div className="hero-shade" />
+  <div className="location-badge"><MapPin size={14} /> SIDI BOUZID <i /> EL JADIDA <i /> MOROCCO</div>
 
   <div className="hero-copy">
     <small className="eyebrow">
@@ -195,7 +197,10 @@ export default function App() {
   </div>
 
   <HeroSearch onSearch={search} />
+  <a className="scroll-indicator" href="#categories">SCROLL TO EXPLORE <ArrowDown size={14} /></a>
 </section>
+
+        <section className="premium-stats"><article><strong>120<span>+</span></strong><p>Beautiful<br />addresses</p></article><article><strong>35<span>+</span></strong><p>Local<br />experiences</p></article><article><strong>4.9<small>/5</small></strong><p>Guest<br />rating</p></article></section>
 
         {/* CATEGORIES */}
 
@@ -250,9 +255,13 @@ export default function App() {
           </div>
         </section>
 
+        <EditorialSection />
+
         {/* DINING */}
 
         <Dining />
+
+        <WhyBouzid />
 
         <UserBookings />
 
@@ -362,38 +371,35 @@ export default function App() {
 
           </div>
         </section>
+
+        <Newsletter />
       </main>
 
       {/* FOOTER */}
 
-      <footer>
-
-        <a
-          className="brand"
-          href="#top"
-        >
-          <b>B</b>
-          bouzid<span>.</span>
-        </a>
-
-        <p>
-          Des séjours qui ont le goût du soleil.
-        </p>
-
-        <div className="footer-bottom">
-          <span>
-            © 2025 Bouzid Escapes
-          </span>
-
-          <span>
-            Mentions légales & CGU
-          </span>
-
-          <span>
-            Made with care in Sidi Bouzid
-          </span>
+      <footer className="site-footer">
+        <div className="footer-main">
+          <div className="footer-intro">
+            <a className="brand" href="#top"><b>B</b> bouzid<span>.</span></a>
+            <p>Des séjours qui ont le goût du soleil, pensés avec soin depuis la côte marocaine.</p>
+          </div>
+          <nav aria-label="Footer navigation">
+            <small>EXPLORER</small>
+            <a href="#categories">Séjours</a>
+            <a href="#escapes">Nos adresses</a>
+            <a href="#story">Le journal</a>
+          </nav>
+          <div className="footer-location">
+            <small>NOUS TROUVER</small>
+            <p>Sidi Bouzid<br />El Jadida, Maroc</p>
+            <a href="#host">Proposer mon adresse →</a>
+          </div>
         </div>
-
+        <div className="footer-bottom">
+          <span>© 2026 Bouzid Escapes</span>
+          <span>Mentions légales &amp; CGU</span>
+          <span>Made with care in Sidi Bouzid</span>
+        </div>
       </footer>
 
       {/* ANNOUNCEMENT MODAL */}

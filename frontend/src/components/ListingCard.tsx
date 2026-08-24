@@ -26,6 +26,7 @@ export default function ListingCard({
           src={image}
           alt={listing.title}
         />
+        <span className="listing-view">View stay →</span>
 
         <span>
           SÉLECTION

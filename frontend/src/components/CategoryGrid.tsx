@@ -1,4 +1,3 @@
-import { ArrowUpRight } from 'lucide-react';
 import { images } from '../data/content';
 import Heading from './Heading';
 
@@ -11,23 +10,19 @@ export default function CategoryGrid({
     {
       className: 'large',
       image: images.stay,
-      number: '01 / SÉJOURNER',
-      title: 'Locations de vacances',
-      text:
-        'Des hébergements sélectionnés pour vos parenthèses au soleil.',
+      number: '01 / STAY', icon: '🏡', title: 'Villas', text: 'Des maisons choisies pour les jours qui durent.',
     },
 
     {
       image: images.explore,
-      number: '02 / EXPLORER',
-      title: 'Activités & loisirs',
+      number: '02 / EXPLORE', icon: '🌊', title: 'Activities', text: 'Des expériences au rythme de la côte.',
     },
 
     {
       image: images.food,
-      number: '03 / SAVOURER',
-      title: 'Restaurants & Cafés',
+      number: '03 / TASTE', icon: '🍽', title: 'Restaurants', text: 'De belles tables, sans se presser.',
     },
+    { image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85', number: '04 / SWIM', icon: '🏖', title: 'Beach', text: 'L’océan du matin au soir.' },
   ];
 
   return (
@@ -50,9 +45,7 @@ export default function CategoryGrid({
 
         {cards.map((card) => (
           <a
-            className={`category-card ${
-              card.className || ''
-            }`}
+            className="category-card"
             href="#escapes"
             key={card.title}
           >
@@ -65,6 +58,7 @@ export default function CategoryGrid({
               <small>
                 {card.number}
               </small>
+              <span className="category-icon">{card.icon}</span>
 
               <h3>
                 {card.title}
@@ -79,27 +73,8 @@ export default function CategoryGrid({
           </a>
         ))}
 
-        <button
-          className="category-card host-card"
-          onClick={onAnnouncement}
-        >
-          <strong>✦</strong>
-
-          <small>
-            VOUS ÊTES PROFESSIONNEL ?
-          </small>
-
-          <h3>
-            Publier une annonce
-          </h3>
-
-          <p>
-            Faites découvrir votre adresse à ceux qui cherchent déjà leur prochaine escale.
-          </p>
-
-          <ArrowUpRight />
-        </button>
       </div>
+      <button className="discover-host-link" onClick={onAnnouncement}>Vous avez une belle adresse ? Partagez-la avec nous →</button>
     </section>
   );
 }
