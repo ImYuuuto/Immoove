@@ -42,4 +42,6 @@ Authenticated profile endpoints are `GET`, `PATCH`, and `DELETE /api/v1/profile`
 
 `GET /api/v1/listings/:id` returns the listing gallery, owner name, amenities, location, pricing unit, blocked availability intervals, reviews, and rating summary. Public availability never exposes booking users or contact details. Authenticated booking creation uses `POST /api/v1/bookings` with `listingId`, `startDate`, `endDate`, `firstName`, `lastName`, `email`, and `phone`; the server calculates the authoritative total from the listing price and its night/day, hour, or fixed-service pricing unit. `GET /api/v1/profile` includes the user's phone when available so checkout forms can be prefilled. Guests receive `401` when attempting to book.
 
+Category navigation uses `GET /api/v1/categories` and `GET /api/v1/categories/:slug/listings?page=1&limit=20`. Stable category slugs are `housing`, `services`, `hobbies-and-activities`, and `renting-cars`. Category listing results contain camelCase card data, rating summaries, and `listingId`; clients should navigate a selected card to `/listings/:listingId`.
+
 Development admin sample: `amina@example.com` / `BouzidAdmin2026!`. Change or remove this credential before using a non-development environment.

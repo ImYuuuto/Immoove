@@ -14,6 +14,7 @@ require('dotenv').config();
       '005-add-session-version.sql',
       '006-profile-ownership.sql',
       '007-booking-contact.sql',
+      '008-listing-categories.sql',
     ])
       await client.query(
         fs.readFileSync(
