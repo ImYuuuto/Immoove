@@ -1,6 +1,8 @@
 import { images } from '../data/content';
 import Heading from './Heading';
 import { useLanguage } from '../i18n/language';
+import { useCategories } from '../categories/useCategories';
+import '../categories/category.css';
 
 export default function CategoryGrid({
   onAnnouncement,
@@ -8,9 +10,9 @@ export default function CategoryGrid({
   onAnnouncement: () => void;
 }) {
   const { text } = useLanguage();
-  const cards = [
+  const categories = useCategories();
+  const presentation = [
     {
-      className: 'large',
       image: images.stay,
       number: '01 / STAY', icon: '🏡', title: text.villas, text: text.villasText,
     },
@@ -26,6 +28,11 @@ export default function CategoryGrid({
     },
     { image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85', number: '04 / SWIM', icon: '🏖', title: text.beach, text: text.beachText },
   ];
+  const cards = categories.map((category, index) => ({
+    ...category,
+    ...presentation[index % presentation.length],
+    title: category.name,
+  }));
 
   return (
     <section
@@ -47,9 +54,9 @@ export default function CategoryGrid({
 
         {cards.map((card) => (
           <a
-            className="category-card"
-            href="#escapes"
-            key={card.title}
+            className={`category-card ${card === cards[0] ? 'large' : ''}`}
+            href={`/categories/${card.slug}`}
+            key={card.categoryId}
           >
             <img
               src={card.image}
@@ -58,7 +65,7 @@ export default function CategoryGrid({
 
             <div>
               <small>
-                {card.number}
+                {card.number}{card.listingCount !== undefined && <span className="category-count">{card.listingCount}</span>}
               </small>
               <span className="category-icon">{card.icon}</span>
 

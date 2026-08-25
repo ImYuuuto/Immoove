@@ -14,14 +14,27 @@ export default function ListingCard({
   onBook: (listing: Listing) => void;
 }) {
   const { language, text } = useLanguage();
+  const detailUrl = listing.listingId ? `/listings/${listing.listingId}` : '';
+  const pricingUnits: Record<string, Record<string, string>> = {
+    fr: { night: 'nuit', day: 'jour', hour: 'heure', service: 'service', session: 'séance', fixed: 'service' },
+    en: { night: 'night', day: 'day', hour: 'hour', service: 'service', session: 'session', fixed: 'service' },
+    ar: { night: 'ليلة', day: 'يوم', hour: 'ساعة', service: 'خدمة', session: 'جلسة', fixed: 'خدمة' },
+  };
+  const unit = pricingUnits[language][listing.pricingUnit?.toLowerCase() || 'night'] || listing.pricingUnit || text.night;
   const image =
     listing.coverImageUrl ||
     listing.images?.[0]?.url ||
     fallbackListings[0]
-      .coverImageUrl;
+      .coverImageUrl ||
+    '';
 
   return (
-    <article className="listing-card">
+    <article
+      className={`listing-card ${detailUrl ? 'is-clickable' : ''}`}
+      onClick={(event) => {
+        if (detailUrl && !(event.target as HTMLElement).closest('a, button')) window.location.assign(detailUrl);
+      }}
+    >
 
       <div className="listing-image">
 
@@ -29,7 +42,7 @@ export default function ListingCard({
           src={image}
           alt={decodeText(listing.title)}
         />
-        {listing.listingId ? <a className="listing-view" href={`/listings/${listing.listingId}`}>{text.viewStay}</a> : <span className="listing-view">{text.viewStay}</span>}
+        {listing.listingId ? <a className="listing-view" href={detailUrl}>{text.viewStay}</a> : <span className="listing-view">{text.viewStay}</span>}
 
         <span>
           {text.selection}
@@ -55,17 +68,13 @@ export default function ListingCard({
               size={13}
               fill="currentColor"
             />
-            5.00 · {text.excellent}
+            {listing.rating?.count && listing.rating.average !== null ? `${listing.rating.average.toFixed(1)} · ${listing.rating.count}` : `— · 0`}
           </span>
 
-          <span>
-            {listing.guestCapacity ||
-              4}{' '}
-            {text.guestsPlural}
-          </span>
+          {listing.guestCapacity ? <span>{listing.guestCapacity} {text.guestsPlural}</span> : null}
         </div>
 
-        <h3>{listing.listingId ? <a href={`/listings/${listing.listingId}`}>{decodeText(listing.title)}</a> : decodeText(listing.title)}</h3>
+        <h3>{listing.listingId ? <a href={detailUrl}>{decodeText(listing.title)}</a> : decodeText(listing.title)}</h3>
 
         <p>
           {decodeText(listing.description) ||
@@ -82,7 +91,7 @@ export default function ListingCard({
           MAD
 
           <i>
-            {' '}/ {text.night}
+            {' '}/ {unit}
           </i>
         </b>
 

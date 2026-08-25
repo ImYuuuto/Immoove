@@ -2169,6 +2169,11 @@ footer > p {
   transform: translateY(-2px);
 }
 
+.listing-card.is-clickable {
+  cursor: pointer;
+}
+
+
 .auth-error {
   margin: 0 0 16px;
   padding: 12px 14px;
