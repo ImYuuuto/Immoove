@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
-import type { Announcement, ApiList, Booking, Listing, Pagination, User } from '../types';
+import type { AdminOverview, Announcement, ApiList, AuditEntry, Booking, Listing, Pagination, User } from '../types';
 import { useAdminCopy } from '../adminI18n';
 
 export function useAdminData() {
@@ -11,6 +11,9 @@ export function useAdminData() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [userPagination, setUserPagination] = useState<Pagination | null>(null);
+  const [overview, setOverview] = useState<AdminOverview | null>(null);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
+  const [days, setDays] = useState(30);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -20,24 +23,28 @@ export function useAdminData() {
       const session = await api<{ user: User }>('/auth/session');
       if (!['ADMIN', 'admin'].includes(session.user.role)) throw new Error(copy.adminRequired);
       setUser(session.user);
-      const [listingData, announcementData, bookingData, userData] = await Promise.all([
+      const [listingData, announcementData, bookingData, userData, overviewData, auditData] = await Promise.all([
         api<ApiList<Listing>>('/listings?limit=100'),
         api<ApiList<Announcement>>('/announcements'),
         api<ApiList<Booking>>('/bookings'),
         api<ApiList<User> & { pagination: Pagination }>('/users?limit=100'),
+        api<AdminOverview>(`/admin/overview?days=${days}`),
+        api<ApiList<AuditEntry>>('/admin/audit?limit=50'),
       ]);
       setListings(listingData.items);
       setAnnouncements(announcementData.items);
       setBookings(bookingData.items);
       setUsers(userData.items);
       setUserPagination(userData.pagination);
+      setOverview(overviewData);
+      setAudit(auditData.items);
       setError('');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : copy.dashboardFailed);
     } finally {
       setLoading(false);
     }
-  }, [copy]);
+  }, [copy, days]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -58,5 +65,5 @@ export function useAdminData() {
     }
   }, [copy]);
 
-  return { user, users, userPagination, listings, announcements, bookings, error, loading, load, runAction, searchUsers, clearError: (_value?: string) => setError('') };
+  return { user, users, userPagination, listings, announcements, bookings, overview, audit, days, setDays, error, loading, load, runAction, searchUsers, clearError: (_value?: string) => setError('') };
 }

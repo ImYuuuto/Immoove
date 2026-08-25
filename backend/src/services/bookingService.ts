@@ -42,13 +42,16 @@ export class BookingService {
         : null,
       email: row.contact_email,
       phone: row.contact_phone ? decodeStoredText(row.contact_phone) : null,
+      status: row.status,
+      paymentStatus: row.payment_status,
+      currency: row.currency || 'MAD',
       createdAt: row.created_at,
     };
   }
 
   static async findAll(userId?: number) {
     const result = await query<any>(
-      'SELECT booking_id, listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone, created_at FROM bookings WHERE ($1::int IS NULL OR user_id = $1) ORDER BY created_at DESC',
+      'SELECT booking_id, listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone, status, payment_status, currency, created_at FROM bookings WHERE ($1::int IS NULL OR user_id = $1) ORDER BY created_at DESC',
       [userId || null],
     );
     return result.rows.map(this.map);
@@ -56,7 +59,7 @@ export class BookingService {
 
   static async findById(bookingId: number) {
     const result = await query<any>(
-      'SELECT booking_id, listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone, created_at FROM bookings WHERE booking_id = $1',
+      'SELECT booking_id, listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone, status, payment_status, currency, created_at FROM bookings WHERE booking_id = $1',
       [bookingId],
     );
     return result.rows[0] ? this.map(result.rows[0]) : null;
@@ -126,6 +129,8 @@ export class BookingService {
       userId: number;
       startDate: Date;
       endDate: Date;
+      status: 'confirmed' | 'cancelled' | 'completed' | 'refunded';
+      paymentStatus: 'unpaid' | 'pending' | 'paid' | 'refunded';
     }>,
   ) {
     return transaction(async (client) => {
@@ -166,8 +171,13 @@ export class BookingService {
         listing.rows[0].service_type,
       );
       const result = await client.query<any>(
-        'UPDATE bookings SET listing_id = $1, user_id = $2, start_date = $3, end_date = $4, total = (SELECT base_price * $5 FROM listings WHERE listing_id = $1) WHERE booking_id = $6 RETURNING booking_id, listing_id, user_id, start_date, end_date, total, created_at',
-        [listingId, userId, startDate, endDate, units, bookingId],
+        `UPDATE bookings SET listing_id = $1, user_id = $2, start_date = $3, end_date = $4,
+          total = (SELECT base_price * $5 FROM listings WHERE listing_id = $1),
+          status = COALESCE($6, status), payment_status = COALESCE($7, payment_status),
+          cancelled_at = CASE WHEN $6 = 'cancelled' THEN now() WHEN $6 IS NOT NULL THEN NULL ELSE cancelled_at END
+         WHERE booking_id = $8
+         RETURNING booking_id, listing_id, user_id, start_date, end_date, total, status, payment_status, currency, created_at`,
+        [listingId, userId, startDate, endDate, units, data.status || null, data.paymentStatus || null, bookingId],
       );
       return this.map(result.rows[0]);
     });

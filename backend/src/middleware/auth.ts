@@ -7,6 +7,39 @@ export interface AuthUser {
   userId: number;
   role: string;
 }
+export type Permission =
+  | 'analytics.read'
+  | 'audit.read'
+  | 'booking.manage'
+  | 'content.moderate'
+  | 'listing.manage'
+  | 'moderation.metrics.read'
+  | 'moderation.queue'
+  | 'settings.manage'
+  | 'user.manage';
+
+const adminPermissions: Permission[] = [
+  'analytics.read',
+  'audit.read',
+  'booking.manage',
+  'content.moderate',
+  'listing.manage',
+  'moderation.metrics.read',
+  'moderation.queue',
+  'settings.manage',
+  'user.manage',
+];
+const moderatorPermissions: Permission[] = [
+  'content.moderate',
+  'moderation.metrics.read',
+  'moderation.queue',
+];
+
+export function permissionsForRole(role: string): Permission[] {
+  if (['ADMIN', 'admin'].includes(role)) return adminPermissions;
+  if (['moderator', 'staff'].includes(role)) return moderatorPermissions;
+  return [];
+}
 const roles = [
   'CLIENT',
   'HOST',
@@ -38,13 +71,14 @@ export const auth: RequestHandler = async (req, _res, next) => {
         typeof payload.role === 'string' &&
         roles.includes(payload.role)
       ) {
-        const result = await query<{ session_version: number; role: string }>(
-          'SELECT session_version, role FROM users WHERE user_id = $1',
+        const result = await query<{ session_version: number; role: string; account_status?: string }>(
+          'SELECT session_version, role, account_status FROM users WHERE user_id = $1',
           [payload.userId],
         );
         const user = result.rows[0];
         if (
           user &&
+          user.account_status !== 'suspended' &&
           user.session_version === payload.sessionVersion &&
           user.role === payload.role
         ) {
@@ -85,6 +119,18 @@ export const requireRoles =
   (...allowedRoles: string[]): RequestHandler =>
   (req, _res, next) =>
     req.user && allowedRoles.includes(req.user.role)
+      ? next()
+      : next(
+          new AppError(
+            req.user ? 403 : 401,
+            req.user ? 'Insufficient permissions' : 'Authentication required',
+          ),
+      );
+
+export const requirePermission =
+  (permission: Permission): RequestHandler =>
+  (req, _res, next) =>
+    req.user && permissionsForRole(req.user.role).includes(permission)
       ? next()
       : next(
           new AppError(

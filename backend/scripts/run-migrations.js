@@ -15,6 +15,8 @@ require('dotenv').config();
       '006-profile-ownership.sql',
       '007-booking-contact.sql',
       '008-listing-categories.sql',
+      '009-localize-seed-images.sql',
+      '010-staff-dashboards.sql',
     ])
       await client.query(
         fs.readFileSync(

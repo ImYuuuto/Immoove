@@ -6,4 +6,5 @@ router.use(auth, requireRoles('ADMIN', 'admin'));
 router.get('/', controller.list);
 router.get('/:id', controller.get);
 router.patch('/:id/role', controller.setRole);
+router.patch('/:id/status', controller.setStatus);
 export default router;

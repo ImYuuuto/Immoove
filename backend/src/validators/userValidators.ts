@@ -13,3 +13,8 @@ export const userQuerySchema = z.object({
 export const userRoleSchema = z.object({
   role: z.enum(['user', 'moderator']),
 });
+
+export const userStatusSchema = z.object({
+  status: z.enum(['active', 'suspended']),
+  reason: z.string().trim().min(2).max(1000).optional(),
+});

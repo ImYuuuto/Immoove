@@ -78,7 +78,7 @@ export class AuthService {
 
   static async authenticate(email: string, password: string) {
     const result = await query<any>(
-      'SELECT user_id, first_name, last_name, email, phone, role, password_hash, session_version FROM users WHERE email = $1',
+      'SELECT user_id, first_name, last_name, email, phone, role, account_status, password_hash, session_version FROM users WHERE email = $1',
       [email],
     );
     const user = result.rows[0];
@@ -88,6 +88,8 @@ export class AuthService {
     );
     if (!user?.password_hash || !passwordMatches)
       throw new AppError(401, 'Invalid email or password');
+    if (user.account_status === 'suspended')
+      throw new AppError(403, 'Account is suspended');
     return {
       userId: user.user_id,
       firstName: user.first_name,

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { query } from '../../src/config/db';
 import { COOKIE_NAME } from '../../src/controllers/authController';
-import { auth } from '../../src/middleware/auth';
+import { auth, permissionsForRole, requirePermission } from '../../src/middleware/auth';
 
 jest.mock('../../src/config/db', () => ({ query: jest.fn() }));
 
@@ -60,5 +60,21 @@ describe('JWT session version validation', () => {
     const { next } = await authenticate(createToken(3));
 
     expect(next).toHaveBeenCalledWith(databaseError);
+  });
+});
+
+describe('staff permissions', () => {
+  test('separates administrator and moderator capabilities', () => {
+    expect(permissionsForRole('admin')).toEqual(expect.arrayContaining(['analytics.read', 'user.manage', 'content.moderate']));
+    expect(permissionsForRole('moderator')).toEqual(expect.arrayContaining(['moderation.queue', 'content.moderate']));
+    expect(permissionsForRole('moderator')).not.toContain('analytics.read');
+    expect(permissionsForRole('user')).toEqual([]);
+  });
+
+  test('rejects a moderator from administrator analytics', () => {
+    const req = { user: { userId: 9, role: 'moderator' } } as Request;
+    const next = jest.fn();
+    requirePermission('analytics.read')(req, {} as Response, next);
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
   });
 });

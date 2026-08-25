@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 import { UserService } from '../services/userService';
-import { userIdSchema, userQuerySchema, userRoleSchema } from '../validators/userValidators';
+import { userIdSchema, userQuerySchema, userRoleSchema, userStatusSchema } from '../validators/userValidators';
 export const list: RequestHandler = async (req, res, next) => {
   try {
     res.json(await UserService.findAll(userQuerySchema.parse(req.query)));
@@ -26,4 +26,11 @@ export const setRole: RequestHandler = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+export const setStatus: RequestHandler = async (req, res, next) => {
+  try {
+    const { id } = userIdSchema.parse(req.params);
+    const { status, reason } = userStatusSchema.parse(req.body);
+    res.json({ item: await UserService.setStatus(id, status, req.user!.userId, reason) });
+  } catch (error) { next(error); }
 };

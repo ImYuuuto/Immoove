@@ -70,6 +70,8 @@ export const updateBookingSchema = z
     userId: id.optional(),
     startDate: z.coerce.date().optional(),
     endDate: z.coerce.date().optional(),
+    status: z.enum(['confirmed', 'cancelled', 'completed', 'refunded']).optional(),
+    paymentStatus: z.enum(['unpaid', 'pending', 'paid', 'refunded']).optional(),
   })
   .refine(
     (value) => Object.keys(value).length > 0,

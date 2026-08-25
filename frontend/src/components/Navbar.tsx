@@ -124,6 +124,12 @@ export default function Navbar({
             </a>
           )}
 
+        {user && ['moderator', 'staff'].includes(user.role) && (
+          <a className="admin-link" href="/moderator" onClick={() => setOpen(false)}>
+            {language === 'ar' ? 'الإشراف' : language === 'fr' ? 'Modération' : 'Moderation'}
+          </a>
+        )}
+
         {user && (
           <a className="mobile-profile-link" href="/profile" onClick={() => setOpen(false)}>
             {text.profile}
