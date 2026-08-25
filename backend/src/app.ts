@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+import path from 'node:path';
 import routes from './routes';
 import { auth } from './middleware/auth';
 import { csrfProtection } from './middleware/csrf';
@@ -32,6 +33,14 @@ const allowedOrigins = new Set(
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(compression());
+app.use(
+  '/uploads',
+  express.static(path.resolve(process.cwd(), 'upload'), {
+    fallthrough: false,
+    immutable: isProduction,
+    maxAge: isProduction ? '30d' : 0,
+  }),
+);
 app.use(
   cors({
     origin: (origin, callback) => {

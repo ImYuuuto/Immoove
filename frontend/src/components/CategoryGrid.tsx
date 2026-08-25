@@ -28,7 +28,7 @@ export default function CategoryGrid({
       image: images.food,
       number: '03 / TASTE', icon: '🍽', title: text.restaurants, text: text.restaurantsText,
     },
-    { image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85', number: '04 / SWIM', icon: '🏖', title: text.beach, text: text.beachText },
+    { image: '/uploads/site/categories/beach.jpg', number: '04 / SWIM', icon: '🏖', title: text.beach, text: text.beachText },
   ];
   const cards = categories.map((category, index) => ({
     ...category,

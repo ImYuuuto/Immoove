@@ -84,7 +84,7 @@ WHERE
 
 INSERT INTO
     listing_images (listing_id, url, sort_order)
-SELECT listing_id, 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c', 0
+SELECT listing_id, '/uploads/site/listings/maison-bleue.jpg', 0
 FROM listings
 WHERE
     title = 'Dar El Bahia'

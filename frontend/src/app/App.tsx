@@ -338,7 +338,7 @@ export default function App() {
           id="host"
         >
           <img
-            src="https://images.unsplash.com/photo-1470214304380-aadaedcfff1b?auto=format&fit=crop&w=2000&q=85"
+            src="/uploads/site/hero/coastal-hero.jpg"
             alt={text.coastalLandscape}
           />
 

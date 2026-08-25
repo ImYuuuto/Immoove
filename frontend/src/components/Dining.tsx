@@ -6,19 +6,19 @@ export default function Dining() {
   const { text } = useLanguage();
   const venues = [
     [
-      'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1200&q=85',
+      '/uploads/site/dining/chez-laura.jpg',
       'EL JADIDA / 01',
       'Restaurant Chez Laura',
     ],
 
     [
-      'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=85',
+      '/uploads/site/dining/la-caleche.jpg',
       'SIDI BOUZID / 02',
       'Café La Calèche',
     ],
 
     [
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=85',
+      '/uploads/site/dining/le-spot.jpg',
       'LA PLAGE / 03',
       'Le Spot',
     ],
