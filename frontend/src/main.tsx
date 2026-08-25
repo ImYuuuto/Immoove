@@ -11,9 +11,15 @@ const ListingPage = lazy(() => import('./listing/ListingPage'));
 const CheckoutPage = lazy(() => import('./listing/CheckoutPage'));
 const CategoryPage = lazy(() => import('./categories/CategoryPage'));
 const CategoriesPage = lazy(() => import('./categories/CategoriesPage'));
+
+if (window.location.hash) {
+  window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+}
+
 const route = window.location.pathname.replace(/\/+$/, '');
 const isAdminRoute = route === '/admin';
 const isProfileRoute = route === '/profile';
+const categoryListingMatch = route.match(/^\/categories\/([a-z0-9-]+)\/listing\/(\d+)$/);
 const listingMatch = route.match(/^\/listings?\/(\d+)$/);
 const checkoutMatch = route.match(/^\/checkout\/(\d+)$/);
 const categoryMatch = route.match(/^\/categories\/([a-z0-9-]+)$/);
@@ -27,6 +33,10 @@ createRoot(document.getElementById('root')!).render(
   ) : isProfileRoute ? (
     <Suspense fallback={<div className="profile-state">{languageText().loading}</div>}>
       <ProfilePage />
+    </Suspense>
+  ) : categoryListingMatch ? (
+    <Suspense fallback={<div className="listing-state">{languageText().loading}</div>}>
+      <ListingPage listingId={Number(categoryListingMatch[2])} categorySlug={categoryListingMatch[1]} />
     </Suspense>
   ) : listingMatch ? (
     <Suspense fallback={<div className="listing-state">{languageText().loading}</div>}>

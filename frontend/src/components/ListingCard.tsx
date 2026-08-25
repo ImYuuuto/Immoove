@@ -8,13 +8,19 @@ export default function ListingCard({
   listing,
   onFavorite,
   onBook,
+  categorySlug,
 }: {
   listing: Listing;
   onFavorite: (id?: number) => void;
   onBook: (listing: Listing) => void;
+  categorySlug?: string;
 }) {
   const { language, text } = useLanguage();
-  const detailUrl = listing.listingId ? `/listings/${listing.listingId}` : '';
+  const detailUrl = listing.listingId
+    ? categorySlug
+      ? `/categories/${categorySlug}/listing/${listing.listingId}`
+      : `/listings/${listing.listingId}`
+    : '';
   const pricingUnits: Record<string, Record<string, string>> = {
     fr: { night: 'nuit', day: 'jour', hour: 'heure', service: 'service', session: 'séance', fixed: 'service' },
     en: { night: 'night', day: 'day', hour: 'hour', service: 'service', session: 'session', fixed: 'service' },

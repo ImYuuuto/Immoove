@@ -11,6 +11,9 @@ const router = Router();
 const authRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
+  skip: () =>
+    process.env.NODE_ENV !== 'production' ||
+    process.env.DISABLE_RATE_LIMITS === 'true',
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { message: 'Too many authentication attempts' } },

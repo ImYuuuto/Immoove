@@ -7,7 +7,7 @@ import { useListingCopy } from './listingI18n';
 import type { ListingDetail } from './types';
 import './listing.css';
 
-export default function ListingPage({ listingId }: { listingId: number }) {
+export default function ListingPage({ listingId, categorySlug }: { listingId: number; categorySlug?: string }) {
   const copy = useListingCopy();
   const { language } = useLanguage();
   const [listing, setListing] = useState<ListingDetail | null>(null);
@@ -16,7 +16,15 @@ export default function ListingPage({ listingId }: { listingId: number }) {
 
   const load = async () => {
     setLoading(true); setError('');
-    try { const result = await request<{ item: ListingDetail }>(`/listings/${listingId}`); setListing(result.item); }
+    try {
+      const result = await request<{ item: ListingDetail }>(`/listings/${listingId}`);
+      setListing(result.item);
+      const slug = result.item.category?.slug || categorySlug;
+      if (slug) {
+        const canonicalPath = `/categories/${slug}/listing/${listingId}`;
+        if (window.location.pathname !== canonicalPath) window.history.replaceState(null, '', canonicalPath);
+      }
+    }
     catch (cause) { setError(cause instanceof Error ? cause.message : copy.unavailable); }
     finally { setLoading(false); }
   };
@@ -36,7 +44,7 @@ export default function ListingPage({ listingId }: { listingId: number }) {
   };
 
   return <main className="listing-page">
-    <header className="listing-topbar"><a className="brand" href="/"><b>B</b>bouzid<span>.</span></a><a href={listing.category?.slug ? `/categories/${listing.category.slug}` : '/categories'}><ArrowLeft size={17} />{copy.back}</a></header>
+    <header className="listing-topbar"><a className="brand" href="/"><b>B</b>bouzid<span>.</span></a><a href={listing.category?.slug || categorySlug ? `/categories/${listing.category?.slug || categorySlug}` : '/categories'}><ArrowLeft size={17} />{copy.back}</a></header>
     <section className={`listing-gallery gallery-${Math.min(images.length, 5)}`} aria-label={copy.gallery}>{images.length ? images.slice(0, 5).map((image, index) => <img key={image.url} className={index === 0 ? 'gallery-main' : ''} src={image.url} alt={`${listing.title} ${index + 1}`} />) : <div className="gallery-empty">{listing.title.slice(0, 1)}</div>}</section>
     <section className="listing-detail-grid"><div className="listing-detail-main"><div className="listing-heading"><div>{listing.location?.name && <small><MapPin size={14} />{listing.location.name}</small>}<h1>{listing.title}</h1><p>{listing.description}</p></div><div className="detail-rating"><Star fill="currentColor" size={18} /><b>{listing.rating.average?.toFixed(1) || '—'}</b><span>{listing.rating.count} {copy.review}</span></div></div>
       <article className="owner-card"><UserRound /><div><small>{copy.owner}</small><b>{ownerName}</b></div></article>

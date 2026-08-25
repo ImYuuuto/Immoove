@@ -24,6 +24,8 @@ npm run dev
 
 The API listens on `http://localhost:4000` by default. Run `npm test`, `npm run build`, and `npm run lint` for verification. `npm run migrate` applies both plain SQL files through `psql`; alternatively, `npm run migrate:node` runs them through the Node PostgreSQL client.
 
+Request, authentication, and password-attempt rate limits are enforced only when `NODE_ENV=production`; development and test environments skip them. Local Docker development can also set `DISABLE_RATE_LIMITS=true`; production deployments should leave it false.
+
 JSON request bodies are limited to 102,400 bytes by default and oversized requests return `413`. Set `REQUEST_BODY_LIMIT_BYTES` to a positive integer to use a different limit.
 
 Feature endpoints are available under `/api/v1` (the legacy `/api` prefix remains supported): `GET /listings/search`, `GET /listings/featured`, `POST /announcements/request`, `PATCH /announcements/:id` for admins, `GET /blog/posts`, `GET /favorites`, and `POST /favorites/:listingId/toggle`. Migration `003-platform-features.sql` adds listing service metadata, the `listing_categories` many-to-many table, host announcement requests, blog posts, and favorites.

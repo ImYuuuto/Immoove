@@ -97,7 +97,7 @@ export default function App() {
     }
 
     document
-      .querySelector('#escapes')
+      .getElementById('escapes')
       ?.scrollIntoView({
         behavior: 'smooth',
       });

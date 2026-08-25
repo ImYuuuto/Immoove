@@ -11,6 +11,8 @@ import { csrfProtection } from './middleware/csrf';
 import { errorHandler, notFound } from './utils/errorHandler';
 export const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
+const rateLimitsDisabled =
+  !isProduction || process.env.DISABLE_RATE_LIMITS === 'true';
 const rateLimitWindowMs =
   Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
 const rateLimitMax =
@@ -54,6 +56,7 @@ app.use(
   rateLimit({
     windowMs: rateLimitWindowMs,
     limit: rateLimitMax,
+    skip: () => rateLimitsDisabled,
     standardHeaders: true,
     legacyHeaders: false,
   }),

@@ -51,7 +51,7 @@ export default function CategoryPage({ slug }: { slug: string }) {
   return <main className="category-page">
     <header className="category-topbar">
       <a className="brand" href="/"><b>B</b>bouzid<span>.</span></a>
-      <a href="/categories"><ArrowLeft size={17} />{copy.back}</a>
+      <a href="/"><ArrowLeft size={17} />{copy.back}</a>
     </header>
     <nav className="category-navigation" aria-label={text.discover}>
       {categories.map((category) => <a className={category.slug === slug ? 'active' : ''} href={`/categories/${category.slug}`} key={category.categoryId}>{category.name}{category.listingCount !== undefined && <span>{category.listingCount}</span>}</a>)}
@@ -64,7 +64,7 @@ export default function CategoryPage({ slug }: { slug: string }) {
         <p>{data.pagination.total.toLocaleString(locale)} {copy.listings}</p>
       </section>
       <section className="category-results">
-        {data.items.length ? <div className="listing-grid">{data.items.map((listing) => <ListingCard listing={listing} onFavorite={favorite} onBook={(item) => item.listingId && window.location.assign(`/listings/${item.listingId}`)} key={listing.listingId} />)}</div> : <div className="category-empty">{copy.empty}</div>}
+        {data.items.length ? <div className="listing-grid">{data.items.map((listing) => <ListingCard listing={listing} categorySlug={slug} onFavorite={favorite} onBook={(item) => item.listingId && window.location.assign(`/categories/${slug}/listing/${item.listingId}`)} key={listing.listingId} />)}</div> : <div className="category-empty">{copy.empty}</div>}
         {totalPages > 1 && <nav className="category-pagination" aria-label="Pagination">
           <button disabled={page <= 1} onClick={() => changePage(page - 1)}><ArrowLeft size={16} />{copy.previous}</button>
           <span>{formatTranslation(copy.page, { page, total: totalPages })}</span>

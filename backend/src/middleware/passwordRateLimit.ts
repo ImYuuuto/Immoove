@@ -16,6 +16,9 @@ const limit = positiveInteger(process.env.PASSWORD_RATE_LIMIT_MAX, 5);
 const options = {
   windowMs,
   limit,
+  skip: () =>
+    process.env.NODE_ENV !== 'production' ||
+    process.env.DISABLE_RATE_LIMITS === 'true',
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
