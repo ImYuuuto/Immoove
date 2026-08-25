@@ -46,4 +46,6 @@ Authenticated profile endpoints are `GET`, `PATCH`, and `DELETE /api/v1/profile`
 
 Category navigation uses `GET /api/v1/categories` and `GET /api/v1/categories/:slug/listings?page=1&limit=20`. Stable category slugs are `housing`, `services`, `hobbies-and-activities`, and `renting-cars`. Category listing results contain camelCase card data, rating summaries, and `listingId`; clients should navigate a selected card to `/listings/:listingId`.
 
+Migration `011-category-sample-listings.sql` adds two approved sample listings per public category, with gallery images and amenities. It is idempotent and can be reapplied safely.
+
 Development admin sample: `amina@example.com` / `BouzidAdmin2026!`. Change or remove this credential before using a non-development environment.
