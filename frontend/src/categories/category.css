@@ -1,4 +1,5 @@
 .category-page { min-height: 100vh; background: #f7f4ee; color: var(--navy); }
+.category-directory-page .categories { padding-top: 90px; }
 .category-topbar { height: 82px; padding: 0 clamp(22px, 6vw, 96px); display: flex; align-items: center; justify-content: space-between; background: white; border-bottom: 1px solid rgba(3, 35, 45, .1); }
 .category-topbar > a:last-child { display: inline-flex; align-items: center; gap: 8px; color: var(--navy); font-size: 13px; font-weight: 700; }
 .category-navigation { padding: 18px clamp(22px, 6vw, 96px); display: flex; gap: 10px; overflow-x: auto; background: white; }

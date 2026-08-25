@@ -51,7 +51,7 @@ export default function CategoryPage({ slug }: { slug: string }) {
   return <main className="category-page">
     <header className="category-topbar">
       <a className="brand" href="/"><b>B</b>bouzid<span>.</span></a>
-      <a href="/#categories"><ArrowLeft size={17} />{copy.back}</a>
+      <a href="/categories"><ArrowLeft size={17} />{copy.back}</a>
     </header>
     <nav className="category-navigation" aria-label={text.discover}>
       {categories.map((category) => <a className={category.slug === slug ? 'active' : ''} href={`/categories/${category.slug}`} key={category.categoryId}>{category.name}{category.listingCount !== undefined && <span>{category.listingCount}</span>}</a>)}

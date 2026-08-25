@@ -6,8 +6,10 @@ import '../categories/category.css';
 
 export default function CategoryGrid({
   onAnnouncement,
+  showAnnouncement = true,
 }: {
   onAnnouncement: () => void;
+  showAnnouncement?: boolean;
 }) {
   const { text } = useLanguage();
   const categories = useCategories();
@@ -83,7 +85,7 @@ export default function CategoryGrid({
         ))}
 
       </div>
-      <button className="discover-host-link" onClick={onAnnouncement}>{text.shareAddress}</button>
+      {showAnnouncement && <button className="discover-host-link" onClick={onAnnouncement}>{text.shareAddress}</button>}
     </section>
   );
 }

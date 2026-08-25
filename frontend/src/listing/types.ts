@@ -7,6 +7,7 @@ export type ListingReview = { reviewId: number; rating: number; comment?: string
 export type ListingDetail = Listing & {
   listingId: number;
   pricingUnit?: string;
+  category?: { categoryId: number; name: string; slug: string };
   owner?: ListingOwner;
   amenities: Array<{ featureId: number; name: string }>;
   availability: AvailabilityInterval[];

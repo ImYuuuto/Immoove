@@ -12,7 +12,7 @@ export function EditorialSection() {
   }, []);
   return <section className="editorial-luxury" ref={ref}>
     <div className="editorial-photo" />
-    <div className="editorial-content reveal"><small className="eyebrow">{text.editorialEyebrow}</small><h2>{text.editorialLine1}<br />{text.editorialLine2}<span>.</span></h2><p>{text.editorialText}</p><a href="#dining">{text.discoverCoast}</a></div>
+    <div className="editorial-content reveal"><small className="eyebrow">{text.editorialEyebrow}</small><h2>{text.editorialLine1}<br />{text.editorialLine2}<span>.</span></h2><p>{text.editorialText}</p><a href="/categories/services">{text.discoverCoast}</a></div>
   </section>;
 }
 

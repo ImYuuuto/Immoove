@@ -188,14 +188,14 @@ export default function App() {
       {text.heroText}
     </p>
 
-    <a className="light-button" href="#escapes">
+    <a className="light-button" href="/categories">
       {text.prepare}
       <ArrowUpRight size={18} />
     </a>
   </div>
 
   <HeroSearch onSearch={search} />
-  <a className="scroll-indicator" href="#categories">{text.scroll} <ArrowDown size={14} /></a>
+  <a className="scroll-indicator" href="/categories">{text.scroll} <ArrowDown size={14} /></a>
 </section>
 
         <section className="premium-stats"><article><strong>120<span>+</span></strong><p>{text.statsAddresses}</p></article><article><strong>35<span>+</span></strong><p>{text.statsExperiences}</p></article><article><strong>4.9<small>/5</small></strong><p>{text.statsRating}</p></article></section>
@@ -228,7 +228,7 @@ export default function App() {
               }
             />
 
-            <a href="#categories">
+            <a href="/categories">
               {text.allAddresses}
               <ArrowUpRight size={16} />
             </a>
@@ -283,7 +283,7 @@ export default function App() {
               }
             />
 
-            <a href="#story">
+            <a href="/">
               {text.allArticles}
               <ArrowUpRight size={16} />
             </a>
@@ -322,7 +322,7 @@ export default function App() {
                     {decodeText(post.excerpt)}
                   </p>
 
-                  <a href="#story">
+                  <a href="/">
                     {text.read}
                     <ArrowUpRight size={14} />
                   </a>
@@ -378,19 +378,19 @@ export default function App() {
       <footer className="site-footer">
         <div className="footer-main">
           <div className="footer-intro">
-            <a className="brand" href="#top"><b>B</b> bouzid<span>.</span></a>
+            <a className="brand" href="/"><b>B</b> bouzid<span>.</span></a>
             <p>{text.footerText}</p>
           </div>
           <nav aria-label="Footer navigation">
             <small>{text.exploreFooter}</small>
-            <a href="#categories">{text.stays}</a>
-            <a href="#escapes">{text.ourAddresses}</a>
-            <a href="#story">{text.journal}</a>
+            <a href="/categories/housing">{text.stays}</a>
+            <a href="/categories">{text.ourAddresses}</a>
+            <a href="/">{text.journal}</a>
           </nav>
           <div className="footer-location">
             <small>{text.findUs}</small>
             <p>Sidi Bouzid<br />El Jadida, Maroc</p>
-            <a href="#host">{text.proposeAddress}</a>
+            <a href="/">{text.proposeAddress}</a>
           </div>
         </div>
         <div className="footer-bottom">

@@ -63,7 +63,7 @@ export default function Navbar({
 
       <a
         className="brand"
-        href="#top"
+        href="/"
       >
         <b>B</b>
         bouzid<span>.</span>
@@ -79,7 +79,7 @@ export default function Navbar({
         }
       >
         <a
-          href="#categories"
+          href="/categories"
           onClick={() =>
             setOpen(false)
           }
@@ -88,7 +88,7 @@ export default function Navbar({
         </a>
 
         <a
-          href="#story"
+          href="/"
           onClick={() =>
             setOpen(false)
           }

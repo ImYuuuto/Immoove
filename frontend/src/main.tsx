@@ -10,12 +10,14 @@ const ProfilePage = lazy(() => import('./profile/ProfilePage'));
 const ListingPage = lazy(() => import('./listing/ListingPage'));
 const CheckoutPage = lazy(() => import('./listing/CheckoutPage'));
 const CategoryPage = lazy(() => import('./categories/CategoryPage'));
+const CategoriesPage = lazy(() => import('./categories/CategoriesPage'));
 const route = window.location.pathname.replace(/\/+$/, '');
 const isAdminRoute = route === '/admin';
 const isProfileRoute = route === '/profile';
-const listingMatch = route.match(/^\/listings\/(\d+)$/);
+const listingMatch = route.match(/^\/listings?\/(\d+)$/);
 const checkoutMatch = route.match(/^\/checkout\/(\d+)$/);
 const categoryMatch = route.match(/^\/categories\/([a-z0-9-]+)$/);
+const isCategoriesRoute = route === '/categories';
 
 createRoot(document.getElementById('root')!).render(
   isAdminRoute ? (
@@ -33,6 +35,10 @@ createRoot(document.getElementById('root')!).render(
   ) : checkoutMatch ? (
     <Suspense fallback={<div className="listing-state">{languageText().loading}</div>}>
       <CheckoutPage listingId={Number(checkoutMatch[1])} />
+    </Suspense>
+  ) : isCategoriesRoute ? (
+    <Suspense fallback={<div className="category-state">{languageText().loading}</div>}>
+      <CategoriesPage />
     </Suspense>
   ) : categoryMatch ? (
     <Suspense fallback={<div className="category-state">{languageText().loading}</div>}>
