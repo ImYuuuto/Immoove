@@ -2,6 +2,7 @@ import { images } from '../data/content';
 import Heading from './Heading';
 import { useLanguage } from '../i18n/language';
 import { useCategories } from '../categories/useCategories';
+import { categoryLabel } from '../categories/categoryLabels';
 import '../categories/category.css';
 
 export default function CategoryGrid({
@@ -11,29 +12,29 @@ export default function CategoryGrid({
   onAnnouncement: () => void;
   showAnnouncement?: boolean;
 }) {
-  const { text } = useLanguage();
+  const { language, text } = useLanguage();
   const categories = useCategories();
   const presentation = [
     {
       image: images.stay,
-      number: '01 / STAY', icon: '🏡', title: text.villas, text: text.villasText,
+      number: `01 / ${text.stay.toUpperCase()}`, icon: '🏡', title: text.villas, text: text.villasText,
     },
 
     {
       image: images.explore,
-      number: '02 / EXPLORE', icon: '🌊', title: text.activities, text: text.activitiesText,
+      number: `02 / ${text.explore.toUpperCase()}`, icon: '🌊', title: text.activities, text: text.activitiesText,
     },
 
     {
       image: images.food,
-      number: '03 / TASTE', icon: '🍽', title: text.restaurants, text: text.restaurantsText,
+      number: `03 / ${text.dining.toUpperCase()}`, icon: '🍽', title: text.restaurants, text: text.restaurantsText,
     },
-    { image: '/uploads/site/categories/beach.jpg', number: '04 / SWIM', icon: '🏖', title: text.beach, text: text.beachText },
+    { image: '/uploads/site/categories/beach.jpg', number: `04 / ${text.carRental.toUpperCase()}`, icon: '🚗', title: text.carRental, text: text.beachText },
   ];
   const cards = categories.map((category, index) => ({
     ...category,
     ...presentation[index % presentation.length],
-    title: category.name,
+    title: categoryLabel(category.slug, language, category.name),
   }));
 
   return (

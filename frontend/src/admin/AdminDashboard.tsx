@@ -8,10 +8,15 @@ import { AdminAnalyticsView, AnnouncementsView, AuditView, BookingsView, Listing
 import { useAdminData } from './hooks/useAdminData';
 import type { View } from './types';
 import { useAdminCopy } from './adminI18n';
+import { useAdminExtraCopy } from './adminExtraI18n';
+import { roleLabel } from '../i18n/labels';
+import { useLanguage } from '../i18n/language';
 
 export default function AdminDashboard() {
   const copy = useAdminCopy();
-  const titles: Record<View, string> = { overview: copy.overview, analytics: 'Analytics', listings: copy.listings, announcements: copy.publicationRequests, bookings: copy.bookings, users: copy.users, audit: 'Audit log' };
+  const extra = useAdminExtraCopy();
+  const { language } = useLanguage();
+  const titles: Record<View, string> = { overview: copy.overview, analytics: extra.analytics, listings: copy.listings, announcements: copy.publicationRequests, bookings: copy.bookings, users: copy.users, audit: extra.audit };
   const [view, setView] = useState<View>('overview');
   const [mobileNav, setMobileNav] = useState(false);
   const { user, users, userPagination, listings, announcements, bookings, overview, audit, days, setDays, error, loading, load, runAction, searchUsers, clearError } = useAdminData();
@@ -36,7 +41,7 @@ export default function AdminDashboard() {
     <AdminSidebar view={view} setView={setView} pendingListings={pendingListings} pendingAnnouncements={pendingAnnouncements} open={mobileNav} onNavigate={() => setMobileNav(false)} onLogout={logout} />
     <button className="admin-menu" onClick={() => setMobileNav((open) => !open)} aria-label={copy.menu}><Menu /></button>
     <main className="admin-main">
-      <header className="admin-header"><div><small>BOUZID ESCAPES / ADMIN</small><h1>{titles[view]}</h1></div><div className="admin-user"><span>{user?.role}</span><b>{copy.admin} #{user?.userId}</b></div></header>
+      <header className="admin-header"><div><small>BOUZID ESCAPES / ADMIN</small><h1>{titles[view]}</h1></div><div className="admin-user"><span>{roleLabel(user?.role, language)}</span><b>{copy.admin} #{user?.userId}</b></div></header>
       {error && <div className="admin-error">{error}<button onClick={() => clearError()}><X size={15} /></button></div>}
       {view === 'overview' && <OverviewView listings={listings} announcements={announcements} bookings={bookings} overview={overview} onView={setView} />}
       {view === 'analytics' && <AdminAnalyticsView overview={overview} days={days} onDays={setDays} />}

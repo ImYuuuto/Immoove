@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { dateAtNoonUtc, fixedSession, localDateTimeToIso, overlapsAvailability, SESSION_TIMES } from './availability';
 import { useListingCopy } from './listingI18n';
+import { useLanguage } from '../i18n/language';
 import type { BookingMode, ListingDetail } from './types';
 
 export type BookingSelection = { startDate: string; endDate: string; valid: boolean };
 
 export default function BookingSelector({ listing, mode, onChange }: { listing: ListingDetail; mode: BookingMode; onChange: (selection: BookingSelection) => void }) {
   const copy = useListingCopy();
+  const { language } = useLanguage();
+  const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-GB' : 'fr-FR';
   const today = new Date().toISOString().slice(0, 10);
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
@@ -55,6 +58,6 @@ export default function BookingSelector({ listing, mode, onChange }: { listing: 
     {mode === 'fixed' && <div className="checkout-fields two"><label>{copy.sessionDate}<input required type="date" min={today} value={sessionDate} onChange={(event) => { setSessionDate(event.target.value); setSessionTime(''); }} /></label><label>{copy.sessionTime}<select required value={sessionTime} onChange={(event) => setSessionTime(event.target.value)}><option value="">{copy.chooseTime}</option>{SESSION_TIMES.map((time) => <option key={time} value={time} disabled={!sessionDate || sessionUnavailable(time)}>{time}{sessionDate && sessionUnavailable(time) ? ` — ${copy.blockedPeriods}` : ''}</option>)}</select></label></div>}
     {!ordered && <p className="checkout-conflict" role="alert">{copy.endAfterStart}</p>}
     {(conflict || blockedAttempt) && <p className="checkout-conflict" role="alert">{copy.unavailableSelection}</p>}
-    {!!listing.availability.length && <div className="blocked-periods"><small>{copy.blockedPeriods}</small>{listing.availability.map((interval, index) => <span key={`${interval.startDate}-${index}`}>{new Date(interval.startDate).toLocaleString()} → {new Date(interval.endDate).toLocaleString()}</span>)}</div>}
+    {!!listing.availability.length && <div className="blocked-periods"><small>{copy.blockedPeriods}</small>{listing.availability.map((interval, index) => <span key={`${interval.startDate}-${index}`}>{new Date(interval.startDate).toLocaleString(locale)} → {new Date(interval.endDate).toLocaleString(locale)}</span>)}</div>}
   </section>;
 }

@@ -7,6 +7,7 @@ import { getCategoryListings } from './api';
 import { useCategories } from './useCategories';
 import { useCategoryCopy } from './categoryI18n';
 import type { CategoryListingsResponse } from './types';
+import { categoryLabel } from './categoryLabels';
 import './category.css';
 
 function initialPage() {
@@ -54,18 +55,18 @@ export default function CategoryPage({ slug }: { slug: string }) {
       <a href="/"><ArrowLeft size={17} />{copy.back}</a>
     </header>
     <nav className="category-navigation" aria-label={text.discover}>
-      {categories.map((category) => <a className={category.slug === slug ? 'active' : ''} href={`/categories/${category.slug}`} key={category.categoryId}>{category.name}{category.listingCount !== undefined && <span>{category.listingCount}</span>}</a>)}
+      {categories.map((category) => <a className={category.slug === slug ? 'active' : ''} href={`/categories/${category.slug}`} key={category.categoryId}>{categoryLabel(category.slug, language, category.name)}{category.listingCount !== undefined && <span>{category.listingCount}</span>}</a>)}
     </nav>
 
     {loading ? <div className="category-state">{copy.loading}</div> : !data ? <div className="category-state"><h1>{copy.unavailable}</h1><p>{error}</p><button onClick={() => void load()}>{copy.retry}</button></div> : <>
       <section className="category-hero">
         <small>{copy.eyebrow}</small>
-        <h1>{data.category.name}</h1>
+        <h1>{categoryLabel(data.category.slug, language, data.category.name)}</h1>
         <p>{data.pagination.total.toLocaleString(locale)} {copy.listings}</p>
       </section>
       <section className="category-results">
         {data.items.length ? <div className="listing-grid">{data.items.map((listing) => <ListingCard listing={listing} categorySlug={slug} onFavorite={favorite} onBook={(item) => item.listingId && window.location.assign(`/categories/${slug}/listing/${item.listingId}`)} key={listing.listingId} />)}</div> : <div className="category-empty">{copy.empty}</div>}
-        {totalPages > 1 && <nav className="category-pagination" aria-label="Pagination">
+        {totalPages > 1 && <nav className="category-pagination" aria-label={copy.pagination}>
           <button disabled={page <= 1} onClick={() => changePage(page - 1)}><ArrowLeft size={16} />{copy.previous}</button>
           <span>{formatTranslation(copy.page, { page, total: totalPages })}</span>
           <button disabled={page >= totalPages} onClick={() => changePage(page + 1)}>{copy.next}<ArrowRight size={16} /></button>

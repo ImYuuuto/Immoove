@@ -252,9 +252,9 @@ export default function Navbar({
             …
           </button>
         ) : user ? (
-          <a className="nav-profile-avatar" href="/profile" aria-label="Ouvrir mon profil">
+          <a className="nav-profile-avatar" href="/profile" aria-label={text.profile}>
             {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt="Photo de profil" />
+              <img src={user.avatarUrl} alt={text.profile} />
             ) : (
               <span>{user.firstName?.trim().charAt(0).toUpperCase() || user.email?.trim().charAt(0).toUpperCase() || 'U'}</span>
             )}

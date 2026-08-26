@@ -3,6 +3,8 @@ import { ArrowLeft, Check, ClipboardCheck, Clock3, History, LogOut, Menu, Shield
 import { request } from '../utils/request';
 import { decodeText } from '../utils/decodeText';
 import type { ModerationCase, ModerationDecision, ModerationMetrics, ModeratorUser } from './types';
+import { roleLabel } from '../i18n/labels';
+import { useModeratorCopy } from './moderatorI18n';
 import '../admin/admin.css';
 import '../admin/admin-polish.css';
 import './moderator.css';
@@ -11,6 +13,8 @@ type View = 'queue' | 'history';
 type Decision = 'approved' | 'rejected' | 'changes_requested' | 'escalated';
 
 export default function ModeratorDashboard() {
+  const { copy, language } = useModeratorCopy();
+  const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-GB' : 'fr-FR';
   const [user, setUser] = useState<ModeratorUser | null>(null);
   const [items, setItems] = useState<ModerationCase[]>([]);
   const [history, setHistory] = useState<ModerationDecision[]>([]);
@@ -29,7 +33,7 @@ export default function ModeratorDashboard() {
     setLoading(true);
     try {
       const session = await request<{ user: ModeratorUser }>('/auth/session');
-      if (!['moderator', 'staff', 'admin', 'ADMIN'].includes(session.user.role)) throw new Error('Moderator access required');
+      if (!['moderator', 'staff', 'admin', 'ADMIN'].includes(session.user.role)) throw new Error(copy.accessRequired);
       const [queue, decisionHistory, performance] = await Promise.all([
         request<{ items: ModerationCase[] }>(`/moderation/queue?scope=${scope}&limit=100`),
         request<{ items: ModerationDecision[] }>('/moderation/history'),
@@ -41,11 +45,11 @@ export default function ModeratorDashboard() {
       setMetrics(performance);
       setError('');
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to load moderation workspace');
+      setError(cause instanceof Error ? cause.message : copy.loadFailed);
     } finally {
       setLoading(false);
     }
-  }, [scope]);
+  }, [copy.accessRequired, copy.loadFailed, scope]);
   useEffect(() => { void load(); }, [load]);
 
   const act = async (action: () => Promise<unknown>) => {
@@ -57,7 +61,7 @@ export default function ModeratorDashboard() {
       setNote('');
       await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Action failed');
+      setError(cause instanceof Error ? cause.message : copy.actionFailed);
     } finally {
       setBusy(false);
     }
@@ -67,29 +71,29 @@ export default function ModeratorDashboard() {
   const overdue = useMemo(() => items.filter((item) => new Date(item.dueAt) < new Date()).length, [items]);
   const logout = async () => { await request('/auth/logout', { method: 'POST' }).catch(() => undefined); window.location.assign('/'); };
 
-  if (loading && !user) return <div className="admin-loading">Loading moderation workspace…</div>;
-  if (error && !user) return <div className="admin-denied"><ShieldCheck size={42} /><h1>Access unavailable</h1><p>{error}</p><a href="/"><ArrowLeft size={16} /> Back home</a></div>;
+  if (loading && !user) return <div className="admin-loading">{copy.loading}</div>;
+  if (error && !user) return <div className="admin-denied"><ShieldCheck size={42} /><h1>{copy.accessUnavailable}</h1><p>{error}</p><a href="/"><ArrowLeft size={16} />{copy.backHome}</a></div>;
 
   return <div className="admin-shell moderator-shell">
     <aside className={mobileNav ? 'admin-sidebar open' : 'admin-sidebar'}>
-      <div className="admin-brand"><span>M</span><div><b>Bouzid</b><small>MODERATION</small></div></div>
+      <div className="admin-brand"><span>M</span><div><b>Bouzid</b><small>{copy.console}</small></div></div>
       <nav>
-        <button className={view === 'queue' ? 'active' : ''} onClick={() => { setView('queue'); setMobileNav(false); }}><ClipboardCheck size={17} />Review queue <i>{items.length}</i></button>
-        <button className={view === 'history' ? 'active' : ''} onClick={() => { setView('history'); setMobileNav(false); }}><History size={17} />Decision history</button>
+        <button className={view === 'queue' ? 'active' : ''} onClick={() => { setView('queue'); setMobileNav(false); }}><ClipboardCheck size={17} />{copy.queue} <i>{items.length}</i></button>
+        <button className={view === 'history' ? 'active' : ''} onClick={() => { setView('history'); setMobileNav(false); }}><History size={17} />{copy.history}</button>
       </nav>
-      <button className="admin-logout" onClick={() => void logout()}><LogOut size={17} />Log out</button>
+      <button className="admin-logout" onClick={() => void logout()}><LogOut size={17} />{copy.logout}</button>
     </aside>
-    <button className="admin-menu" onClick={() => setMobileNav((open) => !open)} aria-label="Moderator menu"><Menu /></button>
+    <button className="admin-menu" onClick={() => setMobileNav((open) => !open)} aria-label={copy.menu}><Menu /></button>
     <main className="admin-main">
-      <header className="admin-header"><div><small>BOUZID ESCAPES / MODERATION</small><h1>{view === 'queue' ? 'Review queue' : 'Decision history'}</h1></div><div className="admin-user"><span>{user?.role}</span><b>{[user?.firstName, user?.lastName].filter(Boolean).join(' ') || `#${user?.userId}`}</b></div></header>
+      <header className="admin-header"><div><small>BOUZID ESCAPES / {copy.console}</small><h1>{view === 'queue' ? copy.queue : copy.history}</h1></div><div className="admin-user"><span>{roleLabel(user?.role, language)}</span><b>{[user?.firstName, user?.lastName].filter(Boolean).join(' ') || `#${user?.userId}`}</b></div></header>
       {error && <div className="admin-error">{error}<button onClick={() => setError('')}><X size={15} /></button></div>}
       {view === 'queue' ? <section className="admin-content">
-        <div className="stat-grid moderator-stats"><article><small>OPEN QUEUE</small><strong>{items.length}</strong><span>Visible cases</span></article><article><small>OVERDUE</small><strong>{overdue}</strong><span>Past 24-hour SLA</span></article><article><small>DECIDED TODAY</small><strong>{metrics?.today || 0}</strong><span>{metrics?.lastSevenDays || 0} this week</span></article><article><small>SLA RATE</small><strong>{Math.round((metrics?.slaRate || 0) * 100)}%</strong><span>{(metrics?.averageHours || 0).toFixed(1)}h average</span></article></div>
-        <div className="moderator-toolbar"><div><button className={scope === 'all' ? 'active' : ''} onClick={() => setScope('all')}>All</button><button className={scope === 'mine' ? 'active' : ''} onClick={() => setScope('mine')}>Mine</button><button className={scope === 'unassigned' ? 'active' : ''} onClick={() => setScope('unassigned')}>Unassigned</button></div><button onClick={() => void load()}>Refresh</button></div>
-        <div className="moderation-layout"><div className="moderation-queue">{items.map((item) => <article className={selected?.caseId === item.caseId ? 'moderation-card selected' : 'moderation-card'} key={item.caseId} onClick={() => setSelected(item)}><div><span className={`priority priority-${item.priority}`}>{item.priority}</span><small>Due {new Date(item.dueAt).toLocaleString()}</small></div><h2>{decodeText(item.title)}</h2><p>{decodeText(item.description || '') || 'No description provided.'}</p><footer><span>{item.entityType} #{item.entityId}</span>{item.assignedTo ? <b>{item.assignedTo === user?.userId ? 'Assigned to you' : 'Assigned'}</b> : <button onClick={(event) => { event.stopPropagation(); void claim(item); }}>Claim</button>}</footer></article>)}</div>
-          {selected && <aside className="review-panel"><div className="review-panel-heading"><div><small>{selected.entityType} #{selected.entityId}</small><h2>{decodeText(selected.title)}</h2></div><button onClick={() => setSelected(null)}><X size={17} /></button></div>{selected.coverImageUrl && <img src={selected.coverImageUrl} alt="" />}<p>{decodeText(selected.description || '') || 'No description provided.'}</p>{!selected.assignedTo ? <button className="review-primary" disabled={busy} onClick={() => void claim(selected)}>Claim before review</button> : selected.assignedTo !== user?.userId && !['admin', 'ADMIN'].includes(user?.role || '') ? <p className="review-notice">This case is assigned to another moderator.</p> : <div className="decision-form"><label>Reason<select value={reasonCode} onChange={(event) => setReasonCode(event.target.value)}><option value="content_quality">Content quality</option><option value="inaccurate_information">Inaccurate information</option><option value="policy_violation">Policy violation</option><option value="duplicate">Duplicate</option><option value="needs_admin_review">Needs admin review</option></select></label><label>Moderator note<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Required context for rejection or escalation" /></label><div><button className="approve" disabled={busy} onClick={() => void decide('approved')}><Check size={15} />Approve</button><button className="changes" disabled={busy || !note.trim()} onClick={() => void decide('changes_requested')}><Clock3 size={15} />Request changes</button><button className="reject" disabled={busy || !note.trim()} onClick={() => void decide('rejected')}><X size={15} />Reject</button><button disabled={busy || !note.trim()} onClick={() => void decide('escalated')}>Escalate</button></div></div>}</aside>}
+        <div className="stat-grid moderator-stats"><article><small>{copy.openQueue}</small><strong>{items.length}</strong><span>{copy.visibleCases}</span></article><article><small>{copy.overdue}</small><strong>{overdue}</strong><span>{copy.pastSla}</span></article><article><small>{copy.decidedToday}</small><strong>{metrics?.today || 0}</strong><span>{metrics?.lastSevenDays || 0} {copy.thisWeek}</span></article><article><small>{copy.slaRate}</small><strong>{Math.round((metrics?.slaRate || 0) * 100)}%</strong><span>{(metrics?.averageHours || 0).toFixed(1)}h {copy.average}</span></article></div>
+        <div className="moderator-toolbar"><div><button className={scope === 'all' ? 'active' : ''} onClick={() => setScope('all')}>{copy.all}</button><button className={scope === 'mine' ? 'active' : ''} onClick={() => setScope('mine')}>{copy.mine}</button><button className={scope === 'unassigned' ? 'active' : ''} onClick={() => setScope('unassigned')}>{copy.unassigned}</button></div><button onClick={() => void load()}>{copy.refresh}</button></div>
+        <div className="moderation-layout"><div className="moderation-queue">{items.map((item) => <article className={selected?.caseId === item.caseId ? 'moderation-card selected' : 'moderation-card'} key={item.caseId} onClick={() => setSelected(item)}><div><span className={`priority priority-${item.priority}`}>{item.priority}</span><small>{copy.due} {new Date(item.dueAt).toLocaleString(locale)}</small></div><h2>{decodeText(item.title)}</h2><p>{decodeText(item.description || '') || copy.noDescription}</p><footer><span>{item.entityType} #{item.entityId}</span>{item.assignedTo ? <b>{item.assignedTo === user?.userId ? copy.assignedToYou : copy.assigned}</b> : <button onClick={(event) => { event.stopPropagation(); void claim(item); }}>{copy.claim}</button>}</footer></article>)}</div>
+          {selected && <aside className="review-panel"><div className="review-panel-heading"><div><small>{selected.entityType} #{selected.entityId}</small><h2>{decodeText(selected.title)}</h2></div><button onClick={() => setSelected(null)}><X size={17} /></button></div>{selected.coverImageUrl && <img src={selected.coverImageUrl} alt="" />}<p>{decodeText(selected.description || '') || copy.noDescription}</p>{!selected.assignedTo ? <button className="review-primary" disabled={busy} onClick={() => void claim(selected)}>{copy.claimBeforeReview}</button> : selected.assignedTo !== user?.userId && !['admin', 'ADMIN'].includes(user?.role || '') ? <p className="review-notice">{copy.assignedElsewhere}</p> : <div className="decision-form"><label>{copy.reason}<select value={reasonCode} onChange={(event) => setReasonCode(event.target.value)}><option value="content_quality">{copy.contentQuality}</option><option value="inaccurate_information">{copy.inaccurateInformation}</option><option value="policy_violation">{copy.policyViolation}</option><option value="duplicate">{copy.duplicate}</option><option value="needs_admin_review">{copy.needsAdminReview}</option></select></label><label>{copy.note}<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder={copy.notePlaceholder} /></label><div><button className="approve" disabled={busy} onClick={() => void decide('approved')}><Check size={15} />{copy.approve}</button><button className="changes" disabled={busy || !note.trim()} onClick={() => void decide('changes_requested')}><Clock3 size={15} />{copy.requestChanges}</button><button className="reject" disabled={busy || !note.trim()} onClick={() => void decide('rejected')}><X size={15} />{copy.reject}</button><button disabled={busy || !note.trim()} onClick={() => void decide('escalated')}>{copy.escalate}</button></div></div>}</aside>}
         </div>
-      </section> : <section className="admin-content"><div className="table-card"><div className="panel-heading"><div><h2>Your decisions</h2><p>Complete moderation history for this account.</p></div></div><div className="admin-table moderator-history"><div className="table-row table-head"><span>Decision</span><span>Entity</span><span>Reason</span><span>Note</span><span>Date</span></div>{history.map((item) => <div className="table-row" key={item.decisionId}><span><b>{item.decision.replace('_', ' ')}</b><small>Case #{item.caseId}</small></span><span>{item.entityType} #{item.entityId}</span><span>{item.reasonCode.replaceAll('_', ' ')}</span><span>{item.note || '—'}</span><span>{new Date(item.createdAt).toLocaleString()}</span></div>)}</div></div></section>}
+      </section> : <section className="admin-content"><div className="table-card"><div className="panel-heading"><div><h2>{copy.yourDecisions}</h2><p>{copy.historyText}</p></div></div><div className="admin-table moderator-history"><div className="table-row table-head"><span>{copy.decision}</span><span>{copy.entity}</span><span>{copy.reason}</span><span>{copy.note}</span><span>{copy.date}</span></div>{history.map((item) => <div className="table-row" key={item.decisionId}><span><b>{item.decision === 'approved' ? copy.approved : item.decision === 'rejected' ? copy.rejected : item.decision === 'changes_requested' ? copy.changesRequested : copy.escalated}</b><small>{copy.case} #{item.caseId}</small></span><span>{item.entityType} #{item.entityId}</span><span>{item.reasonCode.replaceAll('_', ' ')}</span><span>{item.note || '—'}</span><span>{new Date(item.createdAt).toLocaleString(locale)}</span></div>)}</div></div></section>}
     </main>
   </div>;
 }
