@@ -3,6 +3,7 @@ import { ArrowUpRight, X } from 'lucide-react';
 import type { AuthUser } from '../types';
 import { request } from '../utils/request';
 import { useLanguage } from '../i18n/language';
+import PasswordField from './PasswordField';
 
 export default function AuthModal({
   onClose,
@@ -160,11 +161,11 @@ export default function AuthModal({
           }
         />
 
-        <input
+        <PasswordField
           required
-          aria-label="Mot de passe"
+          aria-label={text.password}
           minLength={12}
-          type="password"
+          autoComplete={registerMode ? 'new-password' : 'current-password'}
           placeholder={text.password}
           value={form.password}
           onChange={(event) =>
