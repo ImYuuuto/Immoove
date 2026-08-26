@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from './app/App';
+import ScrollToTopButton from './components/ScrollToTopButton';
 import { activeLanguage, applyLanguage, languageText } from './i18n/language';
 import './styles.css';
 
@@ -28,7 +29,8 @@ const categoryMatch = route.match(/^\/categories\/([a-z0-9-]+)$/);
 const isCategoriesRoute = route === '/categories';
 
 createRoot(document.getElementById('root')!).render(
-  isAdminRoute ? (
+  <>
+  {isAdminRoute ? (
     <Suspense fallback={<div className="admin-loading">{languageText().loading}</div>}>
       <AdminDashboard />
     </Suspense>
@@ -62,7 +64,9 @@ createRoot(document.getElementById('root')!).render(
     </Suspense>
   ) : (
     <App />
-  ),
+  )}
+  <ScrollToTopButton />
+  </>,
 );
 
 if (!isAdminRoute && !isProfileRoute && !isModeratorRoute) {

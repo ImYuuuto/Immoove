@@ -2731,6 +2731,35 @@ textarea:focus-visible {
    REDUCED MOTION
    ========================================================= */
 
+.scroll-to-top {
+  position: fixed;
+  right: clamp(18px, 3vw, 38px);
+  bottom: clamp(18px, 3vw, 38px);
+  z-index: 80;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.32);
+  border-radius: 50%;
+  background: var(--navy);
+  color: white;
+  box-shadow: 0 12px 30px rgba(3,25,34,.25);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(14px) scale(.9);
+  transition: opacity .25s ease, transform .25s ease, background-color .2s ease;
+}
+
+.scroll-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.scroll-to-top:hover { background: var(--coral-dark); transform: translateY(-3px); }
+.scroll-to-top:focus-visible { outline: 3px solid var(--sand); outline-offset: 3px; }
+
 @media (prefers-reduced-motion: reduce) {
 
   *,
