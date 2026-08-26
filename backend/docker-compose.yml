@@ -1,4 +1,16 @@
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
   db:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -22,8 +34,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-sidibouzid}:${POSTGRES_PASSWORD:-sidibouzid_dev_password}@db:5432/${POSTGRES_DB:-sidibouzid}
+      REDIS_URL: redis://redis:6379
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-60}
+      REDIS_CONNECT_TIMEOUT_MS: ${REDIS_CONNECT_TIMEOUT_MS:-1000}
       PORT: 4000
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
@@ -49,3 +66,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:

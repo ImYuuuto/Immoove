@@ -12,6 +12,7 @@ import {
   sanitizeOptionalText,
   sanitizeRequiredText,
 } from '../utils/sanitize';
+import { cached, invalidateCache } from '../config/cache';
 
 function mapListing(row: any): ListingWithRelations {
   return {
@@ -168,6 +169,15 @@ export class ListingService {
   }
 
   static async findAll(filters: GetListingsParams) {
+    if (filters.publicOnly) {
+      return cached('listings', `all:${JSON.stringify(filters)}`, () =>
+        this.findAllUncached(filters),
+      );
+    }
+    return this.findAllUncached(filters);
+  }
+
+  private static async findAllUncached(filters: GetListingsParams) {
     const clauses: string[] = [];
     const params: unknown[] = [];
     const add = (clause: string, value: unknown) => {
@@ -175,7 +185,7 @@ export class ListingService {
       clauses.push(clause.replace('?', `$${params.length}`));
     };
     if (filters.publicOnly)
-      clauses.push('l.status = \'approved\' AND l.is_active = true');
+      clauses.push("l.status = 'approved' AND l.is_active = true");
     if (filters.categoryId) add('l.category_id = ?', filters.categoryId);
     if (filters.locationId) add('l.location_id = ?', filters.locationId);
     if (filters.providerId) add('l.provider_id = ?', filters.providerId);
@@ -215,7 +225,15 @@ export class ListingService {
   }
 
   static async search(filters: import('../types/dto').ListingSearchParams) {
-    const clauses = ['l.status = \'approved\'', 'l.is_active = true'];
+    return cached('listings', `search:${JSON.stringify(filters)}`, () =>
+      this.searchUncached(filters),
+    );
+  }
+
+  private static async searchUncached(
+    filters: import('../types/dto').ListingSearchParams,
+  ) {
+    const clauses = ["l.status = 'approved'", 'l.is_active = true'];
     const params: unknown[] = [];
     const add = (sql: string, value: unknown) => {
       params.push(value);
@@ -266,8 +284,12 @@ export class ListingService {
   }
 
   static async featured() {
+    return cached('listings', 'featured', () => this.featuredUncached());
+  }
+
+  private static async featuredUncached() {
     const rows = await query<{ listing_id: number; service_type: string }>(
-      'SELECT listing_id, service_type FROM listings WHERE status = \'approved\' AND is_active = true AND is_featured = true ORDER BY created_at DESC',
+      "SELECT listing_id, service_type FROM listings WHERE status = 'approved' AND is_active = true AND is_featured = true ORDER BY created_at DESC",
     );
     const items = await Promise.all(
       rows.rows.map((row) =>
@@ -293,8 +315,20 @@ export class ListingService {
     listingId: number,
     options: { publicOnly?: boolean } = {},
   ): Promise<ListingWithRelations | null> {
+    if (options.publicOnly) {
+      return cached('listings', `item:${listingId}`, () =>
+        this.findByIdUncached(listingId, options),
+      );
+    }
+    return this.findByIdUncached(listingId, options);
+  }
+
+  private static async findByIdUncached(
+    listingId: number,
+    options: { publicOnly?: boolean } = {},
+  ): Promise<ListingWithRelations | null> {
     const result = await query<any>(
-      `SELECT l.* FROM listings l WHERE l.listing_id = $1${options.publicOnly ? ' AND l.status = \'approved\' AND l.is_active = true' : ''}`,
+      `SELECT l.* FROM listings l WHERE l.listing_id = $1${options.publicOnly ? " AND l.status = 'approved' AND l.is_active = true" : ''}`,
       [listingId],
     );
     return result.rows[0] ? hydrate(mapListing(result.rows[0])) : null;
@@ -303,7 +337,7 @@ export class ListingService {
   static async create(data: CreateListingDto): Promise<ListingWithRelations> {
     const id = await transaction(async (client) => {
       const inserted = await client.query<{ listing_id: number }>(
-        'INSERT INTO listings (provider_id, category_id, location_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, guest_capacity, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,\'pending\',false) RETURNING listing_id',
+        "INSERT INTO listings (provider_id, category_id, location_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, guest_capacity, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'pending',false) RETURNING listing_id",
         [
           data.providerId || null,
           data.categoryId,
@@ -341,6 +375,7 @@ export class ListingService {
     const listing = await this.findById(id);
     if (!listing)
       throw new AppError(500, 'Created listing could not be loaded');
+    await invalidateCache('listings', 'categories');
     return listing;
   }
 
@@ -416,7 +451,9 @@ export class ListingService {
           );
       }
     });
-    return (await this.findById(listingId)) as ListingWithRelations;
+    const listing = (await this.findById(listingId)) as ListingWithRelations;
+    await invalidateCache('listings', 'categories');
+    return listing;
   }
 
   static async setStatus(
@@ -427,7 +464,7 @@ export class ListingService {
   ) {
     const result = await transaction(async (client) => {
       const updated = await client.query<any>(
-        'UPDATE listings SET status = $1, is_active = ($1 = \'approved\'), updated_at = now() WHERE listing_id = $2 RETURNING *',
+        "UPDATE listings SET status = $1, is_active = ($1 = 'approved'), updated_at = now() WHERE listing_id = $2 RETURNING *",
         [status, listingId],
       );
       if (!updated.rows[0]) throw new AppError(404, 'Listing not found');
@@ -443,7 +480,9 @@ export class ListingService {
       );
       return updated.rows[0];
     });
-    return this.findById(listingId);
+    const listing = await this.findById(listingId);
+    await invalidateCache('listings', 'categories');
+    return listing;
   }
   static async delete(listingId: number, userId: number, role: string) {
     const current = await this.findById(listingId);
@@ -462,5 +501,6 @@ export class ListingService {
         listingId,
       ]);
     });
+    await invalidateCache('listings', 'categories');
   }
 }

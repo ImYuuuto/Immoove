@@ -2,7 +2,7 @@
 
 ## Docker setup
 
-Requires Docker Desktop. The compose stack runs PostgreSQL, persists its data in a named volume, waits for the database healthcheck, applies both migrations, and starts the API.
+Requires Docker Desktop. The compose stack runs PostgreSQL and Redis, persists their data in named volumes, waits for their healthchecks, applies the migrations, and starts the API.
 
 ```sh
 docker compose up --build
@@ -21,6 +21,8 @@ npm install
 npm run migrate
 npm run dev
 ```
+
+Public listing and category reads use Redis when `REDIS_URL` is set. Cached entries expire after `CACHE_TTL_SECONDS` (60 seconds by default) and are invalidated after listing or booking changes. If Redis is unavailable, the API falls back to PostgreSQL. Remove `REDIS_URL` to disable caching locally.
 
 The API listens on `http://localhost:4000` by default. Run `npm test`, `npm run build`, and `npm run lint` for verification. `npm run migrate` applies both plain SQL files through `psql`; alternatively, `npm run migrate:node` runs them through the Node PostgreSQL client.
 

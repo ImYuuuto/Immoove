@@ -1,6 +1,7 @@
 import { query, transaction } from '../config/db';
 import { AppError } from '../utils/errorHandler';
 import { decodeStoredText, sanitizeRequiredText } from '../utils/sanitize';
+import { invalidateCache } from '../config/cache';
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
@@ -90,7 +91,7 @@ export class BookingService {
       if (listing.rows[0].status !== 'approved' || !listing.rows[0].is_active)
         throw new AppError(409, 'Listing is not available for booking');
       const conflict = await client.query(
-        'SELECT 1 FROM bookings WHERE listing_id = $1 AND status NOT IN (\'rejected\',\'cancelled\',\'refunded\') AND start_date < $3 AND end_date > $2 LIMIT 1',
+        "SELECT 1 FROM bookings WHERE listing_id = $1 AND status NOT IN ('rejected','cancelled','refunded') AND start_date < $3 AND end_date > $2 LIMIT 1",
         [data.listingId, data.startDate, data.endDate],
       );
       if (conflict.rowCount)
@@ -119,6 +120,7 @@ export class BookingService {
         throw new AppError(500, 'Booking could not be created');
       return result.rows[0];
     });
+    await invalidateCache('listings', 'categories');
     return this.map(row);
   }
 
@@ -133,7 +135,7 @@ export class BookingService {
       paymentStatus: 'unpaid' | 'pending' | 'paid' | 'refunded';
     }>,
   ) {
-    return transaction(async (client) => {
+    const booking = await transaction(async (client) => {
       const currentResult = await client.query<any>(
         'SELECT * FROM bookings WHERE booking_id = $1 FOR UPDATE',
         [bookingId],
@@ -177,10 +179,21 @@ export class BookingService {
           cancelled_at = CASE WHEN $6 = 'cancelled' THEN now() WHEN $6 IS NOT NULL THEN NULL ELSE cancelled_at END
          WHERE booking_id = $8
          RETURNING booking_id, listing_id, user_id, start_date, end_date, total, status, payment_status, currency, created_at`,
-        [listingId, userId, startDate, endDate, units, data.status || null, data.paymentStatus || null, bookingId],
+        [
+          listingId,
+          userId,
+          startDate,
+          endDate,
+          units,
+          data.status || null,
+          data.paymentStatus || null,
+          bookingId,
+        ],
       );
       return this.map(result.rows[0]);
     });
+    await invalidateCache('listings', 'categories');
+    return booking;
   }
 
   static async delete(bookingId: number) {
@@ -189,5 +202,6 @@ export class BookingService {
       [bookingId],
     );
     if (!result.rowCount) throw new AppError(404, 'Booking not found');
+    await invalidateCache('listings', 'categories');
   }
 }
