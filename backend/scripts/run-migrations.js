@@ -18,6 +18,7 @@ require('dotenv').config();
       '009-localize-seed-images.sql',
       '010-staff-dashboards.sql',
       '011-category-sample-listings.sql',
+      '012-publication-moderation.sql',
     ])
       await client.query(
         fs.readFileSync(

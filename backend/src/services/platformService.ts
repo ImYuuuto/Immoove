@@ -2,34 +2,49 @@ import { query, transaction } from '../config/db';
 import { AppError } from '../utils/errorHandler';
 import { sanitizeOptionalText, sanitizeRequiredText } from '../utils/sanitize';
 import { ListingService } from './listingService';
+import { deleteUploadUrls } from '../middleware/listingUpload';
 
 export class PlatformService {
   static async listAnnouncements() {
     const result = await query<any>(
-      'SELECT request_id, requester_id, service_type, title, description, address, contact_phone, status, created_at FROM announcement_requests ORDER BY created_at DESC',
+      `SELECT ar.*, c.slug AS category_slug,
+       COALESCE(json_agg(ari.url ORDER BY ari.sort_order) FILTER (WHERE ari.id IS NOT NULL), '[]') AS images
+       FROM announcement_requests ar LEFT JOIN categories c ON c.category_id = ar.category_id
+       LEFT JOIN announcement_request_images ari ON ari.request_id = ar.request_id
+       GROUP BY ar.request_id, c.slug ORDER BY ar.created_at DESC`,
     );
     return result.rows;
   }
   static async createAnnouncement(data: {
     requesterId: number;
-    serviceType: string;
+    categorySlug: string;
     title: string;
-    description?: string;
-    address: string;
-    contactPhone?: string;
+    description: string;
+    locationName: string; mapUrl: string; basePrice: number; pricingUnit: string;
+    guestCapacity?: number; contactName: string; contactPhone: string; contactEmail: string;
+    imageUrls: string[];
   }) {
-    const result = await query<any>(
-      'INSERT INTO announcement_requests (requester_id, service_type, title, description, address, contact_phone) VALUES ($1,$2,$3,$4,$5,$6) RETURNING request_id, requester_id, service_type, title, description, address, contact_phone, status, created_at',
-      [
-        data.requesterId,
-        data.serviceType,
-        sanitizeRequiredText(data.title, 'title'),
-        sanitizeOptionalText(data.description) || null,
-        sanitizeRequiredText(data.address, 'address'),
-        sanitizeOptionalText(data.contactPhone) || null,
-      ],
-    );
-    return result.rows[0];
+    const serviceTypes: Record<string, string> = { housing: 'VACATION_RENTAL', services: 'RESTAURANT_CAFE', 'hobbies-and-activities': 'ACTIVITY', 'renting-cars': 'CAR_RENTAL' };
+    return transaction(async (client) => {
+      const category = await client.query<{ category_id: number }>('SELECT category_id FROM categories WHERE slug = $1', [data.categorySlug]);
+      if (!category.rows[0]) throw new AppError(400, 'Unknown category');
+      const result = await client.query<any>(
+        `INSERT INTO announcement_requests
+        (requester_id, service_type, category_id, title, description, address, map_url, base_price, pricing_unit, guest_capacity, contact_name, contact_phone, contact_email)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+        [data.requesterId, serviceTypes[data.categorySlug], category.rows[0].category_id,
+          sanitizeRequiredText(data.title, 'title'), sanitizeRequiredText(data.description, 'description'),
+          sanitizeRequiredText(data.locationName, 'locationName'), data.mapUrl, data.basePrice, data.pricingUnit,
+          data.guestCapacity || null, sanitizeRequiredText(data.contactName, 'contactName'),
+          sanitizeRequiredText(data.contactPhone, 'contactPhone'), data.contactEmail.toLowerCase()],
+      );
+      for (const [index, url] of data.imageUrls.entries()) await client.query(
+        'INSERT INTO announcement_request_images (request_id, url, sort_order) VALUES ($1,$2,$3)',
+        [result.rows[0].request_id, url, index],
+      );
+      await client.query('INSERT INTO moderation_cases (entity_type, entity_id, due_at) VALUES (\'announcement\',$1,now()+interval \'24 hours\') ON CONFLICT DO NOTHING', [result.rows[0].request_id]);
+      return { ...result.rows[0], categorySlug: data.categorySlug, images: data.imageUrls };
+    });
   }
   static async reviewAnnouncement(
     requestId: number,
@@ -37,13 +52,27 @@ export class PlatformService {
     status: string,
     reason?: string,
   ) {
-    return transaction(async (client) => {
-      const result = await client.query<any>(
-        'UPDATE announcement_requests SET status = $1, reviewed_by = $2, review_reason = $3, updated_at = now() WHERE request_id = $4 RETURNING *',
-        [status, reviewerId, sanitizeOptionalText(reason) || null, requestId],
-      );
-      if (!result.rows[0])
-        throw new AppError(404, 'Announcement request not found');
+    const outcome = await transaction(async (client) => {
+      const current = await client.query<any>(`SELECT ar.*, c.slug AS category_slug
+        FROM announcement_requests ar JOIN categories c ON c.category_id=ar.category_id
+        WHERE ar.request_id=$1 FOR UPDATE OF ar`, [requestId]);
+      const row = current.rows[0];
+      if (!row) throw new AppError(404, 'Publication request not found');
+      const images = await client.query<{url:string}>('SELECT url FROM announcement_request_images WHERE request_id=$1 ORDER BY sort_order',[requestId]);
+      row.images = images.rows.map(image => image.url);
+      if (row.status !== 'ESCALATED') throw new AppError(409, 'Only escalated requests can receive final admin review');
+      let listingId: number | null = null;
+      if (status === 'APPROVED') {
+        const location = await client.query<{ location_id: number }>('INSERT INTO locations(name) VALUES ($1) RETURNING location_id', [row.address]);
+        const listing = await client.query<{ listing_id: number }>(`INSERT INTO listings
+          (provider_id,category_id,location_id,title,description,base_price,pricing_unit,contact_name,contact_phone,contact_email,cover_image_url,service_type,guest_capacity,status,is_active,map_url,reviewed_by,reviewed_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'approved',true,$14,$15,now()) RETURNING listing_id`,
+          [row.requester_id,row.category_id,location.rows[0].location_id,row.title,row.description,row.base_price,row.pricing_unit,row.contact_name,row.contact_phone,row.contact_email,row.images[0]||null,row.service_type,row.guest_capacity,row.map_url,reviewerId]);
+        listingId = listing.rows[0].listing_id;
+        for (const [index,url] of row.images.entries()) await client.query('INSERT INTO listing_images(listing_id,url,sort_order) VALUES ($1,$2,$3)',[listingId,url,index]);
+      }
+      await client.query('UPDATE announcement_requests SET status=$1,reviewed_by=$2,review_reason=$3,updated_at=now() WHERE request_id=$4',[status,reviewerId,sanitizeOptionalText(reason)||null,requestId]);
+      await client.query('UPDATE moderation_cases SET status=\'decided\',updated_at=now() WHERE entity_type=\'announcement\' AND entity_id=$1',[requestId]);
       await client.query(
         'INSERT INTO audit_logs (actor_id, action, entity_type, entity_id, reason) VALUES ($1,$2,$3,$4,$5)',
         [
@@ -54,8 +83,11 @@ export class PlatformService {
           sanitizeOptionalText(reason) || null,
         ],
       );
-      return result.rows[0];
+      if (status === 'REJECTED') await client.query('DELETE FROM announcement_requests WHERE request_id=$1',[requestId]);
+      return { item: { requestId, status, listingId }, deleteUrls: status === 'REJECTED' ? row.images as string[] : [] };
     });
+    await deleteUploadUrls(outcome.deleteUrls);
+    return outcome.item;
   }
   static async listPosts(params: {
     category?: string;

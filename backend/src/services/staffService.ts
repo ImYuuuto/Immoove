@@ -1,6 +1,7 @@
 import { query, transaction } from '../config/db';
 import { AppError } from '../utils/errorHandler';
 import { decodeStoredText } from '../utils/sanitize';
+import { deleteUploadUrls } from '../middleware/listingUpload';
 
 export class AdminDashboardService {
   static async overview(days: number) {
@@ -116,6 +117,12 @@ export class ModerationService {
     );
     await query(
       `INSERT INTO moderation_cases (entity_type, entity_id, created_at, due_at)
+       SELECT 'booking', booking_id, created_at, created_at + interval '4 hours'
+       FROM bookings WHERE status IN ('pending','processing')
+       ON CONFLICT (entity_type, entity_id) DO NOTHING`,
+    );
+    await query(
+      `INSERT INTO moderation_cases (entity_type, entity_id, created_at, due_at)
        SELECT 'announcement', request_id, created_at, created_at + interval '24 hours'
        FROM announcement_requests WHERE status = 'PENDING'
        ON CONFLICT (entity_type, entity_id) DO NOTHING`,
@@ -135,14 +142,15 @@ export class ModerationService {
     const offset = (params.page - 1) * params.limit;
     const result = await query<any>(
       `SELECT mc.*, u.first_name AS assignee_first_name, u.last_name AS assignee_last_name,
-        CASE WHEN mc.entity_type = 'listing' THEN l.title ELSE ar.title END AS title,
-        CASE WHEN mc.entity_type = 'listing' THEN l.description ELSE ar.description END AS description,
-        CASE WHEN mc.entity_type = 'listing' THEN l.status ELSE ar.status END AS entity_status,
+        CASE WHEN mc.entity_type = 'listing' THEN l.title WHEN mc.entity_type='announcement' THEN ar.title ELSE 'Booking #' || b.booking_id END AS title,
+        CASE WHEN mc.entity_type = 'listing' THEN l.description WHEN mc.entity_type='announcement' THEN ar.description ELSE b.contact_email END AS description,
+        CASE WHEN mc.entity_type = 'listing' THEN l.status WHEN mc.entity_type='announcement' THEN ar.status ELSE b.status END AS entity_status,
         CASE WHEN mc.entity_type = 'listing' THEN l.cover_image_url ELSE NULL END AS cover_image_url
        FROM moderation_cases mc
        LEFT JOIN users u ON u.user_id = mc.assigned_to
        LEFT JOIN listings l ON mc.entity_type = 'listing' AND l.listing_id = mc.entity_id
        LEFT JOIN announcement_requests ar ON mc.entity_type = 'announcement' AND ar.request_id = mc.entity_id
+       LEFT JOIN bookings b ON mc.entity_type = 'booking' AND b.booking_id = mc.entity_id
        ${where}
        ORDER BY CASE mc.priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 ELSE 4 END,
          mc.due_at, mc.created_at
@@ -175,8 +183,9 @@ export class ModerationService {
     });
   }
 
-  static async decide(caseId: number, actorId: number, data: { decision: 'approved' | 'rejected' | 'changes_requested' | 'escalated'; reasonCode: string; note?: string }) {
-    return transaction(async (client) => {
+  static async decide(caseId: number, actorId: number, actorRole: string, data: { decision: 'approved' | 'rejected' | 'changes_requested' | 'escalated'; reasonCode: string; note?: string }) {
+    let deleteUrls: string[] = [];
+    const response = await transaction(async (client) => {
       const caseResult = await client.query<any>('SELECT * FROM moderation_cases WHERE case_id = $1 FOR UPDATE', [caseId]);
       const item = caseResult.rows[0];
       if (!item) throw new AppError(404, 'Moderation case not found');
@@ -199,7 +208,10 @@ export class ModerationService {
           );
           nextState = updated.rows[0];
         } else nextState = previousState;
-      } else {
+      } else if (item.entity_type === 'announcement') {
+        const isAdmin = ['ADMIN','admin'].includes(actorRole);
+        if (!isAdmin && !['rejected','escalated'].includes(data.decision)) throw new AppError(403, 'Moderators may only reject or escalate publication requests');
+        if (isAdmin && item.status === 'escalated') throw new AppError(409, 'Use the final publication review endpoint');
         const current = await client.query<any>('SELECT status FROM announcement_requests WHERE request_id = $1 FOR UPDATE', [item.entity_id]);
         if (!current.rows[0]) throw new AppError(404, 'Publication request not found');
         previousState = current.rows[0];
@@ -210,7 +222,17 @@ export class ModerationService {
             [targetStatus, actorId, data.note || data.reasonCode, item.entity_id],
           );
           nextState = updated.rows[0];
-        } else nextState = previousState;
+        } else {
+          await client.query('UPDATE announcement_requests SET status=\'ESCALATED\',reviewed_by=$1,review_reason=$2,updated_at=now() WHERE request_id=$3',[actorId,data.note||data.reasonCode,item.entity_id]);
+          nextState = { status: 'ESCALATED' };
+        }
+        if (data.decision === 'rejected') {
+          const images = await client.query<{url:string}>('SELECT url FROM announcement_request_images WHERE request_id=$1',[item.entity_id]);
+          deleteUrls = images.rows.map(image => image.url);
+          await client.query('DELETE FROM announcement_requests WHERE request_id=$1',[item.entity_id]);
+        }
+      } else {
+        throw new AppError(400, 'Use the booking moderation endpoint');
       }
       const nextCaseStatus = data.decision === 'escalated' ? 'escalated' : 'decided';
       await client.query(
@@ -227,6 +249,20 @@ export class ModerationService {
         [actorId, `moderation:${data.decision}`, item.entity_type, item.entity_id, data.note || data.reasonCode],
       );
       return { decisionId: decision.rows[0].decision_id, caseId, decision: data.decision, createdAt: decision.rows[0].created_at };
+    });
+    await deleteUploadUrls(deleteUrls);
+    return response;
+  }
+
+  static async moderateBooking(bookingId: number, actorId: number, status: 'processing'|'confirmed'|'rejected', reason?: string) {
+    return transaction(async client => {
+      const result = await client.query<any>(`UPDATE bookings SET status=$1,processed_by=$2,processed_at=now(),
+        rejection_reason=CASE WHEN $1='rejected' THEN $3 ELSE NULL END WHERE booking_id=$4 AND status IN ('pending','processing') RETURNING *`,
+        [status,actorId,reason||null,bookingId]);
+      if (!result.rows[0]) throw new AppError(409, 'Booking was not found or is no longer awaiting moderation');
+      await client.query('UPDATE moderation_cases SET assigned_to=$1,status=$2,updated_at=now() WHERE entity_type=\'booking\' AND entity_id=$3',[actorId,status==='processing'?'claimed':'decided',bookingId]);
+      await client.query('INSERT INTO audit_logs(actor_id,action,entity_type,entity_id,reason) VALUES($1,$2,$3,$4,$5)',[actorId,`booking:${status}`,'booking',bookingId,reason||null]);
+      return { bookingId, status, processedAt: result.rows[0].processed_at, rejectionReason: result.rows[0].rejection_reason };
     });
   }
 

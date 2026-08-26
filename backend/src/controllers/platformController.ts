@@ -9,6 +9,7 @@ import {
   searchSchema,
 } from '../validators/platformValidators';
 import { ListingService } from '../services/listingService';
+import { deleteUploadUrls, uploadUrl } from '../middleware/listingUpload';
 
 export const search: RequestHandler = async (req, res, next) => {
   try {
@@ -37,19 +38,24 @@ export const featured: RequestHandler = async (_req, res, next) => {
   }
 };
 export const createAnnouncement: RequestHandler = async (req, res, next) => {
+  const imageUrls = ((req.files as Express.Multer.File[] | undefined) || []).map(uploadUrl);
   try {
     if (!req.user) throw new AppError(401, 'Authentication required');
+    if (!imageUrls.length) throw new AppError(400, 'At least one listing image is required');
     const data = announcementSchema.parse(req.body);
     const item = await PlatformService.createAnnouncement({
       requesterId: req.user.userId,
-      serviceType: data.service_type,
+      categorySlug: data.categorySlug,
       title: data.title,
       description: data.description,
-      address: data.address,
-      contactPhone: data.contact_phone,
+      locationName: data.locationName, mapUrl: data.mapUrl, basePrice: data.basePrice,
+      pricingUnit: data.pricingUnit, guestCapacity: data.guestCapacity,
+      contactName: data.contactName, contactPhone: data.contactPhone, contactEmail: data.contactEmail,
+      imageUrls,
     });
     res.status(201).json({ item });
   } catch (error) {
+    await deleteUploadUrls(imageUrls).catch(() => undefined);
     next(error);
   }
 };

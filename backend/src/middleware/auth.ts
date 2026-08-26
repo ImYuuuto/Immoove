@@ -30,6 +30,7 @@ const adminPermissions: Permission[] = [
   'user.manage',
 ];
 const moderatorPermissions: Permission[] = [
+  'booking.manage',
   'content.moderate',
   'moderation.metrics.read',
   'moderation.queue',

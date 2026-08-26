@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 import { AdminDashboardService, ModerationService } from '../services/staffService';
-import { analyticsQuerySchema, auditQuerySchema, moderationCaseSchema, moderationDecisionSchema, moderationQueueSchema } from '../validators/staffValidators';
+import { analyticsQuerySchema, auditQuerySchema, bookingModerationSchema, moderationCaseSchema, moderationDecisionSchema, moderationQueueSchema } from '../validators/staffValidators';
 
 export const overview: RequestHandler = async (req, res, next) => {
   try { res.json(await AdminDashboardService.overview(analyticsQuerySchema.parse(req.query).days)); }
@@ -19,8 +19,12 @@ export const claim: RequestHandler = async (req, res, next) => {
   catch (error) { next(error); }
 };
 export const decide: RequestHandler = async (req, res, next) => {
-  try { res.json({ item: await ModerationService.decide(moderationCaseSchema.parse(req.params).id, req.user!.userId, moderationDecisionSchema.parse(req.body)) }); }
+  try { res.json({ item: await ModerationService.decide(moderationCaseSchema.parse(req.params).id, req.user!.userId, req.user!.role, moderationDecisionSchema.parse(req.body)) }); }
   catch (error) { next(error); }
+};
+export const moderateBooking: RequestHandler = async (req, res, next) => {
+  try { const data=bookingModerationSchema.parse(req.body); res.json({item:await ModerationService.moderateBooking(moderationCaseSchema.parse(req.params).id,req.user!.userId,data.status,data.reason)}); }
+  catch(error){ next(error); }
 };
 export const history: RequestHandler = async (req, res, next) => {
   try { res.json({ items: await ModerationService.history(req.user!.userId) }); }

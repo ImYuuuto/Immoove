@@ -12,6 +12,7 @@ moderation.use(auth);
 moderation.get('/queue', requirePermission('moderation.queue'), controller.queue);
 moderation.post('/cases/:id/claim', requirePermission('moderation.queue'), controller.claim);
 moderation.post('/cases/:id/decision', requirePermission('content.moderate'), controller.decide);
+moderation.patch('/bookings/:id', requirePermission('booking.manage'), controller.moderateBooking);
 moderation.get('/history', requirePermission('moderation.metrics.read'), controller.history);
 moderation.get('/metrics', requirePermission('moderation.metrics.read'), controller.moderatorMetrics);
 

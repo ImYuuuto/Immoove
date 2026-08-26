@@ -14,7 +14,7 @@ export const auditQuerySchema = z.object({
 export const moderationQueueSchema = z.object({
   scope: z.enum(['all', 'mine', 'unassigned']).default('all'),
   status: z.enum(['open', 'claimed', 'escalated']).optional(),
-  entityType: z.enum(['listing', 'announcement']).optional(),
+  entityType: z.enum(['listing', 'announcement', 'booking']).optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(25),
 });
@@ -27,4 +27,10 @@ export const moderationDecisionSchema = z.object({
   decision: z.enum(['approved', 'rejected', 'changes_requested', 'escalated']),
   reasonCode: z.string().trim().min(2).max(80),
   note: z.string().trim().max(2000).optional(),
+});
+export const bookingModerationSchema = z.object({
+  status: z.enum(['processing', 'confirmed', 'rejected']),
+  reason: z.string().trim().max(1000).optional(),
+}).refine(value => value.status !== 'rejected' || (value.reason?.length || 0) >= 2, {
+  message: 'A rejection reason is required', path: ['reason'],
 });

@@ -90,7 +90,7 @@ export class BookingService {
       if (listing.rows[0].status !== 'approved' || !listing.rows[0].is_active)
         throw new AppError(409, 'Listing is not available for booking');
       const conflict = await client.query(
-        'SELECT 1 FROM bookings WHERE listing_id = $1 AND start_date < $3 AND end_date > $2 LIMIT 1',
+        'SELECT 1 FROM bookings WHERE listing_id = $1 AND status NOT IN (\'rejected\',\'cancelled\',\'refunded\') AND start_date < $3 AND end_date > $2 LIMIT 1',
         [data.listingId, data.startDate, data.endDate],
       );
       if (conflict.rowCount)
@@ -102,7 +102,7 @@ export class BookingService {
         listing.rows[0].service_type,
       );
       const result = await client.query<any>(
-        'INSERT INTO bookings (listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone) VALUES ($1,$2,$3,$4,(SELECT base_price * $5 FROM listings WHERE listing_id = $1),$6,$7,$8,$9) RETURNING booking_id, listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone, created_at',
+        'INSERT INTO bookings (listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone) VALUES ($1,$2,$3,$4,(SELECT base_price * $5 FROM listings WHERE listing_id = $1),$6,$7,$8,$9) RETURNING booking_id, listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone, status, payment_status, currency, created_at',
         [
           data.listingId,
           data.userId,
