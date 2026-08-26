@@ -2,13 +2,15 @@
 
 ## Docker setup
 
-Requires Docker Desktop. The compose stack runs PostgreSQL and Redis, persists their data in named volumes, waits for their healthchecks, applies the migrations, and starts the API.
+Requires Docker Desktop. The compose stack runs PostgreSQL and Redis, applies migrations once, then starts two API replicas behind an Nginx load balancer. Database, cache, and uploaded media are shared by every replica.
 
 ```sh
 docker compose up --build
 ```
 
-The API is available at `http://localhost:4000` and the health endpoint is `http://localhost:4000/health`. Stop the stack with `docker compose down`; remove the database volume too with `docker compose down -v`.
+The load-balanced API is available at `http://localhost:4000` and the health endpoint is `http://localhost:4000/health`. The frontend remains available at `http://localhost:5173`. Stop the stack with `docker compose down`; remove all persistent database, Redis, and upload volumes with `docker compose down -v`.
+
+The load balancer uses least-connections routing, keeps upstream connections open, retries another healthy replica after network and gateway errors, and refreshes Docker DNS as replicas change. Set `API_REPLICAS` in `.env` to change the default of two instances.
 
 The defaults are development-only credentials. To override them, copy `.env.example` to `.env`, set a random `JWT_SECRET` of at least 32 characters, and edit the `POSTGRES_*` values before starting Docker. The database is private to the Compose network; connect to it from the API using the service hostname `db`. Authentication uses short-lived JWTs in an HttpOnly, SameSite cookie. The `x-user-id`/`x-user-role` shortcut works only when `ALLOW_DEV_AUTH=true` outside production.
 
