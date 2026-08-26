@@ -9,7 +9,7 @@ import {
   searchSchema,
 } from '../validators/platformValidators';
 import { ListingService } from '../services/listingService';
-import { deleteUploadUrls, uploadUrl } from '../middleware/listingUpload';
+import { deleteUploadUrls, processListingUploads } from '../middleware/listingUpload';
 
 export const search: RequestHandler = async (req, res, next) => {
   try {
@@ -38,9 +38,10 @@ export const featured: RequestHandler = async (_req, res, next) => {
   }
 };
 export const createAnnouncement: RequestHandler = async (req, res, next) => {
-  const imageUrls = ((req.files as Express.Multer.File[] | undefined) || []).map(uploadUrl);
+  let imageUrls: string[] = [];
   try {
     if (!req.user) throw new AppError(401, 'Authentication required');
+    imageUrls = await processListingUploads((req.files as Express.Multer.File[] | undefined) || []);
     if (!imageUrls.length) throw new AppError(400, 'At least one listing image is required');
     const data = announcementSchema.parse(req.body);
     const item = await PlatformService.createAnnouncement({

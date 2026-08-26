@@ -4,6 +4,7 @@ import { useLanguage } from '../i18n/language';
 import { useCategories } from '../categories/useCategories';
 import { categoryLabel } from '../categories/categoryLabels';
 import '../categories/category.css';
+import ResponsiveImage from './ResponsiveImage';
 
 export default function CategoryGrid({
   onAnnouncement,
@@ -61,9 +62,10 @@ export default function CategoryGrid({
             href={`/categories/${card.slug}`}
             key={card.categoryId}
           >
-            <img
+            <ResponsiveImage
               src={card.image}
               alt=""
+              sizes="(max-width: 800px) 78vw, 300px"
             />
 
             <div>

@@ -1,6 +1,7 @@
 import { ArrowUpRight } from 'lucide-react';
 import Heading from './Heading';
 import { useLanguage } from '../i18n/language';
+import ResponsiveImage from './ResponsiveImage';
 
 export default function Dining() {
   const { text } = useLanguage();
@@ -52,9 +53,10 @@ export default function Dining() {
         {venues.map(
           ([image, meta, title]) => (
             <article key={title}>
-              <img
+              <ResponsiveImage
                 src={image}
                 alt={title}
+                sizes="(max-width: 800px) calc(100vw - 44px), 33vw"
               />
 
               <div>

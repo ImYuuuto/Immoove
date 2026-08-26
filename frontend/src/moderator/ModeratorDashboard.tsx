@@ -9,6 +9,7 @@ import { useModerationWorkflowCopy } from './moderationWorkflowI18n';
 import '../admin/admin.css';
 import '../admin/admin-polish.css';
 import './moderator.css';
+import ResponsiveImage from '../components/ResponsiveImage';
 
 type View = 'queue' | 'history';
 type Decision = 'approved' | 'rejected' | 'changes_requested' | 'escalated';
@@ -97,7 +98,7 @@ export default function ModeratorDashboard() {
         <div className="moderation-layout"><div className="moderation-queue">{items.map((item) => <article className={selected?.caseId === item.caseId ? 'moderation-card selected' : 'moderation-card'} key={item.caseId} onClick={() => { setSelected(item); setNote(''); }}><div><span className={`priority priority-${item.priority}`}>{item.priority}</span><small>{copy.due} {new Date(item.dueAt).toLocaleString(locale)}</small></div><h2>{decodeText(item.title)}</h2><p>{decodeText(item.description || '') || copy.noDescription}</p><footer><span>{item.entityType} #{item.entityId}</span>{item.assignedTo ? <b>{item.assignedTo === user?.userId ? copy.assignedToYou : copy.assigned}</b> : <button onClick={(event) => { event.stopPropagation(); void claim(item); }}>{copy.claim}</button>}</footer></article>)}</div>
           {selected && <aside className="review-panel">
             <div className="review-panel-heading"><div><small>{selected.entityType} #{selected.entityId}</small><h2>{decodeText(selected.title)}</h2></div><button onClick={() => setSelected(null)}><X size={17} /></button></div>
-            {selected.coverImageUrl && <img src={selected.coverImageUrl} alt="" />}
+            {selected.coverImageUrl && <ResponsiveImage src={selected.coverImageUrl} alt="" width={960} height={720} sizes="(max-width: 900px) 100vw, 48vw" />}
             <p>{decodeText(selected.description || '') || copy.noDescription}</p>
             {!selected.assignedTo ? <button className="review-primary" disabled={busy} onClick={() => void claim(selected)}>{copy.claimBeforeReview}</button> : selected.assignedTo !== user?.userId && !['admin', 'ADMIN'].includes(user?.role || '') ? <p className="review-notice">{copy.assignedElsewhere}</p> : selected.entityType === 'booking' ? <div className="decision-form">
               <strong>{workflow.bookingReview}</strong><p>{workflow.bookingHelp}</p>

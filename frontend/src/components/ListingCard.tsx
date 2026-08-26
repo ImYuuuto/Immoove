@@ -3,17 +3,20 @@ import { fallbackListings } from '../data/content';
 import type { Listing } from '../types';
 import { decodeText } from '../utils/decodeText';
 import { useLanguage } from '../i18n/language';
+import ResponsiveImage from './ResponsiveImage';
 
 export default function ListingCard({
   listing,
   onFavorite,
   onBook,
   categorySlug,
+  imagePriority = false,
 }: {
   listing: Listing;
   onFavorite: (id?: number) => void;
   onBook: (listing: Listing) => void;
   categorySlug?: string;
+  imagePriority?: boolean;
 }) {
   const { language, text } = useLanguage();
   const detailUrl = listing.listingId
@@ -44,9 +47,13 @@ export default function ListingCard({
 
       <div className="listing-image">
 
-        <img
+        <ResponsiveImage
           src={image}
           alt={decodeText(listing.title)}
+          width={1200}
+          height={900}
+          sizes="(max-width: 720px) calc(100vw - 44px), (max-width: 1100px) 45vw, 360px"
+          priority={imagePriority}
         />
         {listing.listingId ? <a className="listing-view" href={detailUrl}>{text.viewStay}</a> : <span className="listing-view">{text.viewStay}</span>}
 

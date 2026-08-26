@@ -14,6 +14,7 @@ import type { Listing, Post, SearchFilters } from '../types';
 import { request } from '../utils/request';
 import { decodeText } from '../utils/decodeText';
 import { formatTranslation, useLanguage } from '../i18n/language';
+import ResponsiveImage from '../components/ResponsiveImage';
 
 export default function App() {
   const { text } = useLanguage();
@@ -162,7 +163,10 @@ export default function App() {
     muted
     loop
     playsInline
-    poster={images.hero}
+    preload="metadata"
+    width={768}
+    height={432}
+    poster="/uploads/site/hero/coastal-hero-1200.webp"
   >
     <source
       src="/videos/sidi-bouzid-hero.mp4"
@@ -301,12 +305,15 @@ export default function App() {
                     post.title
                   }
                 >
-                  <img
+                  <ResponsiveImage
                     src={
                       post.cover_image_url ||
                       images.explore
                     }
                     alt=""
+                    width={900}
+                    height={600}
+                    sizes="(max-width: 760px) calc(100vw - 44px), 33vw"
                   />
 
                   <small>
@@ -337,9 +344,10 @@ export default function App() {
           className="host section"
           id="host"
         >
-          <img
+          <ResponsiveImage
             src="/uploads/site/hero/coastal-hero.jpg"
             alt={text.coastalLandscape}
+            sizes="100vw"
           />
 
           <div>

@@ -39,8 +39,13 @@ app.use(
   '/uploads',
   express.static(path.resolve(process.cwd(), 'upload'), {
     fallthrough: false,
-    immutable: isProduction,
-    maxAge: isProduction ? '30d' : 0,
+    immutable: false,
+    maxAge: isProduction ? '7d' : 0,
+    setHeaders: (res, filePath) => {
+      if (path.extname(filePath).toLowerCase() === '.avif') res.setHeader('Content-Type', 'image/avif');
+      if (isProduction && filePath.includes(`${path.sep}listings${path.sep}requests${path.sep}`))
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    },
   }),
 );
 app.use(

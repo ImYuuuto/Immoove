@@ -4,6 +4,7 @@ import type { AuthUser, Language } from '../types';
 import { request } from '../utils/request';
 import { useLanguage } from '../i18n/language';
 import AuthModal from './AuthModal';
+import ResponsiveImage from './ResponsiveImage';
 
 export default function Navbar({
   open,
@@ -254,7 +255,7 @@ export default function Navbar({
         ) : user ? (
           <a className="nav-profile-avatar" href="/profile" aria-label={text.profile}>
             {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt={text.profile} />
+              <ResponsiveImage src={user.avatarUrl} alt={text.profile} width={44} height={44} sizes="44px" priority />
             ) : (
               <span>{user.firstName?.trim().charAt(0).toUpperCase() || user.email?.trim().charAt(0).toUpperCase() || 'U'}</span>
             )}

@@ -65,7 +65,7 @@ export default function CategoryPage({ slug }: { slug: string }) {
         <p>{data.pagination.total.toLocaleString(locale)} {copy.listings}</p>
       </section>
       <section className="category-results">
-        {data.items.length ? <div className="listing-grid">{data.items.map((listing) => <ListingCard listing={listing} categorySlug={slug} onFavorite={favorite} onBook={(item) => item.listingId && window.location.assign(`/categories/${slug}/listing/${item.listingId}`)} key={listing.listingId} />)}</div> : <div className="category-empty">{copy.empty}</div>}
+        {data.items.length ? <div className="listing-grid">{data.items.map((listing, index) => <ListingCard listing={listing} categorySlug={slug} imagePriority={index === 0} onFavorite={favorite} onBook={(item) => item.listingId && window.location.assign(`/categories/${slug}/listing/${item.listingId}`)} key={listing.listingId} />)}</div> : <div className="category-empty">{copy.empty}</div>}
         {totalPages > 1 && <nav className="category-pagination" aria-label={copy.pagination}>
           <button disabled={page <= 1} onClick={() => changePage(page - 1)}><ArrowLeft size={16} />{copy.previous}</button>
           <span>{formatTranslation(copy.page, { page, total: totalPages })}</span>
