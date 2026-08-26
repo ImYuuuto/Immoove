@@ -31,6 +31,9 @@ const ar: Translation = { ...fr,
 };
 
 ar.service = 'الخدمة';
+fr.services = 'Publier une annonce';
+en.services = 'Publish a listing';
+ar.services = 'نشر إعلان';
 
 const translations: Record<Language, Translation> = { fr, en, ar };
 const listeners = new Set<() => void>();

@@ -1,0 +1,13 @@
+import { useLanguage } from '../i18n/language';
+
+const fr = {
+  category: 'Catégorie', title: 'Titre de l’annonce', description: 'Description', location: 'Nom du lieu', mapUrl: 'Lien Google Maps HTTPS', price: 'Prix de base', pricingUnit: 'Unité de tarification', capacity: 'Capacité (facultatif)', contactName: 'Nom du contact', contactPhone: 'Téléphone du contact', contactEmail: 'E-mail du contact', images: 'Photos de l’annonce', imageHelp: 'Ajoutez de 1 à 8 images JPEG, PNG ou WebP (5 Mo maximum chacune).', selectedImages: '{count} photo(s) sélectionnée(s)', night: 'Par nuit', day: 'Par jour', hour: 'Par heure', service: 'Par service', imageRequired: 'Ajoutez au moins une image.', imageCount: 'Vous pouvez ajouter 8 images au maximum.', imageType: 'Les images doivent être au format JPEG, PNG ou WebP.', imageSize: 'Chaque image doit peser 5 Mo ou moins.', sending: 'Envoi…', submit: 'Envoyer la demande',
+};
+type Copy = { [K in keyof typeof fr]: string };
+const en: Copy = { category: 'Category', title: 'Listing title', description: 'Description', location: 'Location name', mapUrl: 'HTTPS Google Maps link', price: 'Base price', pricingUnit: 'Pricing unit', capacity: 'Guest capacity (optional)', contactName: 'Contact name', contactPhone: 'Contact phone', contactEmail: 'Contact email', images: 'Listing images', imageHelp: 'Add 1–8 JPEG, PNG, or WebP images (maximum 5 MB each).', selectedImages: '{count} image(s) selected', night: 'Per night', day: 'Per day', hour: 'Per hour', service: 'Per service', imageRequired: 'Add at least one image.', imageCount: 'You can add no more than 8 images.', imageType: 'Images must be JPEG, PNG, or WebP.', imageSize: 'Each image must be 5 MB or smaller.', sending: 'Sending…', submit: 'Send request' };
+const ar: Copy = { category: 'الفئة', title: 'عنوان الإعلان', description: 'الوصف', location: 'اسم الموقع', mapUrl: 'رابط خرائط Google آمن HTTPS', price: 'السعر الأساسي', pricingUnit: 'وحدة التسعير', capacity: 'السعة (اختياري)', contactName: 'اسم جهة الاتصال', contactPhone: 'هاتف جهة الاتصال', contactEmail: 'بريد جهة الاتصال', images: 'صور الإعلان', imageHelp: 'أضيفوا من صورة إلى 8 صور بصيغة JPEG أو PNG أو WebP (5 ميغابايت كحد أقصى لكل صورة).', selectedImages: 'تم اختيار {count} صورة', night: 'لكل ليلة', day: 'لكل يوم', hour: 'لكل ساعة', service: 'لكل خدمة', imageRequired: 'أضيفوا صورة واحدة على الأقل.', imageCount: 'يمكن إضافة 8 صور كحد أقصى.', imageType: 'يجب أن تكون الصور بصيغة JPEG أو PNG أو WebP.', imageSize: 'يجب ألا يتجاوز حجم كل صورة 5 ميغابايت.', sending: 'جارٍ الإرسال…', submit: 'إرسال الطلب' };
+
+export function useAnnouncementCopy() {
+  const { language } = useLanguage();
+  return language === 'ar' ? ar : language === 'en' ? en : fr;
+}

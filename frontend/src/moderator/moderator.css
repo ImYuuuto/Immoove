@@ -24,6 +24,8 @@
 .review-panel > p { padding: 0 20px; color: #526970; line-height: 1.65; }
 .review-panel > .review-primary, .review-notice { margin: 0 20px 20px; }
 .decision-form { display: grid; gap: 14px; padding: 20px; border-top: 1px solid #e4eaeb; }
+.decision-form > strong { color: #173640; font-size: 15px; }
+.decision-form > p { margin: -7px 0 0; color: #64787e; font-size: 12px; line-height: 1.55; }
 .decision-form label { display: grid; gap: 6px; color: #36545d; font-size: 11px; font-weight: 800; }
 .decision-form select, .decision-form textarea { padding: 10px; border: 1px solid #d7e0e2; border-radius: 9px; color: #173640; font: inherit; }
 .decision-form textarea { min-height: 90px; resize: vertical; }

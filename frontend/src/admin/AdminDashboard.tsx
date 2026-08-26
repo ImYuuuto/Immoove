@@ -21,12 +21,12 @@ export default function AdminDashboard() {
   const [mobileNav, setMobileNav] = useState(false);
   const { user, users, userPagination, listings, announcements, bookings, overview, audit, days, setDays, error, loading, load, runAction, searchUsers, clearError } = useAdminData();
   const pendingListings = useMemo(() => listings.filter((item) => item.status === 'pending').length, [listings]);
-  const pendingAnnouncements = useMemo(() => announcements.filter((item) => item.status === 'PENDING').length, [announcements]);
+  const pendingAnnouncements = useMemo(() => announcements.filter((item) => item.status === 'ESCALATED').length, [announcements]);
 
   const updateListing = (id: number, status: 'approved' | 'rejected') => runAction(() => api(`/listings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }));
   const editListing = (id: number, data: { title: string; basePrice: number }) => runAction(() => api(`/listings/${id}`, { method: 'PATCH', body: JSON.stringify(data) }));
   const deleteListing = (id: number) => runAction(() => api(`/listings/${id}`, { method: 'DELETE' }));
-  const updateAnnouncement = (id: number, status: 'APPROVED' | 'REJECTED') => runAction(() => api(`/announcements/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }));
+  const approveAnnouncement = (id: number) => runAction(() => api(`/announcements/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'APPROVED', reason: 'Approved for publication' }) }));
   const updateRole = (id: number, role: 'user' | 'moderator') => runAction(() => api(`/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }));
   const updateUserStatus = (id: number, status: 'active' | 'suspended') => runAction(() => api(`/users/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, reason: 'Administrator dashboard action' }) }));
   const createBooking = (data: Record<string, number | string>) => runAction(() => api('/bookings', { method: 'POST', body: JSON.stringify(data) }));
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
       {view === 'overview' && <OverviewView listings={listings} announcements={announcements} bookings={bookings} overview={overview} onView={setView} />}
       {view === 'analytics' && <AdminAnalyticsView overview={overview} days={days} onDays={setDays} />}
       {view === 'listings' && <ListingsView listings={listings} onStatus={updateListing} onUpdate={editListing} onDelete={deleteListing} onRefresh={() => void load()} />}
-      {view === 'announcements' && <AnnouncementsView items={announcements} onStatus={updateAnnouncement} />}
+      {view === 'announcements' && <AnnouncementsView items={announcements} onApprove={approveAnnouncement} />}
       {view === 'bookings' && <BookingsView bookings={bookings} onCreate={createBooking} onUpdate={updateBooking} onDelete={deleteBooking} onRefresh={() => void load()} />}
       {view === 'users' && <UsersView users={users} pagination={userPagination} currentUserId={user?.userId} onSearch={searchUsers} onRole={updateRole} onStatus={updateUserStatus} />}
       {view === 'audit' && <AuditView items={audit} />}
