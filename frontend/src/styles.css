@@ -2829,3 +2829,25 @@ textarea:focus-visible {
 .local-map{background-image:linear-gradient(rgba(222,232,224,.72),rgba(222,232,224,.72)),url('/uploads/site/map/coast-map.jpg');background-image:linear-gradient(rgba(222,232,224,.72),rgba(222,232,224,.72)),image-set(url('/uploads/site/map/coast-map-1100.avif') type('image/avif'),url('/uploads/site/map/coast-map-1100.webp') type('image/webp'),url('/uploads/site/map/coast-map.jpg') type('image/jpeg'))}
 @media(max-width:800px){.editorial-photo{background-image:linear-gradient(0deg,var(--deep),transparent 72%),url('/uploads/site/hero/coastal-hero.jpg');background-image:linear-gradient(0deg,var(--deep),transparent 72%),image-set(url('/uploads/site/hero/coastal-hero-800.avif') type('image/avif'),url('/uploads/site/hero/coastal-hero-800.webp') type('image/webp'),url('/uploads/site/hero/coastal-hero.jpg') type('image/jpeg'))}}
 .listing-view{text-decoration:none}.listing-info h3 a{color:inherit;text-decoration:none}
+
+/* Unknown routes */
+.not-found-page{position:relative;display:flex;min-height:100svh;flex-direction:column;overflow:hidden;background:var(--cream-2);color:var(--navy)}
+.not-found-nav{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:24px clamp(22px,5vw,78px)}
+.not-found-nav>a:last-child{display:flex;align-items:center;gap:9px;padding-bottom:5px;border-bottom:1px solid rgba(6,43,59,.28);font-size:12px;font-weight:700}
+.not-found-content{position:relative;z-index:1;display:grid;grid-template-columns:minmax(260px,.8fr) minmax(340px,1fr);align-items:center;width:min(1180px,calc(100% - 44px));margin:auto;gap:clamp(30px,7vw,100px);padding:45px 0 140px}
+.not-found-number{color:transparent;font:600 clamp(150px,23vw,330px)/.72 "Playfair Display",serif;letter-spacing:-.1em;-webkit-text-stroke:1px rgba(6,43,59,.22);user-select:none}
+.not-found-copy{max-width:560px}
+.not-found-copy small{color:var(--coral-dark);font-size:11px;font-weight:800;letter-spacing:.18em}
+.not-found-copy h1{margin:20px 0 22px;font:600 clamp(45px,6vw,82px)/.96 "Playfair Display",serif;letter-spacing:-.055em}
+.not-found-copy h1::after{content:".";color:var(--coral)}
+.not-found-copy p{max-width:480px;margin:0;color:var(--muted);font-size:16px;line-height:1.75}
+.not-found-actions{display:flex;align-items:center;gap:25px;margin-top:36px}
+.not-found-primary{display:inline-flex;align-items:center;gap:11px;padding:15px 20px;border-radius:999px;background:var(--navy);color:white;font-size:12px;font-weight:800;transition:var(--transition)}
+.not-found-primary:hover{background:var(--coral-dark);transform:translateY(-2px)}
+.not-found-secondary{padding-bottom:6px;border-bottom:1px solid var(--coral);font-size:12px;font-weight:800}
+.not-found-horizon{position:absolute;right:-5%;bottom:-105px;left:-5%;height:230px;border-radius:50% 50% 0 0;background:linear-gradient(180deg,#89c7ce,#286d7b);opacity:.85}
+.not-found-horizon i{position:absolute;top:43px;left:0;width:100%;height:1px;background:rgba(255,255,255,.35);transform:rotate(-2deg)}
+.not-found-horizon i:nth-child(2){top:74px;transform:rotate(1deg)}
+.not-found-horizon i:nth-child(3){top:105px;transform:rotate(-1deg)}
+.not-found-loading{display:grid;min-height:100svh;place-items:center;background:var(--cream-2);color:var(--muted)}
+@media(max-width:760px){.not-found-nav>a:last-child{font-size:0}.not-found-content{grid-template-columns:1fr;align-content:center;gap:25px;padding:20px 0 150px}.not-found-number{font-size:clamp(125px,48vw,190px);line-height:.75}.not-found-copy h1{font-size:clamp(42px,13vw,62px)}.not-found-actions{align-items:flex-start;flex-direction:column;gap:20px}.not-found-horizon{bottom:-145px}}
