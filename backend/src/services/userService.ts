@@ -7,7 +7,7 @@ export class UserService {
     let where = '';
     if (params.search) {
       values.push(`%${params.search}%`);
-      where = 'WHERE concat_ws(\' \', first_name, last_name) ILIKE $1';
+      where = "WHERE (COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')) ILIKE $1";
     }
     const count = await query<{ count: string }>(`SELECT COUNT(*) AS count FROM users ${where}`, values);
     const offset = (params.page - 1) * params.limit;

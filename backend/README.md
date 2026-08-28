@@ -12,6 +12,8 @@ The load-balanced API is available at `http://localhost:4000` and the health end
 
 The load balancer uses least-connections routing, keeps upstream connections open, retries another healthy replica after network and gateway errors, and refreshes Docker DNS as replicas change. Set `API_REPLICAS` in `.env` to change the default of two instances.
 
+Migration `013-query-indexes.sql` adds idempotent indexes for public listing feeds, category and location filters, owner listings, listing hydration, active booking overlap checks, favorites, moderation history, and trigram-backed title, description, and user-name searches.
+
 The defaults are development-only credentials. To override them, copy `.env.example` to `.env`, set a random `JWT_SECRET` of at least 32 characters, and edit the `POSTGRES_*` values before starting Docker. The database is private to the Compose network; connect to it from the API using the service hostname `db`. Authentication uses short-lived JWTs in an HttpOnly, SameSite cookie. The `x-user-id`/`x-user-role` shortcut works only when `ALLOW_DEV_AUTH=true` outside production.
 
 ## Local setup

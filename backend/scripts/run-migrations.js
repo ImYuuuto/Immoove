@@ -19,6 +19,7 @@ require('dotenv').config();
       '010-staff-dashboards.sql',
       '011-category-sample-listings.sql',
       '012-publication-moderation.sql',
+      '013-query-indexes.sql',
     ])
       await client.query(
         fs.readFileSync(
