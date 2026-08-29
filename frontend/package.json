@@ -22,5 +22,8 @@
     "@types/react-dom": "^19.0.2",
     "prettier": "^3.9.6",
     "typescript": "^5.7.2"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-musl": "4.62.5"
   }
 }
