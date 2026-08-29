@@ -24,5 +24,17 @@ export default function ScrollToTopButton() {
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
   };
 
-  return <button type="button" className={`scroll-to-top${visible ? ' visible' : ''}`} onClick={scrollToTop} aria-label={labels[language]} title={labels[language]} aria-hidden={!visible} tabIndex={visible ? 0 : -1}><ArrowUp size={20} /></button>;
+  return (
+    <button
+      type="button"
+      className={`scroll-to-top${visible ? ' visible' : ''}`}
+      onClick={scrollToTop}
+      aria-label={labels[language]}
+      title={labels[language]}
+      aria-hidden={!visible}
+      tabIndex={visible ? 0 : -1}
+    >
+      <ArrowUp size={20} />
+    </button>
+  );
 }

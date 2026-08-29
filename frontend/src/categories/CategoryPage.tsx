@@ -27,12 +27,19 @@ export default function CategoryPage({ slug }: { slug: string }) {
   const load = async () => {
     setLoading(true);
     setError('');
-    try { setData(await getCategoryListings(slug, page)); }
-    catch (cause) { setData(null); setError(cause instanceof Error ? cause.message : copy.unavailable); }
-    finally { setLoading(false); }
+    try {
+      setData(await getCategoryListings(slug, page));
+    } catch (cause) {
+      setData(null);
+      setError(cause instanceof Error ? cause.message : copy.unavailable);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { void load(); }, [slug, page]);
+  useEffect(() => {
+    void load();
+  }, [slug, page]);
 
   const changePage = (nextPage: number) => {
     window.history.replaceState(null, '', `/categories/${slug}?page=${nextPage}`);
@@ -42,36 +49,95 @@ export default function CategoryPage({ slug }: { slug: string }) {
 
   const favorite = async (listingId?: number) => {
     if (!listingId) return;
-    try { await request(`/favorites/${listingId}/toggle`, { method: 'POST' }); }
-    catch { window.location.assign(`/?login=1&next=${encodeURIComponent(`/categories/${slug}?page=${page}`)}`); }
+    try {
+      await request(`/favorites/${listingId}/toggle`, { method: 'POST' });
+    } catch {
+      window.location.assign(
+        `/?login=1&next=${encodeURIComponent(`/categories/${slug}?page=${page}`)}`,
+      );
+    }
   };
 
   const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-GB' : 'fr-FR';
   const totalPages = data?.pagination.totalPages || 1;
 
-  return <main className="category-page">
-    <header className="category-topbar">
-      <a className="brand" href="/"><b>B</b>bouzid<span>.</span></a>
-      <a href="/"><ArrowLeft size={17} />{copy.back}</a>
-    </header>
-    <nav className="category-navigation" aria-label={text.discover}>
-      {categories.map((category) => <a className={category.slug === slug ? 'active' : ''} href={`/categories/${category.slug}`} key={category.categoryId}>{categoryLabel(category.slug, language, category.name)}{category.listingCount !== undefined && <span>{category.listingCount}</span>}</a>)}
-    </nav>
+  return (
+    <main className="category-page">
+      <header className="category-topbar">
+        <a className="brand" href="/">
+          <b>B</b>bouzid<span>.</span>
+        </a>
+        <a href="/">
+          <ArrowLeft size={17} />
+          {copy.back}
+        </a>
+      </header>
+      <nav className="category-navigation" aria-label={text.discover}>
+        {categories.map((category) => (
+          <a
+            className={category.slug === slug ? 'active' : ''}
+            href={`/categories/${category.slug}`}
+            key={category.categoryId}
+          >
+            {categoryLabel(category.slug, language, category.name)}
+            {category.listingCount !== undefined && <span>{category.listingCount}</span>}
+          </a>
+        ))}
+      </nav>
 
-    {loading ? <div className="category-state">{copy.loading}</div> : !data ? <div className="category-state"><h1>{copy.unavailable}</h1><p>{error}</p><button onClick={() => void load()}>{copy.retry}</button></div> : <>
-      <section className="category-hero">
-        <small>{copy.eyebrow}</small>
-        <h1>{categoryLabel(data.category.slug, language, data.category.name)}</h1>
-        <p>{data.pagination.total.toLocaleString(locale)} {copy.listings}</p>
-      </section>
-      <section className="category-results">
-        {data.items.length ? <div className="listing-grid">{data.items.map((listing, index) => <ListingCard listing={listing} categorySlug={slug} imagePriority={index === 0} onFavorite={favorite} onBook={(item) => item.listingId && window.location.assign(`/categories/${slug}/listing/${item.listingId}`)} key={listing.listingId} />)}</div> : <div className="category-empty">{copy.empty}</div>}
-        {totalPages > 1 && <nav className="category-pagination" aria-label={copy.pagination}>
-          <button disabled={page <= 1} onClick={() => changePage(page - 1)}><ArrowLeft size={16} />{copy.previous}</button>
-          <span>{formatTranslation(copy.page, { page, total: totalPages })}</span>
-          <button disabled={page >= totalPages} onClick={() => changePage(page + 1)}>{copy.next}<ArrowRight size={16} /></button>
-        </nav>}
-      </section>
-    </>}
-  </main>;
+      {loading ? (
+        <div className="category-state">{copy.loading}</div>
+      ) : !data ? (
+        <div className="category-state">
+          <h1>{copy.unavailable}</h1>
+          <p>{error}</p>
+          <button onClick={() => void load()}>{copy.retry}</button>
+        </div>
+      ) : (
+        <>
+          <section className="category-hero">
+            <small>{copy.eyebrow}</small>
+            <h1>{categoryLabel(data.category.slug, language, data.category.name)}</h1>
+            <p>
+              {data.pagination.total.toLocaleString(locale)} {copy.listings}
+            </p>
+          </section>
+          <section className="category-results">
+            {data.items.length ? (
+              <div className="listing-grid">
+                {data.items.map((listing, index) => (
+                  <ListingCard
+                    listing={listing}
+                    categorySlug={slug}
+                    imagePriority={index === 0}
+                    onFavorite={favorite}
+                    onBook={(item) =>
+                      item.listingId &&
+                      window.location.assign(`/categories/${slug}/listing/${item.listingId}`)
+                    }
+                    key={listing.listingId}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="category-empty">{copy.empty}</div>
+            )}
+            {totalPages > 1 && (
+              <nav className="category-pagination" aria-label={copy.pagination}>
+                <button disabled={page <= 1} onClick={() => changePage(page - 1)}>
+                  <ArrowLeft size={16} />
+                  {copy.previous}
+                </button>
+                <span>{formatTranslation(copy.page, { page, total: totalPages })}</span>
+                <button disabled={page >= totalPages} onClick={() => changePage(page + 1)}>
+                  {copy.next}
+                  <ArrowRight size={16} />
+                </button>
+              </nav>
+            )}
+          </section>
+        </>
+      )}
+    </main>
+  );
 }

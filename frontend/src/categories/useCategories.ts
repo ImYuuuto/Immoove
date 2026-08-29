@@ -15,9 +15,13 @@ export function useCategories() {
   useEffect(() => {
     let active = true;
     getCategories()
-      .then((items) => { if (active && items.length) setCategories(items); })
+      .then((items) => {
+        if (active && items.length) setCategories(items);
+      })
       .catch(() => {});
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   return categories;

@@ -18,20 +18,15 @@ import ResponsiveImage from '../components/ResponsiveImage';
 
 export default function App() {
   const { text } = useLanguage();
-  const [open, setOpen] =
-    useState(false);
+  const [open, setOpen] = useState(false);
 
-  const [modal, setModal] =
-    useState(false);
+  const [modal, setModal] = useState(false);
 
-  const [message, setMessage] =
-    useState('');
+  const [message, setMessage] = useState('');
 
-  const [listings, setListings] =
-    useState(fallbackListings);
+  const [listings, setListings] = useState(fallbackListings);
 
-  const [posts, setPosts] =
-    useState(fallbackPosts);
+  const [posts, setPosts] = useState(fallbackPosts);
 
   useEffect(() => {
     Promise.all([
@@ -45,9 +40,7 @@ export default function App() {
     ])
       .then(([featured, blog]) => {
         if (featured.rentals?.length) {
-          setListings(
-            featured.rentals,
-          );
+          setListings(featured.rentals);
         }
 
         if (blog.items?.length) {
@@ -60,166 +53,130 @@ export default function App() {
   const notify = (text: string) => {
     setMessage(text);
 
-    window.setTimeout(
-      () => setMessage(''),
-      3500,
-    );
+    window.setTimeout(() => setMessage(''), 3500);
   };
 
-  const search = async (
-    filters: SearchFilters,
-  ) => {
-    const query =
-      new URLSearchParams(
-        Object.entries(filters).filter(
-          ([, value]) => value,
-        ) as [string, string][],
-      );
+  const search = async (filters: SearchFilters) => {
+    const query = new URLSearchParams(
+      Object.entries(filters).filter(([, value]) => value) as [string, string][],
+    );
 
     try {
-      const result =
-        await request<{
-          items: Listing[];
-        }>(
-          `/listings/search?${query}`,
-        );
+      const result = await request<{
+        items: Listing[];
+      }>(`/listings/search?${query}`);
 
       setListings(result.items);
 
-      notify(
-        formatTranslation(text.searchFound, { count: result.items.length }),
-      );
+      notify(formatTranslation(text.searchFound, { count: result.items.length }));
     } catch (error) {
-      notify(
-        error instanceof Error
-          ? error.message
-          : text.searchUnavailable,
-      );
+      notify(error instanceof Error ? error.message : text.searchUnavailable);
     }
 
-    document
-      .getElementById('escapes')
-      ?.scrollIntoView({
-        behavior: 'smooth',
-      });
+    document.getElementById('escapes')?.scrollIntoView({
+      behavior: 'smooth',
+    });
   };
 
-  const favorite = async (
-    id?: number,
-  ) => {
+  const favorite = async (id?: number) => {
     if (!id) {
-      return notify(
-        text.demoFavorite,
-      );
+      return notify(text.demoFavorite);
     }
 
     try {
-      await request(
-        `/favorites/${id}/toggle`,
-        {
-          method: 'POST',
+      await request(`/favorites/${id}/toggle`, {
+        method: 'POST',
 
-          headers: {
-            Authorization: `Bearer ${
-              localStorage.getItem(
-                'bouzid_token',
-              ) || ''
-            }`,
-          },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('bouzid_token') || ''}`,
         },
-      );
+      });
 
-      notify(
-        text.favoriteUpdated,
-      );
+      notify(text.favoriteUpdated);
     } catch (error) {
-      notify(
-        error instanceof Error
-          ? error.message
-          : text.favoriteLogin,
-      );
+      notify(error instanceof Error ? error.message : text.favoriteLogin);
     }
   };
 
   return (
     <div id="top">
-
-      <Navbar
-        open={open}
-        setOpen={setOpen}
-        onAnnouncement={() =>
-          setModal(true)
-        }
-      />
+      <Navbar open={open} setOpen={setOpen} onAnnouncement={() => setModal(true)} />
 
       <main>
-
         {/* HERO */}
 
-       <section className="hero">
-  <video
-    className="hero-video"
-    autoPlay
-    muted
-    loop
-    playsInline
-    preload="metadata"
-    width={768}
-    height={432}
-    poster="/uploads/site/hero/coastal-hero-1200.webp"
-  >
-    <source
-      src="/videos/sidi-bouzid-hero.mp4"
-      type="video/mp4"
-    />
-  </video>
+        <section className="hero">
+          <video
+            className="hero-video"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            width={768}
+            height={432}
+            poster="/uploads/site/hero/coastal-hero-1200.webp"
+          >
+            <source src="/videos/sidi-bouzid-hero.mp4" type="video/mp4" />
+          </video>
 
-  <div className="hero-shade" />
-  <div className="location-badge"><MapPin size={14} /> SIDI BOUZID <i /> EL JADIDA <i /> MOROCCO</div>
+          <div className="hero-shade" />
+          <div className="location-badge">
+            <MapPin size={14} /> SIDI BOUZID <i /> EL JADIDA <i /> MOROCCO
+          </div>
 
-  <div className="hero-copy">
-    <small className="eyebrow">
-      {text.eyebrow}
-    </small>
+          <div className="hero-copy">
+            <small className="eyebrow">{text.eyebrow}</small>
 
-    <h1>
-      {text.heroLine1}
-      <br />
-      <em>{text.heroLine2}</em>
-    </h1>
+            <h1>
+              {text.heroLine1}
+              <br />
+              <em>{text.heroLine2}</em>
+            </h1>
 
-    <p>
-      {text.heroText}
-    </p>
+            <p>{text.heroText}</p>
 
-    <a className="light-button" href="/categories">
-      {text.prepare}
-      <ArrowUpRight size={18} />
-    </a>
-  </div>
+            <a className="light-button" href="/categories">
+              {text.prepare}
+              <ArrowUpRight size={18} />
+            </a>
+          </div>
 
-  <HeroSearch onSearch={search} />
-  <a className="scroll-indicator" href="/categories">{text.scroll} <ArrowDown size={14} /></a>
-</section>
+          <HeroSearch onSearch={search} />
+          <a className="scroll-indicator" href="/categories">
+            {text.scroll} <ArrowDown size={14} />
+          </a>
+        </section>
 
-        <section className="premium-stats"><article><strong>120<span>+</span></strong><p>{text.statsAddresses}</p></article><article><strong>35<span>+</span></strong><p>{text.statsExperiences}</p></article><article><strong>4.9<small>/5</small></strong><p>{text.statsRating}</p></article></section>
+        <section className="premium-stats">
+          <article>
+            <strong>
+              120<span>+</span>
+            </strong>
+            <p>{text.statsAddresses}</p>
+          </article>
+          <article>
+            <strong>
+              35<span>+</span>
+            </strong>
+            <p>{text.statsExperiences}</p>
+          </article>
+          <article>
+            <strong>
+              4.9<small>/5</small>
+            </strong>
+            <p>{text.statsRating}</p>
+          </article>
+        </section>
 
         {/* CATEGORIES */}
 
-        <CategoryGrid
-          onAnnouncement={() =>
-            setModal(true)
-          }
-        />
+        <CategoryGrid onAnnouncement={() => setModal(true)} />
 
         {/* ESCAPES */}
 
-        <section
-          className="section escapes"
-          id="escapes"
-        >
+        <section className="section escapes" id="escapes">
           <div className="heading-row">
-
             <Heading
               eyebrow={text.selected}
               title={
@@ -239,21 +196,16 @@ export default function App() {
           </div>
 
           <div className="listing-grid">
-
-            {listings
-              .slice(0, 3)
-              .map((listing) => (
-                <ListingCard
-                  listing={listing}
-                  onFavorite={favorite}
-                  onBook={(item) => item.listingId && window.location.assign(`/listings/${item.listingId}`)}
-                  key={
-                    listing.listingId ||
-                    listing.title
-                  }
-                />
-              ))}
-
+            {listings.slice(0, 3).map((listing) => (
+              <ListingCard
+                listing={listing}
+                onFavorite={favorite}
+                onBook={(item) =>
+                  item.listingId && window.location.assign(`/listings/${item.listingId}`)
+                }
+                key={listing.listingId || listing.title}
+              />
+            ))}
           </div>
         </section>
 
@@ -269,12 +221,8 @@ export default function App() {
 
         {/* JOURNAL */}
 
-        <section
-          className="section journal"
-          id="story"
-        >
+        <section className="section journal" id="story">
           <div className="heading-row">
-
             <Heading
               eyebrow={text.journal}
               title={
@@ -294,56 +242,34 @@ export default function App() {
           </div>
 
           <div className="journal-grid">
+            {posts.slice(0, 3).map((post) => (
+              <article className="post" key={post.post_id || post.title}>
+                <ResponsiveImage
+                  src={post.cover_image_url || images.explore}
+                  alt=""
+                  width={900}
+                  height={600}
+                  sizes="(max-width: 760px) calc(100vw - 44px), 33vw"
+                />
 
-            {posts
-              .slice(0, 3)
-              .map((post) => (
-                <article
-                  className="post"
-                  key={
-                    post.post_id ||
-                    post.title
-                  }
-                >
-                  <ResponsiveImage
-                    src={
-                      post.cover_image_url ||
-                      images.explore
-                    }
-                    alt=""
-                    width={900}
-                    height={600}
-                    sizes="(max-width: 760px) calc(100vw - 44px), 33vw"
-                  />
+                <small>{decodeText(post.category) || text.ideas}</small>
 
-                  <small>
-                    {decodeText(post.category) ||
-                      text.ideas}
-                  </small>
+                <h3>{decodeText(post.title)}</h3>
 
-                  <h3>
-                    {decodeText(post.title)}
-                  </h3>
+                <p>{decodeText(post.excerpt)}</p>
 
-                  <p>
-                    {decodeText(post.excerpt)}
-                  </p>
-
-                  <a href="/">
-                    {text.read}
-                    <ArrowUpRight size={14} />
-                  </a>
-                </article>
-              ))}
+                <a href="/">
+                  {text.read}
+                  <ArrowUpRight size={14} />
+                </a>
+              </article>
+            ))}
           </div>
         </section>
 
         {/* HOST */}
 
-        <section
-          className="host section"
-          id="host"
-        >
+        <section className="host section" id="host">
           <ResponsiveImage
             src="/uploads/site/hero/coastal-hero.jpg"
             alt={text.coastalLandscape}
@@ -351,30 +277,19 @@ export default function App() {
           />
 
           <div>
-
-            <small className="eyebrow">
-              {text.hosts}
-            </small>
+            <small className="eyebrow">{text.hosts}</small>
 
             <h2>
               {text.hostTitle}
               <span>?</span>
             </h2>
 
-            <p>
-              {text.hostText}
-            </p>
+            <p>{text.hostText}</p>
 
-            <button
-              className="light-button"
-              onClick={() =>
-                setModal(true)
-              }
-            >
+            <button className="light-button" onClick={() => setModal(true)}>
               {text.addAddress}
               <ArrowUpRight size={18} />
             </button>
-
           </div>
         </section>
 
@@ -386,7 +301,9 @@ export default function App() {
       <footer className="site-footer">
         <div className="footer-main">
           <div className="footer-intro">
-            <a className="brand" href="/"><b>B</b> bouzid<span>.</span></a>
+            <a className="brand" href="/">
+              <b>B</b> bouzid<span>.</span>
+            </a>
             <p>{text.footerText}</p>
           </div>
           <nav aria-label="Footer navigation">
@@ -397,7 +314,11 @@ export default function App() {
           </nav>
           <div className="footer-location">
             <small>{text.findUs}</small>
-            <p>Sidi Bouzid<br />El Jadida, Maroc</p>
+            <p>
+              Sidi Bouzid
+              <br />
+              El Jadida, Maroc
+            </p>
             <a href="/">{text.proposeAddress}</a>
           </div>
         </div>
@@ -410,23 +331,11 @@ export default function App() {
 
       {/* ANNOUNCEMENT MODAL */}
 
-      {modal && (
-        <AnnouncementModal
-          onClose={() =>
-            setModal(false)
-          }
-          onMessage={notify}
-        />
-      )}
+      {modal && <AnnouncementModal onClose={() => setModal(false)} onMessage={notify} />}
 
       {/* TOAST */}
 
-      {message && (
-        <div className="toast">
-          {message}
-        </div>
-      )}
-
+      {message && <div className="toast">{message}</div>}
     </div>
   );
 }

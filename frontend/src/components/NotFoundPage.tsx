@@ -1,31 +1,31 @@
-import { useEffect } from "react";
-import { ArrowLeft, Compass } from "lucide-react";
-import { useLanguage } from "../i18n/language";
+import { useEffect } from 'react';
+import { ArrowLeft, Compass } from 'lucide-react';
+import { useLanguage } from '../i18n/language';
 
 const copy = {
   fr: {
-    eyebrow: "HORS DES SENTIERS",
-    title: "Cette adresse reste introuvable.",
-    body: "La page que vous cherchez a peut-être changé d’adresse, ou n’a jamais existé.",
-    home: "Retour à l’accueil",
-    explore: "Explorer les adresses",
-    titleTag: "Page introuvable — Bouzid Escapes",
+    eyebrow: 'HORS DES SENTIERS',
+    title: 'Cette adresse reste introuvable.',
+    body: 'La page que vous cherchez a peut-être changé d’adresse, ou n’a jamais existé.',
+    home: 'Retour à l’accueil',
+    explore: 'Explorer les adresses',
+    titleTag: 'Page introuvable — Bouzid Escapes',
   },
   en: {
-    eyebrow: "OFF THE MAP",
-    title: "This address cannot be found.",
-    body: "The page you are looking for may have moved, or it may never have existed.",
-    home: "Back to home",
-    explore: "Explore our addresses",
-    titleTag: "Page not found — Bouzid Escapes",
+    eyebrow: 'OFF THE MAP',
+    title: 'This address cannot be found.',
+    body: 'The page you are looking for may have moved, or it may never have existed.',
+    home: 'Back to home',
+    explore: 'Explore our addresses',
+    titleTag: 'Page not found — Bouzid Escapes',
   },
   ar: {
-    eyebrow: "خارج الخريطة",
-    title: "لم نتمكن من العثور على هذا العنوان.",
-    body: "ربما انتقلت الصفحة التي تبحثون عنها إلى عنوان آخر، أو أنها لم تكن موجودة.",
-    home: "العودة إلى الرئيسية",
-    explore: "استكشفوا عناويننا",
-    titleTag: "الصفحة غير موجودة — Bouzid Escapes",
+    eyebrow: 'خارج الخريطة',
+    title: 'لم نتمكن من العثور على هذا العنوان.',
+    body: 'ربما انتقلت الصفحة التي تبحثون عنها إلى عنوان آخر، أو أنها لم تكن موجودة.',
+    home: 'العودة إلى الرئيسية',
+    explore: 'استكشفوا عناويننا',
+    titleTag: 'الصفحة غير موجودة — Bouzid Escapes',
   },
 };
 

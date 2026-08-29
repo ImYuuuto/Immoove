@@ -18,19 +18,34 @@ export default function CategoryGrid({
   const presentation = [
     {
       image: images.stay,
-      number: `01 / ${text.stay.toUpperCase()}`, icon: '🏡', title: text.villas, text: text.villasText,
+      number: `01 / ${text.stay.toUpperCase()}`,
+      icon: '🏡',
+      title: text.villas,
+      text: text.villasText,
     },
 
     {
       image: images.explore,
-      number: `02 / ${text.explore.toUpperCase()}`, icon: '🌊', title: text.activities, text: text.activitiesText,
+      number: `02 / ${text.explore.toUpperCase()}`,
+      icon: '🌊',
+      title: text.activities,
+      text: text.activitiesText,
     },
 
     {
       image: images.food,
-      number: `03 / ${text.dining.toUpperCase()}`, icon: '🍽', title: text.restaurants, text: text.restaurantsText,
+      number: `03 / ${text.dining.toUpperCase()}`,
+      icon: '🍽',
+      title: text.restaurants,
+      text: text.restaurantsText,
     },
-    { image: '/uploads/site/categories/beach.jpg', number: `04 / ${text.carRental.toUpperCase()}`, icon: '🚗', title: text.carRental, text: text.beachText },
+    {
+      image: '/uploads/site/categories/beach.jpg',
+      number: `04 / ${text.carRental.toUpperCase()}`,
+      icon: '🚗',
+      title: text.carRental,
+      text: text.beachText,
+    },
   ];
   const cards = categories.map((category, index) => ({
     ...category,
@@ -39,57 +54,49 @@ export default function CategoryGrid({
   }));
 
   return (
-    <section
-      className="section categories"
-      id="categories"
-    >
+    <section className="section categories" id="categories">
       <Heading
         eyebrow={text.categoriesEyebrow}
         title={
           <>
             {text.categoriesLine1}
             <br />
-            {text.categoriesLine2}<span>.</span>
+            {text.categoriesLine2}
+            <span>.</span>
           </>
         }
       />
 
       <div className="category-grid">
-
         {cards.map((card) => (
           <a
             className={`category-card ${card === cards[0] ? 'large' : ''}`}
             href={`/categories/${card.slug}`}
             key={card.categoryId}
           >
-            <ResponsiveImage
-              src={card.image}
-              alt=""
-              sizes="(max-width: 800px) 78vw, 300px"
-            />
+            <ResponsiveImage src={card.image} alt="" sizes="(max-width: 800px) 78vw, 300px" />
 
             <div>
               <small>
-                {card.number}{card.listingCount !== undefined && <span className="category-count">{card.listingCount}</span>}
+                {card.number}
+                {card.listingCount !== undefined && (
+                  <span className="category-count">{card.listingCount}</span>
+                )}
               </small>
               <span className="category-icon">{card.icon}</span>
 
-              <h3>
-                {card.title}
-              </h3>
+              <h3>{card.title}</h3>
 
-              {card.text && (
-                <p>
-                  {card.text}
-                </p>
-              )}
+              {card.text && <p>{card.text}</p>}
             </div>
           </a>
         ))}
-
       </div>
-      {showAnnouncement && <button className="discover-host-link" onClick={onAnnouncement}>{text.shareAddress}</button>}
+      {showAnnouncement && (
+        <button className="discover-host-link" onClick={onAnnouncement}>
+          {text.shareAddress}
+        </button>
+      )}
     </section>
   );
 }
-

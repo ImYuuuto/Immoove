@@ -5,7 +5,11 @@ const AUTH_MARKER = 'bouzid_authenticated';
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number, readonly retryAfter?: number) {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly retryAfter?: number,
+  ) {
     super(message);
     this.name = 'ApiError';
   }
@@ -68,13 +72,24 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     const text = languageText();
     const serverMessage = (await response.json().catch(() => null))?.error?.message;
     const retryAfter = Number(response.headers.get('Retry-After')) || undefined;
-    const message = response.status === 413
-      ? text.tooLarge
-      : response.status === 429
-        ? serverMessage || (retryAfter ? formatTranslation(text.tooManyRetry, { seconds: retryAfter }) : text.tooMany)
-        : serverMessage || `${text.error} ${response.status}`;
-    const incorrectCurrentPassword = path === '/auth/password' && message === 'Current password is incorrect';
-    if (response.status === 401 && !incorrectCurrentPassword && localStorage.getItem(AUTH_MARKER) === '1' && !['/auth/login', '/auth/register'].includes(path)) redirectToLogin();
+    const message =
+      response.status === 413
+        ? text.tooLarge
+        : response.status === 429
+          ? serverMessage ||
+            (retryAfter
+              ? formatTranslation(text.tooManyRetry, { seconds: retryAfter })
+              : text.tooMany)
+          : serverMessage || `${text.error} ${response.status}`;
+    const incorrectCurrentPassword =
+      path === '/auth/password' && message === 'Current password is incorrect';
+    if (
+      response.status === 401 &&
+      !incorrectCurrentPassword &&
+      localStorage.getItem(AUTH_MARKER) === '1' &&
+      !['/auth/login', '/auth/register'].includes(path)
+    )
+      redirectToLogin();
     throw new ApiError(message, response.status, retryAfter);
   }
 

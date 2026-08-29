@@ -13,10 +13,18 @@ export default function PasswordField(props: Omit<InputHTMLAttributes<HTMLInputE
   const [visible, setVisible] = useState(false);
   const label = visible ? labels[language].hide : labels[language].show;
 
-  return <div className="password-field">
-    <input {...props} type={visible ? 'text' : 'password'} />
-    <button type="button" onClick={() => setVisible((current) => !current)} aria-label={label} title={label} aria-pressed={visible}>
-      {visible ? <EyeOff size={19} /> : <Eye size={19} />}
-    </button>
-  </div>;
+  return (
+    <div className="password-field">
+      <input {...props} type={visible ? 'text' : 'password'} />
+      <button
+        type="button"
+        onClick={() => setVisible((current) => !current)}
+        aria-label={label}
+        title={label}
+        aria-pressed={visible}
+      >
+        {visible ? <EyeOff size={19} /> : <Eye size={19} />}
+      </button>
+    </div>
+  );
 }

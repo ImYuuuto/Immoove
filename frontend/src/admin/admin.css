@@ -44,7 +44,6 @@
   --admin-transition: 0.22s ease;
 }
 
-
 /* =========================================================
    RESET
    ========================================================= */
@@ -80,7 +79,6 @@ a {
   text-decoration: none;
 }
 
-
 /* =========================================================
    MAIN SHELL
    ========================================================= */
@@ -91,21 +89,11 @@ a {
   position: relative;
 
   background:
-    radial-gradient(
-      circle at 90% 5%,
-      rgba(231, 182, 138, 0.14),
-      transparent 25%
-    ),
-    radial-gradient(
-      circle at 45% 100%,
-      rgba(12, 105, 112, 0.07),
-      transparent 28%
-    ),
-    var(--admin-bg);
+    radial-gradient(circle at 90% 5%, rgba(231, 182, 138, 0.14), transparent 25%),
+    radial-gradient(circle at 45% 100%, rgba(12, 105, 112, 0.07), transparent 28%), var(--admin-bg);
 
   color: var(--admin-ink);
 }
-
 
 /* =========================================================
    SIDEBAR
@@ -126,23 +114,15 @@ a {
 
   padding: 30px 17px 20px;
 
-  background:
-    linear-gradient(
-      180deg,
-      #052b3b 0%,
-      #062f40 52%,
-      #052733 100%
-    );
+  background: linear-gradient(180deg, #052b3b 0%, #062f40 52%, #052733 100%);
 
   color: #d7e4e0;
 
-  box-shadow:
-    12px 0 35px rgba(6, 45, 66, 0.12);
+  box-shadow: 12px 0 35px rgba(6, 45, 66, 0.12);
 
   overflow: hidden;
   z-index: 20;
 }
-
 
 /* decorative circle */
 
@@ -161,7 +141,6 @@ a {
 
   pointer-events: none;
 }
-
 
 /* =========================================================
    BRAND
@@ -189,18 +168,15 @@ a {
 
   border-radius: 50%;
 
-  background: linear-gradient(
-    135deg,
-    #e08369,
-    #d76852
-  );
+  background: linear-gradient(135deg, #e08369, #d76852);
 
   color: #fff;
 
-  font: 700 21px 'Playfair Display', serif;
+  font:
+    700 21px 'Playfair Display',
+    serif;
 
-  box-shadow:
-    0 8px 20px rgba(221, 116, 91, 0.3);
+  box-shadow: 0 8px 20px rgba(221, 116, 91, 0.3);
 }
 
 .admin-brand b {
@@ -208,7 +184,9 @@ a {
 
   color: #fff;
 
-  font: 600 20px 'Playfair Display', serif;
+  font:
+    600 20px 'Playfair Display',
+    serif;
 
   letter-spacing: -0.4px;
 }
@@ -225,7 +203,6 @@ a {
   letter-spacing: 1.8px;
   text-transform: uppercase;
 }
-
 
 /* =========================================================
    SIDEBAR NAVIGATION
@@ -269,7 +246,6 @@ a {
     transform var(--admin-transition);
 }
 
-
 /* icon */
 
 .admin-sidebar nav button svg,
@@ -283,7 +259,6 @@ a {
     transform var(--admin-transition),
     opacity var(--admin-transition);
 }
-
 
 /* active indicator */
 
@@ -307,7 +282,6 @@ a {
   transition: opacity var(--admin-transition);
 }
 
-
 /* hover */
 
 .admin-sidebar nav button:hover {
@@ -322,21 +296,14 @@ a {
   transform: translateX(1px);
 }
 
-
 /* active */
 
 .admin-sidebar nav button.active {
-  background:
-    linear-gradient(
-      90deg,
-      rgba(20, 85, 98, 0.95),
-      rgba(16, 73, 86, 0.75)
-    );
+  background: linear-gradient(90deg, rgba(20, 85, 98, 0.95), rgba(16, 73, 86, 0.75));
 
   color: #fff;
 
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .admin-sidebar nav button.active::before {
@@ -347,7 +314,6 @@ a {
   color: var(--admin-sand);
   opacity: 1;
 }
-
 
 /* notification count */
 
@@ -373,7 +339,6 @@ a {
   font-weight: 700;
 }
 
-
 /* =========================================================
    LOGOUT
    ========================================================= */
@@ -395,7 +360,6 @@ a {
   background: rgba(221, 116, 91, 0.08);
 }
 
-
 /* =========================================================
    MAIN
    ========================================================= */
@@ -407,7 +371,6 @@ a {
 
   padding: 0 clamp(22px, 5vw, 70px) 70px;
 }
-
 
 /* =========================================================
    HEADER
@@ -424,23 +387,14 @@ a {
 
   margin: 0 clamp(-70px, -5vw, -22px) 35px;
 
-  padding:
-    43px
-    clamp(22px, 5vw, 70px)
-    29px;
+  padding: 43px clamp(22px, 5vw, 70px) 29px;
 
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.82),
-      rgba(255, 255, 255, 0.46)
-    );
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.46));
 
   border-bottom: 1px solid rgba(220, 227, 222, 0.8);
 
   backdrop-filter: blur(12px);
 }
-
 
 /* small decorative line */
 
@@ -458,7 +412,6 @@ a {
   background: var(--admin-coral);
 }
 
-
 /* eyebrow */
 
 .admin-header > div > small {
@@ -474,7 +427,6 @@ a {
   text-transform: uppercase;
 }
 
-
 /* title */
 
 .admin-header h1 {
@@ -483,14 +435,11 @@ a {
   color: var(--admin-ink);
 
   font:
-    600 clamp(35px, 4vw, 55px)
-    / 0.98
-    'Playfair Display',
+    600 clamp(35px, 4vw, 55px) / 0.98 'Playfair Display',
     serif;
 
   letter-spacing: -1.5px;
 }
-
 
 /* =========================================================
    ADMIN USER
@@ -531,7 +480,6 @@ a {
 
   font-size: 13px;
 }
-
 
 /* =========================================================
    STATISTICS
@@ -577,7 +525,6 @@ a {
   box-shadow: var(--admin-shadow);
 }
 
-
 /* card accents */
 
 .stat-grid article:nth-child(2) {
@@ -591,7 +538,6 @@ a {
 .stat-grid article:nth-child(4) {
   border-left-color: #4779a3;
 }
-
 
 /* decorative circle */
 
@@ -629,7 +575,6 @@ a {
   opacity: 0.7;
 }
 
-
 /* stat label */
 
 .stat-grid small {
@@ -645,7 +590,6 @@ a {
   text-transform: uppercase;
 }
 
-
 /* stat number */
 
 .stat-grid strong {
@@ -659,8 +603,7 @@ a {
   color: var(--admin-ink);
 
   font:
-    600 42px
-    'Playfair Display',
+    600 42px 'Playfair Display',
     serif;
 
   letter-spacing: -1px;
@@ -671,7 +614,6 @@ a {
 
   font-size: 11px;
 }
-
 
 /* =========================================================
    PANELS
@@ -700,7 +642,6 @@ a {
   padding: 25px;
 }
 
-
 /* =========================================================
    PANEL HEADER
    ========================================================= */
@@ -722,8 +663,7 @@ a {
   color: var(--admin-ink);
 
   font:
-    600 24px
-    'Playfair Display',
+    600 24px 'Playfair Display',
     serif;
 
   letter-spacing: -0.4px;
@@ -757,7 +697,6 @@ a {
 .panel-heading button:hover {
   color: var(--admin-coral);
 }
-
 
 /* =========================================================
    QUEUE
@@ -807,7 +746,6 @@ a {
   font-size: 10px;
 }
 
-
 /* =========================================================
    STATUS BADGES
    ========================================================= */
@@ -848,7 +786,6 @@ a {
   color: var(--admin-danger);
 }
 
-
 /* =========================================================
    EMPTY STATE
    ========================================================= */
@@ -866,7 +803,6 @@ a {
 
   text-align: center;
 }
-
 
 /* =========================================================
    TABLE CARD
@@ -893,7 +829,6 @@ a {
   background: var(--admin-line-dark);
   border-radius: 10px;
 }
-
 
 /* table row */
 
@@ -932,7 +867,6 @@ a {
   transform: translateX(2px);
 }
 
-
 /* table header */
 
 .table-head {
@@ -949,7 +883,6 @@ a {
 
   text-transform: uppercase;
 }
-
 
 /* first column */
 
@@ -970,7 +903,6 @@ a {
 
   font-size: 9px;
 }
-
 
 /* =========================================================
    ACTIONS
@@ -1029,7 +961,6 @@ a {
   background: #f3d0cb;
 }
 
-
 /* =========================================================
    REQUEST GRID
    ========================================================= */
@@ -1037,12 +968,10 @@ a {
 .request-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   gap: 17px;
 }
-
 
 /* =========================================================
    REQUEST CARD
@@ -1076,7 +1005,6 @@ a {
   box-shadow: var(--admin-shadow);
 }
 
-
 /* status-based top border */
 
 .request-card:has(.status-approved) {
@@ -1086,7 +1014,6 @@ a {
 .request-card:has(.status-rejected) {
   border-top-color: #bd6257;
 }
-
 
 /* =========================================================
    REQUEST TOP
@@ -1108,7 +1035,6 @@ a {
   font-size: 9px;
 }
 
-
 /* =========================================================
    REQUEST CONTENT
    ========================================================= */
@@ -1119,8 +1045,7 @@ a {
   color: var(--admin-ink);
 
   font:
-    600 25px
-    'Playfair Display',
+    600 25px 'Playfair Display',
     serif;
 
   letter-spacing: -0.5px;
@@ -1148,7 +1073,6 @@ a {
   line-height: 1.5;
 }
 
-
 /* =========================================================
    REQUEST ACTIONS
    ========================================================= */
@@ -1168,7 +1092,6 @@ a {
 .request-actions button {
   flex: 1;
 }
-
 
 /* =========================================================
    ERROR
@@ -1211,7 +1134,6 @@ a {
   line-height: 1;
 }
 
-
 /* =========================================================
    LOADING
    ========================================================= */
@@ -1227,12 +1149,7 @@ a {
 
   padding: 30px;
 
-  background:
-    radial-gradient(
-      circle at center,
-      #f8faf7,
-      var(--admin-bg)
-    );
+  background: radial-gradient(circle at center, #f8faf7, var(--admin-bg));
 
   color: var(--admin-ink);
 
@@ -1262,7 +1179,6 @@ a {
   }
 }
 
-
 /* =========================================================
    DENIED
    ========================================================= */
@@ -1271,8 +1187,7 @@ a {
   margin: 0 0 10px;
 
   font:
-    600 42px
-    'Playfair Display',
+    600 42px 'Playfair Display',
     serif;
 }
 
@@ -1294,7 +1209,6 @@ a {
 
   padding-bottom: 4px;
 }
-
 
 /* =========================================================
    MOBILE MENU
@@ -1320,8 +1234,7 @@ a {
 
   color: #fff;
 
-  box-shadow:
-    0 8px 22px rgba(6, 45, 66, 0.2);
+  box-shadow: 0 8px 22px rgba(6, 45, 66, 0.2);
 
   transition:
     transform var(--admin-transition),
@@ -1333,7 +1246,6 @@ a {
 
   background: var(--admin-teal);
 }
-
 
 /* =========================================================
    LANGUAGE SELECTOR
@@ -1375,10 +1287,8 @@ a {
 .admin-language:focus {
   border-color: var(--admin-teal);
 
-  box-shadow:
-    0 0 0 3px rgba(12, 105, 112, 0.1);
+  box-shadow: 0 0 0 3px rgba(12, 105, 112, 0.1);
 }
-
 
 /* =========================================================
    FOCUS ACCESSIBILITY
@@ -1395,13 +1305,11 @@ a {
   outline-offset: 3px;
 }
 
-
 /* =========================================================
    TABLET
    ========================================================= */
 
 @media (max-width: 1100px) {
-
   .admin-sidebar {
     width: 225px;
   }
@@ -1417,16 +1325,13 @@ a {
   .admin-panels {
     grid-template-columns: 1fr;
   }
-
 }
-
 
 /* =========================================================
    MOBILE SIDEBAR
    ========================================================= */
 
 @media (max-width: 900px) {
-
   .admin-sidebar {
     position: fixed;
 
@@ -1444,8 +1349,7 @@ a {
   .admin-sidebar.open {
     left: 0;
 
-    box-shadow:
-      18px 0 50px rgba(6, 45, 66, 0.25);
+    box-shadow: 18px 0 50px rgba(6, 45, 66, 0.25);
   }
 
   .admin-menu {
@@ -1456,22 +1360,13 @@ a {
   .admin-main {
     width: 100%;
 
-    padding:
-      82px
-      20px
-      40px;
+    padding: 82px 20px 40px;
   }
 
   .admin-header {
-    margin:
-      -82px
-      -20px
-      30px;
+    margin: -82px -20px 30px;
 
-    padding:
-      82px
-      20px
-      26px;
+    padding: 82px 20px 26px;
 
     align-items: flex-start;
   }
@@ -1499,16 +1394,13 @@ a {
   .request-grid {
     grid-template-columns: 1fr;
   }
-
 }
-
 
 /* =========================================================
    SMALL TABLET
    ========================================================= */
 
 @media (max-width: 650px) {
-
   .stat-grid {
     grid-template-columns: 1fr 1fr;
 
@@ -1534,33 +1426,21 @@ a {
   .panel-heading h2 {
     font-size: 21px;
   }
-
 }
-
 
 /* =========================================================
    PHONE
    ========================================================= */
 
 @media (max-width: 480px) {
-
   .admin-main {
-    padding:
-      78px
-      14px
-      30px;
+    padding: 78px 14px 30px;
   }
 
   .admin-header {
-    margin:
-      -78px
-      -14px
-      25px;
+    margin: -78px -14px 25px;
 
-    padding:
-      78px
-      16px
-      23px;
+    padding: 78px 16px 23px;
   }
 
   .admin-header h1 {
@@ -1576,8 +1456,7 @@ a {
   }
 
   .admin-language {
-    margin:
-      13px 0 0;
+    margin: 13px 0 0;
 
     width: 100%;
   }
@@ -1641,8 +1520,7 @@ a {
   .status {
     min-width: 65px;
 
-    padding:
-      5px 6px;
+    padding: 5px 6px;
 
     font-size: 7px;
   }
@@ -1661,16 +1539,13 @@ a {
 
     font-size: 10px;
   }
-
 }
-
 
 /* =========================================================
    EXTRA POLISH
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {
@@ -1681,7 +1556,6 @@ a {
 
     transition-duration: 0.01ms !important;
   }
-
 }
 
 .admin-inline-form,
@@ -1721,19 +1595,100 @@ a {
   font-weight: 700;
 }
 
-.analytics-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
-.analytics-toolbar h2 { margin: 0 0 6px; font: 600 30px 'Playfair Display', serif; color: #123845; }
-.analytics-toolbar p { margin: 0; color: #708086; }
-.analytics-toolbar select { padding: 10px 13px; border: 1px solid #dce3e5; border-radius: 9px; background: white; color: #173640; }
-.analytics-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .8fr); gap: 20px; }
-.analytics-chart { min-height: 390px; }
-.bar-chart { height: 280px; display: flex; align-items: end; gap: 4px; padding-top: 22px; border-bottom: 1px solid #dce3e5; }
-.bar-column { min-width: 5px; flex: 1; height: 100%; display: flex; flex-direction: column; align-items: stretch; justify-content: end; gap: 7px; }
-.bar-column i { display: block; min-height: 3px; border-radius: 4px 4px 0 0; background: #e96d51; }
-.bar-column small { min-height: 14px; overflow: hidden; color: #7b8b90; font-size: 8px; text-align: center; }
-.metric-list > div { display: flex; justify-content: space-between; gap: 12px; padding: 15px 0; border-bottom: 1px solid #e8edef; }
-.metric-list span { display: grid; gap: 4px; }
-.metric-list small { color: #7b8b90; }
-.metric-list strong { color: #123845; text-align: right; }
-.audit-table .table-row { grid-template-columns: 1.1fr 1fr .8fr 1.2fr .8fr; }
-@media (max-width: 900px) { .analytics-grid { grid-template-columns: 1fr; } .analytics-toolbar { align-items: stretch; flex-direction: column; } .audit-table .table-row { min-width: 850px; } }
+.analytics-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.analytics-toolbar h2 {
+  margin: 0 0 6px;
+  font:
+    600 30px 'Playfair Display',
+    serif;
+  color: #123845;
+}
+.analytics-toolbar p {
+  margin: 0;
+  color: #708086;
+}
+.analytics-toolbar select {
+  padding: 10px 13px;
+  border: 1px solid #dce3e5;
+  border-radius: 9px;
+  background: white;
+  color: #173640;
+}
+.analytics-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.8fr);
+  gap: 20px;
+}
+.analytics-chart {
+  min-height: 390px;
+}
+.bar-chart {
+  height: 280px;
+  display: flex;
+  align-items: end;
+  gap: 4px;
+  padding-top: 22px;
+  border-bottom: 1px solid #dce3e5;
+}
+.bar-column {
+  min-width: 5px;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: end;
+  gap: 7px;
+}
+.bar-column i {
+  display: block;
+  min-height: 3px;
+  border-radius: 4px 4px 0 0;
+  background: #e96d51;
+}
+.bar-column small {
+  min-height: 14px;
+  overflow: hidden;
+  color: #7b8b90;
+  font-size: 8px;
+  text-align: center;
+}
+.metric-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 0;
+  border-bottom: 1px solid #e8edef;
+}
+.metric-list span {
+  display: grid;
+  gap: 4px;
+}
+.metric-list small {
+  color: #7b8b90;
+}
+.metric-list strong {
+  color: #123845;
+  text-align: right;
+}
+.audit-table .table-row {
+  grid-template-columns: 1.1fr 1fr 0.8fr 1.2fr 0.8fr;
+}
+@media (max-width: 900px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+  .analytics-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .audit-table .table-row {
+    min-width: 850px;
+  }
+}

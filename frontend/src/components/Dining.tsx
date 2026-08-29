@@ -6,30 +6,16 @@ import ResponsiveImage from './ResponsiveImage';
 export default function Dining() {
   const { text } = useLanguage();
   const venues = [
-    [
-      '/uploads/site/dining/chez-laura.jpg',
-      'EL JADIDA / 01',
-      'Restaurant Chez Laura',
-    ],
+    ['/uploads/site/dining/chez-laura.jpg', 'EL JADIDA / 01', 'Restaurant Chez Laura'],
 
-    [
-      '/uploads/site/dining/la-caleche.jpg',
-      'SIDI BOUZID / 02',
-      'Café La Calèche',
-    ],
+    ['/uploads/site/dining/la-caleche.jpg', 'SIDI BOUZID / 02', 'Café La Calèche'],
 
-    [
-      '/uploads/site/dining/le-spot.jpg',
-      'LA PLAGE / 03',
-      'Le Spot',
-    ],
+    ['/uploads/site/dining/le-spot.jpg', 'LA PLAGE / 03', 'Le Spot'],
   ];
 
   return (
     <section className="dining section">
-
       <div className="dining-intro">
-
         <Heading
           light
           eyebrow={text.atTable}
@@ -43,40 +29,28 @@ export default function Dining() {
           }
         />
 
-        <p>
-          {text.diningText}
-        </p>
+        <p>{text.diningText}</p>
       </div>
 
       <div className="dining-grid">
+        {venues.map(([image, meta, title]) => (
+          <article key={title}>
+            <ResponsiveImage
+              src={image}
+              alt={title}
+              sizes="(max-width: 800px) calc(100vw - 44px), 33vw"
+            />
 
-        {venues.map(
-          ([image, meta, title]) => (
-            <article key={title}>
-              <ResponsiveImage
-                src={image}
-                alt={title}
-                sizes="(max-width: 800px) calc(100vw - 44px), 33vw"
-              />
+            <div>
+              <small>{meta}</small>
 
-              <div>
-                <small>
-                  {meta}
-                </small>
-
-                <h3>
-                  {title}
-                </h3>
-              </div>
-            </article>
-          ),
-        )}
+              <h3>{title}</h3>
+            </div>
+          </article>
+        ))}
       </div>
 
-      <a
-        className="outline-button"
-        href="/categories/services"
-      >
+      <a className="outline-button" href="/categories/services">
         {text.exploreMore}
         <ArrowUpRight size={17} />
       </a>

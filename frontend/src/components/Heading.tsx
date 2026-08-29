@@ -10,15 +10,9 @@ export default function Heading({
   light?: boolean;
 }) {
   return (
-    <div
-      className={`section-heading ${
-        light ? 'light' : ''
-      }`}
-    >
+    <div className={`section-heading ${light ? 'light' : ''}`}>
       <div>
-        <small className="eyebrow">
-          {eyebrow}
-        </small>
+        <small className="eyebrow">{eyebrow}</small>
 
         <h2>{title}</h2>
       </div>

@@ -16,25 +16,18 @@ export default function Navbar({
   onAnnouncement: () => void;
 }) {
   const { language, text, setLanguage } = useLanguage();
-  const [authOpen, setAuthOpen] =
-    useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
 
-  const [message, setMessage] =
-    useState('');
+  const [message, setMessage] = useState('');
 
-  const [user, setUser] =
-    useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
-  const [authLoading, setAuthLoading] =
-    useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  const [languageOpen, setLanguageOpen] =
-    useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
 
   useEffect(() => {
-    request<{ user: AuthUser }>(
-      '/auth/session',
-    )
+    request<{ user: AuthUser }>('/auth/session')
       .then(async (session) => {
         const profile = await request<{ user: AuthUser }>('/profile').catch(() => null);
         setUser(profile?.user || session.user);
@@ -44,56 +37,37 @@ export default function Navbar({
   }, []);
 
   useEffect(() => {
-    const requireLogin = () => { setUser(null); setAuthOpen(true); };
+    const requireLogin = () => {
+      setUser(null);
+      setAuthOpen(true);
+    };
     window.addEventListener('auth:unauthorized', requireLogin);
     if (new URLSearchParams(window.location.search).get('login') === '1') setAuthOpen(true);
     return () => window.removeEventListener('auth:unauthorized', requireLogin);
   }, []);
 
-  const changeLanguage = (
-    language: Language,
-  ) => {
+  const changeLanguage = (language: Language) => {
     setLanguage(language);
     setLanguageOpen(false);
   };
 
   return (
     <header className="navbar">
-
       {/* BRAND */}
 
-      <a
-        className="brand"
-        href="/"
-      >
+      <a className="brand" href="/">
         <b>B</b>
         bouzid<span>.</span>
       </a>
 
       {/* NAVIGATION */}
 
-      <nav
-        className={
-          open
-            ? 'nav-links open'
-            : 'nav-links'
-        }
-      >
-        <a
-          href="/categories"
-          onClick={() =>
-            setOpen(false)
-          }
-        >
+      <nav className={open ? 'nav-links open' : 'nav-links'}>
+        <a href="/categories" onClick={() => setOpen(false)}>
           {text.discover}
         </a>
 
-        <a
-          href="/"
-          onClick={() =>
-            setOpen(false)
-          }
-        >
+        <a href="/" onClick={() => setOpen(false)}>
           {text.about}
         </a>
 
@@ -110,20 +84,11 @@ export default function Navbar({
           {text.services}
         </button>
 
-        {user &&
-          ['ADMIN', 'admin'].includes(
-            user.role,
-          ) && (
-            <a
-              className="admin-link"
-              href="/admin"
-              onClick={() =>
-                setOpen(false)
-              }
-            >
-              {text.admin}
-            </a>
-          )}
+        {user && ['ADMIN', 'admin'].includes(user.role) && (
+          <a className="admin-link" href="/admin" onClick={() => setOpen(false)}>
+            {text.admin}
+          </a>
+        )}
 
         {user && ['moderator', 'staff'].includes(user.role) && (
           <a className="admin-link" href="/moderator" onClick={() => setOpen(false)}>
@@ -141,107 +106,55 @@ export default function Navbar({
       {/* NAV ACTIONS */}
 
       <div className="nav-actions">
-
         {/* CUSTOM LANGUAGE MENU */}
 
         <div className="language-picker navbar-language-picker">
-
           <button
             type="button"
-            className={`language-trigger ${
-              languageOpen
-                ? 'is-open'
-                : ''
-            }`}
-            onClick={() =>
-              setLanguageOpen(
-                !languageOpen,
-              )
-            }
-            aria-expanded={
-              languageOpen
-            }
+            className={`language-trigger ${languageOpen ? 'is-open' : ''}`}
+            onClick={() => setLanguageOpen(!languageOpen)}
+            aria-expanded={languageOpen}
             aria-haspopup="menu"
           >
-            <span>
-              {language.toUpperCase()}
-            </span>
+            <span>{language.toUpperCase()}</span>
 
-            <ChevronDown
-              size={14}
-              className="language-chevron"
-            />
+            <ChevronDown size={14} className="language-chevron" />
           </button>
 
           {languageOpen && (
-            <div
-              className="language-menu"
-              role="menu"
-            >
-
+            <div className="language-menu" role="menu">
               <button
                 type="button"
                 role="menuitem"
-                className={
-                  language === 'fr'
-                    ? 'selected'
-                    : ''
-                }
-                onClick={() =>
-                  changeLanguage('fr')
-                }
+                className={language === 'fr' ? 'selected' : ''}
+                onClick={() => changeLanguage('fr')}
               >
-                <span className="language-code">
-                  FR
-                </span>
+                <span className="language-code">FR</span>
 
-                <span className="language-name">
-                  Français
-                </span>
+                <span className="language-name">Français</span>
               </button>
 
               <button
                 type="button"
                 role="menuitem"
-                className={
-                  language === 'en'
-                    ? 'selected'
-                    : ''
-                }
-                onClick={() =>
-                  changeLanguage('en')
-                }
+                className={language === 'en' ? 'selected' : ''}
+                onClick={() => changeLanguage('en')}
               >
-                <span className="language-code">
-                  EN
-                </span>
+                <span className="language-code">EN</span>
 
-                <span className="language-name">
-                  English
-                </span>
+                <span className="language-name">English</span>
               </button>
 
               <button
                 type="button"
                 role="menuitem"
-                className={
-                  language === 'ar'
-                    ? 'selected'
-                    : ''
-                }
-                onClick={() =>
-                  changeLanguage('ar')
-                }
+                className={language === 'ar' ? 'selected' : ''}
+                onClick={() => changeLanguage('ar')}
               >
-                <span className="language-code">
-                  AR
-                </span>
+                <span className="language-code">AR</span>
 
-                <span className="language-name">
-                  العربية
-                </span>
+                <span className="language-name">العربية</span>
               </button>
-
             </div>
           )}
         </div>
@@ -255,9 +168,20 @@ export default function Navbar({
         ) : user ? (
           <a className="nav-profile-avatar" href="/profile" aria-label={text.profile}>
             {user.avatarUrl ? (
-              <ResponsiveImage src={user.avatarUrl} alt={text.profile} width={44} height={44} sizes="44px" priority />
+              <ResponsiveImage
+                src={user.avatarUrl}
+                alt={text.profile}
+                width={44}
+                height={44}
+                sizes="44px"
+                priority
+              />
             ) : (
-              <span>{user.firstName?.trim().charAt(0).toUpperCase() || user.email?.trim().charAt(0).toUpperCase() || 'U'}</span>
+              <span>
+                {user.firstName?.trim().charAt(0).toUpperCase() ||
+                  user.email?.trim().charAt(0).toUpperCase() ||
+                  'U'}
+              </span>
             )}
           </a>
         ) : (
@@ -266,7 +190,6 @@ export default function Navbar({
             data-auth-action="login"
             onClick={() => {
               setAuthOpen(true);
-
             }}
           >
             {text.login}
@@ -275,18 +198,8 @@ export default function Navbar({
 
         {/* MOBILE MENU */}
 
-        <button
-          className="menu-button"
-          onClick={() =>
-            setOpen(!open)
-          }
-          aria-label="Menu"
-        >
-          {open ? (
-            <X />
-          ) : (
-            <Menu />
-          )}
+        <button className="menu-button" onClick={() => setOpen(!open)} aria-label="Menu">
+          {open ? <X /> : <Menu />}
         </button>
       </div>
 
@@ -294,20 +207,13 @@ export default function Navbar({
 
       {authOpen && (
         <AuthModal
-          onClose={() =>
-            setAuthOpen(false)
-          }
+          onClose={() => setAuthOpen(false)}
           onMessage={(text) => {
             setMessage(text);
 
-            window.setTimeout(
-              () => setMessage(''),
-              3500,
-            );
+            window.setTimeout(() => setMessage(''), 3500);
           }}
-          onAuthenticated={(
-            nextUser,
-          ) => {
+          onAuthenticated={(nextUser) => {
             const next = new URLSearchParams(window.location.search).get('next');
             if (next?.startsWith('/') && !next.startsWith('//')) {
               window.location.assign(next);
@@ -315,18 +221,13 @@ export default function Navbar({
             }
             setUser(nextUser);
             setAuthLoading(false);
-          }
-          }
+          }}
         />
       )}
 
       {/* TOAST */}
 
-      {message && (
-        <div className="toast">
-          {message}
-        </div>
-      )}
+      {message && <div className="toast">{message}</div>}
     </header>
   );
 }

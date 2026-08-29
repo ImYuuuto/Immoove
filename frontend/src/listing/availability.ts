@@ -5,7 +5,8 @@ export const SESSION_TIMES = ['09:00', '12:00', '15:00', '18:00'];
 export function bookingMode(listing: ListingDetail): BookingMode {
   const unit = (listing.pricingUnit || '').toLowerCase();
   if (unit.includes('hour') || unit.includes('heure')) return 'hourly';
-  if (unit.includes('fixed') || unit.includes('service') || unit.includes('session')) return 'fixed';
+  if (unit.includes('fixed') || unit.includes('service') || unit.includes('session'))
+    return 'fixed';
   if (!unit && ['RESTAURANT_CAFE', 'ACTIVITY'].includes(listing.serviceType || '')) return 'fixed';
   return 'range';
 }
@@ -25,18 +26,35 @@ export function fixedSession(date: string, time: string) {
   return { startDate: start.toISOString(), endDate: end.toISOString() };
 }
 
-export function overlapsAvailability(startDate: string, endDate: string, availability: AvailabilityInterval[]) {
+export function overlapsAvailability(
+  startDate: string,
+  endDate: string,
+  availability: AvailabilityInterval[],
+) {
   if (!startDate || !endDate) return false;
   const start = new Date(startDate).getTime();
   const end = new Date(endDate).getTime();
-  return availability.some((interval) => start < new Date(interval.endDate).getTime() && end > new Date(interval.startDate).getTime());
+  return availability.some(
+    (interval) =>
+      start < new Date(interval.endDate).getTime() && end > new Date(interval.startDate).getTime(),
+  );
 }
 
-export function pricingUnitLabel(unit: string | undefined, copy: { night: string; day: string; hour: string; service: string }, serviceType?: string) {
+export function pricingUnitLabel(
+  unit: string | undefined,
+  copy: { night: string; day: string; hour: string; service: string },
+  serviceType?: string,
+) {
   const normalized = (unit || '').toLowerCase();
   if (normalized.includes('hour') || normalized.includes('heure')) return copy.hour;
   if (normalized.includes('day') || normalized.includes('jour')) return copy.day;
-  if (normalized.includes('fixed') || normalized.includes('service') || normalized.includes('session')) return copy.service;
-  if (!normalized && ['RESTAURANT_CAFE', 'ACTIVITY'].includes(serviceType || '')) return copy.service;
+  if (
+    normalized.includes('fixed') ||
+    normalized.includes('service') ||
+    normalized.includes('session')
+  )
+    return copy.service;
+  if (!normalized && ['RESTAURANT_CAFE', 'ACTIVITY'].includes(serviceType || ''))
+    return copy.service;
   return copy.night;
 }
