@@ -16,6 +16,10 @@ Migration `013-query-indexes.sql` adds idempotent indexes for public listing fee
 
 The defaults are development-only credentials. To override them, copy `.env.example` to `.env`, set a random `JWT_SECRET` of at least 32 characters, and edit the `POSTGRES_*` values before starting Docker. The database is private to the Compose network; connect to it from the API using the service hostname `db`. Authentication uses short-lived JWTs in an HttpOnly, SameSite cookie. The `x-user-id`/`x-user-role` shortcut works only when `ALLOW_DEV_AUTH=true` outside production.
 
+### LAN HTTP development security note
+
+Browsers do not accept `Secure` cookies from a plain-HTTP LAN address such as `http://192.168.1.20:5173`. For trusted local-network testing only, add the LAN frontend origin to `CORS_ORIGIN` and set `COOKIE_SECURE=false` in `.env`. Before any public, production, or untrusted-network deployment, serve the site over HTTPS, remove LAN origins from `CORS_ORIGIN`, and set `COOKIE_SECURE=true`. Production remains secure by default when `COOKIE_SECURE` is omitted.
+
 ## Local setup
 
 For a non-Docker setup, requires Node 18+ and PostgreSQL. Create a database, copy `.env.example` to `.env`, and change `DATABASE_URL` to use `localhost`.

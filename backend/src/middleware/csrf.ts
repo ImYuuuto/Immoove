@@ -6,11 +6,14 @@ export const CSRF_COOKIE_NAME = 'sidibouzid_csrf';
 export const CSRF_HEADER_NAME = 'x-csrf-token';
 
 const isProduction = process.env.NODE_ENV === 'production';
+const cookieSecure = process.env.COOKIE_SECURE
+  ? process.env.COOKIE_SECURE === 'true'
+  : isProduction;
 const stateChangingMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 const csrfCookieOptions = {
   httpOnly: false,
-  secure: isProduction,
+  secure: cookieSecure,
   sameSite: 'lax' as const,
   path: '/',
 };

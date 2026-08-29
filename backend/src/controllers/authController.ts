@@ -11,6 +11,9 @@ import { clearCsrfToken, issueCsrfToken } from '../middleware/csrf';
 
 export const COOKIE_NAME = 'sidibouzid_access';
 const isProduction = process.env.NODE_ENV === 'production';
+const cookieSecure = process.env.COOKIE_SECURE
+  ? process.env.COOKIE_SECURE === 'true'
+  : isProduction;
 
 function issueCookie(
   res: Parameters<RequestHandler>[1],
@@ -33,7 +36,7 @@ function issueCookie(
   );
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: isProduction,
+    secure: cookieSecure,
     sameSite: 'lax',
     maxAge: 15 * 60 * 1000,
     path: '/',
@@ -66,7 +69,7 @@ export const login: RequestHandler = async (req, res, next) => {
 export const logout: RequestHandler = (_req, res) => {
   res.clearCookie(COOKIE_NAME, {
     httpOnly: true,
-    secure: isProduction,
+    secure: cookieSecure,
     sameSite: 'lax',
     path: '/',
   });
@@ -83,7 +86,7 @@ export const changePassword: RequestHandler = async (req, res, next) => {
     );
     res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
-      secure: isProduction,
+      secure: cookieSecure,
       sameSite: 'lax',
       path: '/',
     });

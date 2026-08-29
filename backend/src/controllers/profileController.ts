@@ -5,6 +5,9 @@ import { clearCsrfToken } from '../middleware/csrf';
 import { updateProfileSchema } from '../validators/profileValidators';
 
 const isProduction = process.env.NODE_ENV === 'production';
+const cookieSecure = process.env.COOKIE_SECURE
+  ? process.env.COOKIE_SECURE === 'true'
+  : isProduction;
 
 export const get: RequestHandler = async (req, res, next) => {
   try {
@@ -33,7 +36,7 @@ export const remove: RequestHandler = async (req, res, next) => {
     await ProfileService.delete(req.user!.userId);
     res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
-      secure: isProduction,
+      secure: cookieSecure,
       sameSite: 'lax',
       path: '/',
     });
