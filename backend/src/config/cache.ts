@@ -9,6 +9,13 @@ if (!Number.isSafeInteger(defaultTtlSeconds) || defaultTtlSeconds <= 0) {
 
 let client: RedisClientType | null = null;
 let connection: Promise<RedisClientType | null> | null = null;
+const reportedWarnings = new Set<string>();
+
+function warnOnce(type: string, message: string) {
+  if (reportedWarnings.has(type)) return;
+  reportedWarnings.add(type);
+  console.warn(`[cache] ${message}`);
+}
 
 async function getClient(): Promise<RedisClientType | null> {
   if (!redisUrl) return null;
@@ -23,7 +30,10 @@ async function getClient(): Promise<RedisClientType | null> {
     },
   });
   candidate.on('error', (error) => {
-    console.warn('Redis cache unavailable:', error.message);
+    warnOnce(
+      'connection',
+      `Redis unavailable; using PostgreSQL directly (${error.message})`,
+    );
   });
   connection = candidate
     .connect()
@@ -60,7 +70,10 @@ export async function cached<T>(
     const hit = await redis.get(cacheKey);
     if (hit !== null) return JSON.parse(hit) as T;
   } catch (error) {
-    console.warn('Redis cache operation failed:', (error as Error).message);
+    warnOnce(
+      'read',
+      `Redis read failed; using PostgreSQL directly (${(error as Error).message})`,
+    );
   }
 
   const value = await load();
@@ -68,7 +81,10 @@ export async function cached<T>(
     try {
       await redis.set(cacheKey, JSON.stringify(value), { EX: ttlSeconds });
     } catch (error) {
-      console.warn('Redis cache write failed:', (error as Error).message);
+      warnOnce(
+        'write',
+        `Redis write failed; response was still served (${(error as Error).message})`,
+      );
     }
   }
   return value;
@@ -82,7 +98,10 @@ export async function invalidateCache(...namespaces: string[]) {
       namespaces.map((namespace) => redis.incr(`cache-version:${namespace}`)),
     );
   } catch (error) {
-    console.warn('Redis cache invalidation failed:', (error as Error).message);
+    warnOnce(
+      'invalidation',
+      `Redis invalidation failed; cached entries will expire normally (${(error as Error).message})`,
+    );
   }
 }
 
