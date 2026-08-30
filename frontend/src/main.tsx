@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import App from './app/App';
 import ScrollToTopButton from './components/ScrollToTopButton';
+import TermsAcceptanceGate from './legal/TermsAcceptanceGate';
 import { activeLanguage, applyLanguage, languageText } from './i18n/language';
 import './styles.css';
 
@@ -13,6 +14,7 @@ const CheckoutPage = lazy(() => import('./listing/CheckoutPage'));
 const CategoryPage = lazy(() => import('./categories/CategoryPage'));
 const CategoriesPage = lazy(() => import('./categories/CategoriesPage'));
 const NotFoundPage = lazy(() => import('./components/NotFoundPage'));
+const LegalPage = lazy(() => import('./legal/LegalPage'));
 
 if (window.location.hash) {
   window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
@@ -27,10 +29,15 @@ const checkoutMatch = route.match(/^\/checkout\/(\d+)$/);
 const categoryMatch = route.match(/^\/categories\/([a-z0-9-]+)$/);
 const isCategoriesRoute = route === '/categories';
 const isHomeRoute = route === '' || route === '/';
+const legalMatch = route.match(/^\/(terms|privacy)$/);
 
 createRoot(document.getElementById('root')!).render(
   <>
-    {isAdminRoute ? (
+    {legalMatch ? (
+      <Suspense fallback={<div className="not-found-loading">{languageText().loading}</div>}>
+        <LegalPage type={legalMatch[1] as 'terms' | 'privacy'} />
+      </Suspense>
+    ) : isAdminRoute ? (
       <Suspense fallback={<div className="admin-loading">{languageText().loading}</div>}>
         <AdminDashboard />
       </Suspense>
@@ -68,6 +75,7 @@ createRoot(document.getElementById('root')!).render(
         <NotFoundPage />
       </Suspense>
     )}
+    <TermsAcceptanceGate />
     <ScrollToTopButton />
   </>,
 );

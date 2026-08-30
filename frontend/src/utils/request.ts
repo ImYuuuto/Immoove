@@ -83,6 +83,9 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
           : serverMessage || `${text.error} ${response.status}`;
     const incorrectCurrentPassword =
       path === '/auth/password' && message === 'Current password is incorrect';
+    if (response.status === 428 && path !== '/legal/terms/accept') {
+      window.dispatchEvent(new CustomEvent('terms:required', { detail: { message } }));
+    }
     if (
       response.status === 401 &&
       !incorrectCurrentPassword &&

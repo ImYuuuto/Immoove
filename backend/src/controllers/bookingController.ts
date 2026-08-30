@@ -41,13 +41,18 @@ export const create: RequestHandler = async (req, res, next) => {
 };
 export const update: RequestHandler = async (req, res, next) => {
   try {
-    const item = await BookingService.update(userIdSchema.parse(req.params).id, updateBookingSchema.parse(req.body));
+    const item = await BookingService.update(
+      userIdSchema.parse(req.params).id,
+      req.user!.userId,
+      req.user!.role,
+      updateBookingSchema.parse(req.body),
+    );
     res.json({ item });
   } catch (error) { next(error); }
 };
 export const remove: RequestHandler = async (req, res, next) => {
   try {
-    await BookingService.delete(userIdSchema.parse(req.params).id);
+    await BookingService.delete(userIdSchema.parse(req.params).id, req.user!.role);
     res.status(204).send();
   } catch (error) { next(error); }
 };

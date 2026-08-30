@@ -4,7 +4,7 @@ import {
   scrypt as scryptCallback,
   timingSafeEqual,
 } from 'node:crypto';
-import { query } from '../config/db';
+import { query, transaction } from '../config/db';
 import { AppError } from '../utils/errorHandler';
 import { sanitizeOptionalText, sanitizeRequiredText } from '../utils/sanitize';
 
@@ -42,24 +42,38 @@ export class AuthService {
     email: string;
     password: string;
     phone?: string;
+    acceptTerms: true;
+    language: 'en' | 'fr' | 'ar';
   }) {
     const passwordHash = await hashPassword(data.password);
     const firstName = sanitizeRequiredText(data.first_name, 'first_name');
     const lastName = sanitizeRequiredText(data.last_name, 'last_name');
     const phone = sanitizeOptionalText(data.phone);
     try {
-      const result = await query<any>(
-        'INSERT INTO users (first_name, last_name, email, password_hash, phone, role) VALUES ($1,$2,$3,$4,$5,$6) RETURNING user_id, first_name, last_name, email, phone, role, session_version',
-        [
-          firstName,
-          lastName,
-          data.email,
-          passwordHash,
-          phone || null,
-          'CLIENT',
-        ],
-      );
-      const user = result.rows[0];
+      const user = await transaction(async (client) => {
+        const document = await client.query<{ version: string }>(
+          `SELECT version FROM legal_documents
+           WHERE document_type = 'terms' AND is_current = true
+           FOR SHARE`,
+        );
+        if (!document.rows[0])
+          throw new AppError(503, 'Registration is unavailable until Terms of Use are configured');
+        const result = await client.query<any>(
+          `INSERT INTO users
+           (first_name, last_name, email, password_hash, phone, role, terms_accepted_at, terms_version)
+           VALUES ($1,$2,$3,$4,$5,'CLIENT',now(),$6)
+           RETURNING user_id, first_name, last_name, email, phone, role, session_version, terms_accepted_at, terms_version`,
+          [firstName, lastName, data.email, passwordHash, phone || null, document.rows[0].version],
+        );
+        const created = result.rows[0];
+        await client.query(
+          `INSERT INTO user_legal_consents
+           (user_id, document_type, document_version, accepted_at, accepted_language)
+           VALUES ($1,'terms',$2,$3,$4)`,
+          [created.user_id, created.terms_version, created.terms_accepted_at, data.language],
+        );
+        return created;
+      });
       return {
         userId: user.user_id,
         firstName: user.first_name,
@@ -68,6 +82,7 @@ export class AuthService {
         phone: user.phone,
         role: user.role,
         sessionVersion: user.session_version,
+        requiresTermsAcceptance: false,
       };
     } catch (error: any) {
       if (error?.code === '23505')
@@ -78,7 +93,18 @@ export class AuthService {
 
   static async authenticate(email: string, password: string) {
     const result = await query<any>(
-      'SELECT user_id, first_name, last_name, email, phone, role, account_status, password_hash, session_version FROM users WHERE email = $1',
+      `SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.role,
+       u.account_status, u.password_hash, u.session_version,
+       EXISTS (
+         SELECT 1 FROM legal_documents d
+         WHERE d.document_type='terms' AND d.is_current=true AND d.requires_reacceptance=true
+           AND NOT EXISTS (
+             SELECT 1 FROM user_legal_consents c
+             WHERE c.user_id=u.user_id AND c.document_type=d.document_type
+               AND c.document_version=d.version
+           )
+       ) AS requires_terms_acceptance
+       FROM users u WHERE u.email = $1`,
       [email],
     );
     const user = result.rows[0];
@@ -98,6 +124,7 @@ export class AuthService {
       phone: user.phone,
       role: user.role,
       sessionVersion: user.session_version,
+      requiresTermsAcceptance: Boolean(user.requires_terms_acceptance),
     };
   }
 

@@ -19,6 +19,7 @@ const migrationFiles = [
   '012-publication-moderation.sql',
   '013-query-indexes.sql',
   '014-housing-role-location-normalization.sql',
+  '015-legal-consent.sql',
 ];
 
 const migrationDirectory = path.join(__dirname, '..', 'src', 'migrations');

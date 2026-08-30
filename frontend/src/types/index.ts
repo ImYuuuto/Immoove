@@ -69,5 +69,6 @@ export type AuthUser = {
   firstName?: string;
   lastName?: string;
   avatarUrl?: string | null;
+  requiresTermsAcceptance?: boolean;
 };
 export type Language = 'fr' | 'ar' | 'en';

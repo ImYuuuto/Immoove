@@ -6,32 +6,7 @@ import { query } from '../config/db';
 export interface AuthUser {
   userId: number;
   role: string;
-}
-export type Permission =
-  | 'analytics.read'
-  | 'audit.read'
-  | 'booking.manage'
-  | 'content.moderate'
-  | 'listing.manage'
-  | 'moderation.metrics.read'
-  | 'moderation.queue'
-  | 'settings.manage'
-  | 'user.manage';
-
-const adminPermissions: Permission[] = [
-  'analytics.read',
-  'audit.read',
-  'booking.manage',
-  'content.moderate',
-  'listing.manage',
-  'moderation.metrics.read',
-  'moderation.queue',
-  'settings.manage',
-  'user.manage',
-];
-export function permissionsForRole(role: string): Permission[] {
-  if (role === 'ADMIN') return adminPermissions;
-  return [];
+  requiresTermsAcceptance: boolean;
 }
 const roles = ['CLIENT', 'OWNER', 'ADMIN'];
 export const auth: RequestHandler = async (req, _res, next) => {
@@ -55,8 +30,18 @@ export const auth: RequestHandler = async (req, _res, next) => {
         typeof payload.role === 'string' &&
         roles.includes(payload.role)
       ) {
-        const result = await query<{ session_version: number; role: string; account_status?: string }>(
-          'SELECT session_version, role, account_status FROM users WHERE user_id = $1',
+        const result = await query<{ session_version: number; role: string; account_status?: string; requires_terms_acceptance: boolean }>(
+          `SELECT u.session_version, u.role, u.account_status,
+           EXISTS (
+             SELECT 1 FROM legal_documents d
+             WHERE d.document_type='terms' AND d.is_current=true AND d.requires_reacceptance=true
+               AND NOT EXISTS (
+                 SELECT 1 FROM user_legal_consents c
+                 WHERE c.user_id=u.user_id AND c.document_type=d.document_type
+                   AND c.document_version=d.version
+               )
+           ) AS requires_terms_acceptance
+           FROM users u WHERE u.user_id = $1`,
           [payload.userId],
         );
         const user = result.rows[0];
@@ -66,7 +51,11 @@ export const auth: RequestHandler = async (req, _res, next) => {
           user.session_version === payload.sessionVersion &&
           user.role === payload.role
         ) {
-          req.user = { userId: payload.userId as number, role: payload.role };
+          req.user = {
+            userId: payload.userId as number,
+            role: payload.role,
+            requiresTermsAcceptance: Boolean(user.requires_terms_acceptance),
+          };
           req.authenticationSource = bearerToken ? 'bearer' : 'cookie';
         }
       }
@@ -82,27 +71,35 @@ export const auth: RequestHandler = async (req, _res, next) => {
     const role = req.header('x-user-role');
     req.user =
       Number.isInteger(id) && id > 0 && role && roles.includes(role)
-        ? { userId: id, role }
+        ? { userId: id, role, requiresTermsAcceptance: false }
         : undefined;
     if (req.user) req.authenticationSource = 'development';
   }
   next();
 };
 export const requireAuth: RequestHandler = (req, _res, next) =>
-  req.user ? next() : next(new AppError(401, 'Authentication required'));
-export const requireStaff: RequestHandler = (req, _res, next) =>
-  req.user?.role === 'ADMIN'
+  !req.user
+    ? next(new AppError(401, 'Authentication required'))
+    : req.user.requiresTermsAcceptance
+      ? next(new AppError(428, 'Current Terms of Use must be accepted'))
+      : next();
+export const requireAdmin: RequestHandler = (req, _res, next) =>
+  req.user?.requiresTermsAcceptance
+    ? next(new AppError(428, 'Current Terms of Use must be accepted'))
+    : req.user?.role === 'ADMIN'
     ? next()
     : next(
         new AppError(
           req.user ? 403 : 401,
-          req.user ? 'Staff access required' : 'Authentication required',
+          req.user ? 'Administrator access required' : 'Authentication required',
         ),
       );
 export const requireRoles =
   (...allowedRoles: string[]): RequestHandler =>
   (req, _res, next) =>
-    req.user && allowedRoles.includes(req.user.role)
+    req.user?.requiresTermsAcceptance
+      ? next(new AppError(428, 'Current Terms of Use must be accepted'))
+      : req.user && allowedRoles.includes(req.user.role)
       ? next()
       : next(
           new AppError(
@@ -111,17 +108,6 @@ export const requireRoles =
           ),
       );
 
-export const requirePermission =
-  (permission: Permission): RequestHandler =>
-  (req, _res, next) =>
-    req.user && permissionsForRole(req.user.role).includes(permission)
-      ? next()
-      : next(
-          new AppError(
-            req.user ? 403 : 401,
-            req.user ? 'Insufficient permissions' : 'Authentication required',
-          ),
-        );
 declare global {
   namespace Express {
     interface Request {

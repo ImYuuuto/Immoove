@@ -42,7 +42,8 @@ export const get: RequestHandler = async (req, res, next) => {
     const staff =
       req.user &&
       req.user.role === 'ADMIN';
-    const owner = req.user?.userId === listing.providerId;
+    const owner =
+      req.user?.role === 'OWNER' && req.user.userId === listing.providerId;
     if (
       (!listing.isActive || listing.status !== 'approved') &&
       !staff &&

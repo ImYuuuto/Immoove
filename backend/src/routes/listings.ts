@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import * as controller from '../controllers/listingController';
-import { auth, requireAuth, requireStaff } from '../middleware/auth';
+import { auth, requireAdmin, requireAuth, requireRoles } from '../middleware/auth';
 const router = Router();
 router.use(auth);
 router.get('/', controller.list);
 router.get('/mine', requireAuth, controller.mine);
 router.get('/:id', controller.get);
-router.post('/', requireAuth, controller.create);
+router.post('/', requireRoles('OWNER', 'ADMIN'), controller.create);
 router.patch('/:id', requireAuth, controller.update);
-router.put('/:id/status', requireStaff, controller.setStatus);
+router.put('/:id/status', requireAdmin, controller.setStatus);
 router.delete('/:id', requireAuth, controller.remove);
 export default router;

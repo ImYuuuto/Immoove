@@ -37,7 +37,7 @@ describe('JWT session version validation', () => {
 
     const { req, next } = await authenticate(createToken(3));
 
-    expect(req.user).toEqual({ userId: 7, role: 'CLIENT' });
+    expect(req.user).toEqual({ userId: 7, role: 'CLIENT', requiresTermsAcceptance: false });
     expect(req.authenticationSource).toBe('cookie');
     expect(next).toHaveBeenCalledWith();
   });
@@ -76,5 +76,16 @@ describe('staff permissions', () => {
     const next = jest.fn();
     requirePermission('analytics.read')(req, {} as Response, next);
     expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
+  });
+});
+
+describe('renewed Terms acceptance', () => {
+  test('blocks protected actions until the current version is accepted', () => {
+    const req = {
+      user: { userId: 7, role: 'CLIENT', requiresTermsAcceptance: true },
+    } as Request;
+    const next = jest.fn();
+    requirePermission('analytics.read')(req, {} as Response, next);
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 428 }));
   });
 });

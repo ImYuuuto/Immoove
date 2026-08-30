@@ -11,6 +11,17 @@ export const registerSchema = z.object({
     .transform((value) => value.toLowerCase()),
   password: z.string().min(12).max(128),
   phone: z.string().trim().max(50).optional(),
+  acceptTerms: z.literal(true, {
+    errorMap: () => ({ message: 'Terms of Use must be accepted' }),
+  }),
+  language: z.enum(['en', 'fr', 'ar']),
+}).strict();
+
+export const legalConsentSchema = z.object({
+  acceptTerms: z.literal(true, {
+    errorMap: () => ({ message: 'Terms of Use must be accepted' }),
+  }),
+  language: z.enum(['en', 'fr', 'ar']),
 });
 
 export const loginSchema = z.object({

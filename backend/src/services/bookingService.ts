@@ -126,6 +126,8 @@ export class BookingService {
 
   static async update(
     bookingId: number,
+    actorId: number,
+    actorRole: string,
     data: Partial<{
       listingId: number;
       userId: number;
@@ -142,6 +144,15 @@ export class BookingService {
       );
       const current = currentResult.rows[0];
       if (!current) throw new AppError(404, 'Booking not found');
+      const isAdmin = actorRole === 'ADMIN';
+      if (!isAdmin && current.user_id !== actorId)
+        throw new AppError(403, 'You cannot update this booking');
+      if (
+        !isAdmin &&
+        (data.status !== 'cancelled' ||
+          Object.keys(data).some((key) => key !== 'status'))
+      )
+        throw new AppError(403, 'Clients may only cancel their own bookings');
       const listingId = data.listingId ?? current.listing_id;
       const userId = data.userId ?? current.user_id;
       const startDate = data.startDate ?? current.start_date;
@@ -196,7 +207,9 @@ export class BookingService {
     return booking;
   }
 
-  static async delete(bookingId: number) {
+  static async delete(bookingId: number, actorRole: string) {
+    if (actorRole !== 'ADMIN')
+      throw new AppError(403, 'Only administrators may delete bookings');
     const result = await query(
       'DELETE FROM bookings WHERE booking_id = $1 RETURNING booking_id',
       [bookingId],

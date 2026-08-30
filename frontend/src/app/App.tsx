@@ -17,7 +17,7 @@ import { formatTranslation, useLanguage } from '../i18n/language';
 import ResponsiveImage from '../components/ResponsiveImage';
 
 export default function App() {
-  const { text } = useLanguage();
+  const { text, language } = useLanguage();
   const [open, setOpen] = useState(false);
 
   const [modal, setModal] = useState(false);
@@ -102,7 +102,12 @@ export default function App() {
 
   return (
     <div id="top">
-      <Navbar open={open} setOpen={setOpen} onAnnouncement={() => setModal(true)} onUserChange={setCurrentUser} />
+      <Navbar
+        open={open}
+        setOpen={setOpen}
+        onAnnouncement={() => setModal(true)}
+        onUserChange={setCurrentUser}
+      />
 
       <main>
         {/* HERO */}
@@ -173,7 +178,10 @@ export default function App() {
 
         {/* CATEGORIES */}
 
-        <CategoryGrid onAnnouncement={() => setModal(true)} showAnnouncement={currentUser?.role === 'OWNER'} />
+        <CategoryGrid
+          onAnnouncement={() => setModal(true)}
+          showAnnouncement={currentUser?.role === 'OWNER'}
+        />
 
         {/* ESCAPES */}
 
@@ -288,10 +296,12 @@ export default function App() {
 
             <p>{text.hostText}</p>
 
-            {currentUser?.role === 'OWNER' && <button className="light-button" onClick={() => setModal(true)}>
-              {text.addAddress}
-              <ArrowUpRight size={18} />
-            </button>}
+            {currentUser?.role === 'OWNER' && (
+              <button className="light-button" onClick={() => setModal(true)}>
+                {text.addAddress}
+                <ArrowUpRight size={18} />
+              </button>
+            )}
           </div>
         </section>
 
@@ -326,14 +336,19 @@ export default function App() {
         </div>
         <div className="footer-bottom">
           <span>© 2026 Bouzid Escapes</span>
-          <span>{text.legal}</span>
+          <span className="footer-legal-links">
+            <a href={`/terms?language=${language}`}>{text.termsOfUse}</a>
+            <a href={`/privacy?language=${language}`}>{text.privacyPolicy}</a>
+          </span>
           <span>{text.madeWithCare}</span>
         </div>
       </footer>
 
       {/* ANNOUNCEMENT MODAL */}
 
-      {modal && currentUser?.role === 'OWNER' && <AnnouncementModal onClose={() => setModal(false)} onMessage={notify} />}
+      {modal && currentUser?.role === 'OWNER' && (
+        <AnnouncementModal onClose={() => setModal(false)} onMessage={notify} />
+      )}
 
       {/* TOAST */}
 

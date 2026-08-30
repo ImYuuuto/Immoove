@@ -7,6 +7,7 @@ COPY tsconfig.json .eslintrc.js .prettierrc jest.config.js ./
 COPY src ./src
 COPY tests ./tests
 COPY scripts ./scripts
+COPY legal ./legal
 RUN npm run build
 
 FROM node:20-alpine AS runtime

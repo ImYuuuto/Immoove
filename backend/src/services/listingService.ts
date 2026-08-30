@@ -388,6 +388,8 @@ export class ListingService {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
     const staff = role === 'ADMIN';
+    if (!staff && role !== 'OWNER')
+      throw new AppError(403, 'Only owners may manage properties');
     if (!staff && current.providerId !== userId)
       throw new AppError(403, 'You cannot update this listing');
     const columns: Record<string, unknown> = {
@@ -487,6 +489,8 @@ export class ListingService {
   static async delete(listingId: number, userId: number, role: string) {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
+    if (role !== 'ADMIN' && role !== 'OWNER')
+      throw new AppError(403, 'Only owners may manage properties');
     if (
       role !== 'ADMIN' &&
       current.providerId !== userId
