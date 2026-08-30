@@ -30,7 +30,7 @@ export default function ProfilePage() {
     try {
       const profile = await request<{ user: ProfileUser }>('/profile');
       const [ownListings, saved] = await Promise.all([
-        profile.user.role === 'OWNER'
+        profile.user.role === 'OWNER' || profile.user.role === 'ADMIN'
           ? request<{ items: ProfileListing[] }>('/listings/mine')
           : Promise.resolve({ items: [] as ProfileListing[] }),
         request<{ items: ProfileListing[] }>('/favorites'),
@@ -52,10 +52,12 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    const requireLogin = () => {
+    const requireLogin = (event: Event) => {
       setUser(null);
       setPasswordOpen(false);
       setAuthOpen(true);
+      const detail = (event as CustomEvent<{ message?: string }>).detail;
+      if (detail?.message) setMessage(detail.message);
     };
     window.addEventListener('auth:unauthorized', requireLogin);
     return () => window.removeEventListener('auth:unauthorized', requireLogin);
@@ -279,31 +281,33 @@ export default function ProfilePage() {
         </article>
       </section>
 
-      {user.role === 'OWNER' && <section className="profile-owned">
-        <div className="profile-panel-heading">
-          <div>
-            <small>{text.yourServices}</small>
-            <h2>{text.yourListings}</h2>
-            <p>{text.editsNeedApproval}</p>
+      {(user.role === 'OWNER' || user.role === 'ADMIN') && (
+        <section className="profile-owned">
+          <div className="profile-panel-heading">
+            <div>
+              <small>{text.yourServices}</small>
+              <h2>{text.yourListings}</h2>
+              <p>{text.editsNeedApproval}</p>
+            </div>
+            <b>{listings.length}</b>
           </div>
-          <b>{listings.length}</b>
-        </div>
-        {listings.length ? (
-          <div className="profile-listing-grid">
-            {listings.map((listing) => (
-              <ProfileListingCard
-                key={listing.listingId}
-                listing={listing}
-                onUpdate={updateListing}
-                onDelete={deleteListing}
-                locale={locale}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="profile-empty">{text.noListings}</div>
-        )}
-      </section>}
+          {listings.length ? (
+            <div className="profile-listing-grid">
+              {listings.map((listing) => (
+                <ProfileListingCard
+                  key={listing.listingId}
+                  listing={listing}
+                  onUpdate={updateListing}
+                  onDelete={deleteListing}
+                  locale={locale}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="profile-empty">{text.noListings}</div>
+          )}
+        </section>
+      )}
 
       <section className="profile-danger">
         <div>

@@ -34,6 +34,7 @@ export function clearLocalSession() {
 }
 
 export function redirectToLogin() {
+  const message = languageText().sessionChanged;
   clearLocalSession();
   const checkoutPath = window.location.pathname.startsWith('/checkout/')
     ? `${window.location.pathname}${window.location.search}`
@@ -41,13 +42,13 @@ export function redirectToLogin() {
   const listingId = window.location.pathname.match(/^\/listings\/(\d+)/)?.[1];
   if (checkoutPath || listingId) {
     const next = checkoutPath || `/checkout/${listingId}`;
-    window.location.assign(`/?login=1&next=${encodeURIComponent(next)}`);
+    window.location.assign(`/?login=1&reauth=1&next=${encodeURIComponent(next)}`);
     return;
   }
   if (window.location.pathname === '/' || window.location.pathname === '/profile') {
-    window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+    window.dispatchEvent(new CustomEvent('auth:unauthorized', { detail: { message } }));
   } else {
-    window.location.assign('/?login=1');
+    window.location.assign('/?login=1&reauth=1');
   }
 }
 

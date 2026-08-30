@@ -60,7 +60,13 @@ export type ListingSubmission = {
 export type BookingDraft = { listingId: number; startDate: string; endDate: string };
 export type BookingContact = { firstName: string; lastName: string; email: string; phone: string };
 export type BookingRecord = BookingDraft &
-  BookingContact & { bookingId: number; userId: number; total: number };
+  BookingContact & {
+    bookingId: number;
+    userId: number;
+    total: number;
+    status?:
+      'pending' | 'processing' | 'confirmed' | 'cancelled' | 'completed' | 'rejected' | 'refunded';
+  };
 export type AuthUser = {
   userId: number;
   role: UserRole;

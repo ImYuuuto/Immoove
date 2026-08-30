@@ -9,6 +9,7 @@ export default function UserBookings() {
   const { language, text } = useLanguage();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selected, setSelected] = useState<Booking | null>(null);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     request<{ items: Booking[] }>('/bookings')
@@ -19,6 +20,29 @@ export default function UserBookings() {
   const showDetails = async (id: number) => {
     const result = await request<{ item: Booking }>(`/bookings/${id}`).catch(() => null);
     if (result) setSelected(result.item);
+  };
+
+  const cancelBooking = async (booking: Booking) => {
+    if (!window.confirm(text.cancelBookingConfirm)) return;
+    try {
+      const result = await request<{ item: Booking }>(`/bookings/${booking.bookingId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
+      setBookings((items) =>
+        items.map((item) =>
+          item.bookingId === booking.bookingId
+            ? { ...item, ...result.item, status: 'cancelled' }
+            : item,
+        ),
+      );
+      setSelected((item) =>
+        item?.bookingId === booking.bookingId ? { ...item, status: 'cancelled' } : item,
+      );
+      setMessage(text.bookingCancelled);
+    } catch (cause) {
+      setMessage(cause instanceof Error ? cause.message : text.bookingCancelFailed);
+    }
   };
 
   if (!bookings.length) return null;
@@ -49,15 +73,28 @@ export default function UserBookings() {
               {new Date(booking.endDate).toLocaleDateString(locale)}
             </p>
             <b>{Number(booking.total).toLocaleString(locale)} MAD</b>
-            <button onClick={() => void showDetails(booking.bookingId)}>{text.viewDetails}</button>
+            <div className="user-booking-actions">
+              <button onClick={() => void showDetails(booking.bookingId)}>
+                {text.viewDetails}
+              </button>
+              {!['cancelled', 'completed', 'rejected', 'refunded'].includes(
+                booking.status || '',
+              ) && (
+                <button className="booking-cancel" onClick={() => void cancelBooking(booking)}>
+                  {text.cancelBooking}
+                </button>
+              )}
+            </div>
             {selected?.bookingId === booking.bookingId && (
               <div className="booking-detail">
                 {text.traveler} #{selected.userId}
+                {selected.status && <small>{selected.status}</small>}
               </div>
             )}
           </article>
         ))}
       </div>
+      {message && <div className="toast">{message}</div>}
     </section>
   );
 }

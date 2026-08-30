@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import type {
   AdminOverview,
+  ApprovalCase,
   Announcement,
   ApiList,
   AuditEntry,
@@ -22,6 +23,7 @@ export function useAdminData() {
   const [userPagination, setUserPagination] = useState<Pagination | null>(null);
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
+  const [approvals, setApprovals] = useState<ApprovalCase[]>([]);
   const [days, setDays] = useState(30);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -32,15 +34,23 @@ export function useAdminData() {
       const session = await api<{ user: User }>('/auth/session');
       if (session.user.role !== 'ADMIN') throw new Error(copy.adminRequired);
       setUser(session.user);
-      const [listingData, announcementData, bookingData, userData, overviewData, auditData] =
-        await Promise.all([
-          api<ApiList<Listing>>('/listings?limit=100'),
-          api<ApiList<Announcement>>('/announcements'),
-          api<ApiList<Booking>>('/bookings'),
-          api<ApiList<User> & { pagination: Pagination }>('/users?limit=100'),
-          api<AdminOverview>(`/admin/overview?days=${days}`),
-          api<ApiList<AuditEntry>>('/admin/audit?limit=50'),
-        ]);
+      const [
+        listingData,
+        announcementData,
+        bookingData,
+        userData,
+        overviewData,
+        auditData,
+        approvalData,
+      ] = await Promise.all([
+        api<ApiList<Listing>>('/listings?limit=100'),
+        api<ApiList<Announcement>>('/announcements'),
+        api<ApiList<Booking>>('/bookings'),
+        api<ApiList<User> & { pagination: Pagination }>('/users?limit=100'),
+        api<AdminOverview>(`/admin/overview?days=${days}`),
+        api<ApiList<AuditEntry>>('/admin/audit?limit=50'),
+        api<ApiList<ApprovalCase>>('/admin/approvals?scope=all&limit=100'),
+      ]);
       setListings(listingData.items);
       setAnnouncements(announcementData.items);
       setBookings(bookingData.items);
@@ -48,6 +58,7 @@ export function useAdminData() {
       setUserPagination(userData.pagination);
       setOverview(overviewData);
       setAudit(auditData.items);
+      setApprovals(approvalData.items);
       setError('');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : copy.dashboardFailed);
@@ -96,6 +107,7 @@ export function useAdminData() {
     bookings,
     overview,
     audit,
+    approvals,
     days,
     setDays,
     error,

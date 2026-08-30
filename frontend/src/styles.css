@@ -1397,11 +1397,23 @@ img {
   color: var(--coral);
   font-weight: 700;
 }
+.user-booking-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.user-booking-grid .booking-cancel {
+  color: #a33a2f;
+}
 .booking-detail {
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
   color: var(--muted);
+}
+.booking-detail small {
+  display: block;
+  margin-top: 6px;
 }
 
 .listing-info i {

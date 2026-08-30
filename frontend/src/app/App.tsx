@@ -180,7 +180,7 @@ export default function App() {
 
         <CategoryGrid
           onAnnouncement={() => setModal(true)}
-          showAnnouncement={currentUser?.role === 'OWNER'}
+          showAnnouncement={currentUser?.role === 'OWNER' || currentUser?.role === 'ADMIN'}
         />
 
         {/* ESCAPES */}
@@ -227,7 +227,7 @@ export default function App() {
 
         <WhyBouzid />
 
-        <UserBookings />
+        {currentUser && currentUser.role !== 'ADMIN' && <UserBookings />}
 
         {/* JOURNAL */}
 
@@ -296,7 +296,7 @@ export default function App() {
 
             <p>{text.hostText}</p>
 
-            {currentUser?.role === 'OWNER' && (
+            {(currentUser?.role === 'OWNER' || currentUser?.role === 'ADMIN') && (
               <button className="light-button" onClick={() => setModal(true)}>
                 {text.addAddress}
                 <ArrowUpRight size={18} />
@@ -346,7 +346,7 @@ export default function App() {
 
       {/* ANNOUNCEMENT MODAL */}
 
-      {modal && currentUser?.role === 'OWNER' && (
+      {modal && (currentUser?.role === 'OWNER' || currentUser?.role === 'ADMIN') && (
         <AnnouncementModal onClose={() => setModal(false)} onMessage={notify} />
       )}
 

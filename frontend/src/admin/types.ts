@@ -1,7 +1,14 @@
 import type { UserRole } from '../types';
 
 export type View =
-  'overview' | 'analytics' | 'listings' | 'announcements' | 'bookings' | 'users' | 'audit';
+  | 'overview'
+  | 'analytics'
+  | 'approvals'
+  | 'listings'
+  | 'announcements'
+  | 'bookings'
+  | 'users'
+  | 'audit';
 export type User = {
   userId: number;
   role: UserRole;
@@ -74,4 +81,17 @@ export type AuditEntry = {
   reason?: string;
   createdAt: string;
   actor?: { firstName?: string; lastName?: string; email?: string } | null;
+};
+export type ApprovalCase = {
+  caseId: number;
+  entityType: 'listing' | 'announcement' | 'booking';
+  entityId: number;
+  title: string;
+  description?: string | null;
+  entityStatus: string;
+  coverImageUrl?: string | null;
+  priority: string;
+  status: 'open' | 'claimed' | 'escalated';
+  dueAt?: string;
+  createdAt: string;
 };

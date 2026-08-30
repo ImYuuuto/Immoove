@@ -6,6 +6,7 @@ import { api } from './api';
 import { AdminSidebar } from './components/AdminSidebar';
 import {
   AdminAnalyticsView,
+  ApprovalsView,
   AnnouncementsView,
   AuditView,
   BookingsView,
@@ -27,6 +28,7 @@ export default function AdminDashboard() {
   const titles: Record<View, string> = {
     overview: copy.overview,
     analytics: extra.analytics,
+    approvals: copy.approvals,
     listings: copy.listings,
     announcements: copy.publicationRequests,
     bookings: copy.bookings,
@@ -44,6 +46,7 @@ export default function AdminDashboard() {
     bookings,
     overview,
     audit,
+    approvals,
     days,
     setDays,
     error,
@@ -61,10 +64,26 @@ export default function AdminDashboard() {
     () => announcements.filter((item) => item.status === 'ESCALATED').length,
     [announcements],
   );
-
-  const updateListing = (id: number, status: 'approved' | 'rejected') =>
+  const decideApproval = (id: number, decision: 'approved' | 'rejected' | 'changes_requested') =>
     runAction(() =>
-      api(`/listings/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+      api(`/admin/approvals/${id}/decision`, {
+        method: 'POST',
+        body: JSON.stringify({
+          decision,
+          reasonCode: decision === 'approved' ? 'admin_approved' : 'admin_review',
+          note: decision === 'approved' ? undefined : 'Reviewed by an administrator',
+        }),
+      }),
+    );
+  const decideBooking = (id: number, status: 'processing' | 'confirmed' | 'rejected') =>
+    runAction(() =>
+      api(`/admin/bookings/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          status,
+          ...(status === 'rejected' ? { reason: 'Rejected by an administrator' } : {}),
+        }),
+      }),
     );
   const editListing = (id: number, data: { title: string; basePrice: number }) =>
     runAction(() => api(`/listings/${id}`, { method: 'PATCH', body: JSON.stringify(data) }));
@@ -115,6 +134,7 @@ export default function AdminDashboard() {
         setView={setView}
         pendingListings={pendingListings}
         pendingAnnouncements={pendingAnnouncements}
+        pendingApprovals={approvals.length}
         open={mobileNav}
         onNavigate={() => setMobileNav(false)}
         onLogout={logout}
@@ -159,10 +179,17 @@ export default function AdminDashboard() {
         {view === 'analytics' && (
           <AdminAnalyticsView overview={overview} days={days} onDays={setDays} />
         )}
+        {view === 'approvals' && (
+          <ApprovalsView
+            items={approvals}
+            onDecision={decideApproval}
+            onBookingDecision={decideBooking}
+            onFinalPublication={approveAnnouncement}
+          />
+        )}
         {view === 'listings' && (
           <ListingsView
             listings={listings}
-            onStatus={updateListing}
             onUpdate={editListing}
             onDelete={deleteListing}
             onRefresh={() => void load()}

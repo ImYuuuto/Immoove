@@ -2,6 +2,7 @@ import {
   Activity,
   CalendarDays,
   ClipboardList,
+  CircleCheckBig,
   FileClock,
   LayoutDashboard,
   LogOut,
@@ -17,6 +18,7 @@ export function AdminSidebar({
   setView,
   pendingListings,
   pendingAnnouncements,
+  pendingApprovals,
   open,
   onNavigate,
   onLogout,
@@ -25,6 +27,7 @@ export function AdminSidebar({
   setView: (view: View) => void;
   pendingListings: number;
   pendingAnnouncements: number;
+  pendingApprovals: number;
   open: boolean;
   onNavigate: () => void;
   onLogout: () => void;
@@ -52,6 +55,10 @@ export function AdminSidebar({
         <button className={view === 'analytics' ? 'active' : ''} onClick={() => go('analytics')}>
           <Activity size={17} />
           {extra.analytics}
+        </button>
+        <button className={view === 'approvals' ? 'active' : ''} onClick={() => go('approvals')}>
+          <CircleCheckBig size={17} />
+          {copy.approvals} <i>{pendingApprovals}</i>
         </button>
         <button className={view === 'listings' ? 'active' : ''} onClick={() => go('listings')}>
           <Store size={17} />

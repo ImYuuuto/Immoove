@@ -44,15 +44,19 @@ export default function Navbar({
   }, [onUserChange]);
 
   useEffect(() => {
-    const requireLogin = () => {
+    const requireLogin = (event: Event) => {
       setUser(null);
       onUserChange?.(null);
       setAuthOpen(true);
+      const detail = (event as CustomEvent<{ message?: string }>).detail;
+      if (detail?.message) setMessage(detail.message);
     };
     window.addEventListener('auth:unauthorized', requireLogin);
-    if (new URLSearchParams(window.location.search).get('login') === '1') setAuthOpen(true);
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('login') === '1') setAuthOpen(true);
+    if (params.get('reauth') === '1') setMessage(text.sessionChanged);
     return () => window.removeEventListener('auth:unauthorized', requireLogin);
-  }, [onUserChange]);
+  }, [onUserChange, text.sessionChanged]);
 
   const changeLanguage = (language: Language) => {
     setLanguage(language);
@@ -79,7 +83,9 @@ export default function Navbar({
           {text.about}
         </a>
 
-        {user?.role === 'OWNER' && <button onClick={onAnnouncement}>{text.services}</button>}
+        {(user?.role === 'OWNER' || user?.role === 'ADMIN') && (
+          <button onClick={onAnnouncement}>{text.services}</button>
+        )}
 
         {user?.role === 'ADMIN' && (
           <a className="admin-link" href="/admin" onClick={() => setOpen(false)}>
@@ -209,6 +215,9 @@ export default function Navbar({
             if (next?.startsWith('/') && !next.startsWith('//')) {
               window.location.assign(next);
               return;
+            }
+            if (new URLSearchParams(window.location.search).has('login')) {
+              window.history.replaceState(null, '', '/');
             }
             setUser(nextUser);
             onUserChange?.(nextUser);
