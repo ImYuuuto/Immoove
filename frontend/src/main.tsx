@@ -8,6 +8,7 @@ import { activeLanguage, applyLanguage, languageText } from './i18n/language';
 import './styles.css';
 
 const AdminDashboard = lazy(() => import('./admin/AdminDashboard'));
+const OwnerDashboard = lazy(() => import('./owner/OwnerDashboard'));
 const ProfilePage = lazy(() => import('./profile/ProfilePage'));
 const ListingPage = lazy(() => import('./listing/ListingPage'));
 const CheckoutPage = lazy(() => import('./listing/CheckoutPage'));
@@ -29,6 +30,7 @@ if (legacyListing) {
   window.history.replaceState(null, '', `${route}${window.location.search}`);
 }
 const isAdminRoute = route === '/admin';
+const isOwnerRoute = route === '/owner';
 const isProfileRoute = route === '/profile';
 const listingMatch = route.match(/^\/listings?\/(\d+)$/);
 const checkoutMatch = route.match(/^\/checkout\/(\d+)$/);
@@ -46,6 +48,10 @@ createRoot(document.getElementById('root')!).render(
     ) : isAdminRoute ? (
       <Suspense fallback={<div className="admin-loading">{languageText().loading}</div>}>
         <AdminDashboard />
+      </Suspense>
+    ) : isOwnerRoute ? (
+      <Suspense fallback={<div className="owner-state">{languageText().loading}</div>}>
+        <OwnerDashboard />
       </Suspense>
     ) : isProfileRoute ? (
       <Suspense fallback={<div className="profile-state">{languageText().loading}</div>}>
@@ -75,6 +81,6 @@ createRoot(document.getElementById('root')!).render(
   </>,
 );
 
-if (!isAdminRoute && !isProfileRoute) {
+if (!isAdminRoute && !isOwnerRoute && !isProfileRoute) {
   window.setTimeout(() => applyLanguage(activeLanguage), 0);
 }

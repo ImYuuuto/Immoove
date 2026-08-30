@@ -6,8 +6,12 @@ import {
   listingQuerySchema,
   statusSchema,
   updateListingSchema,
+  imageOrderSchema,
+  availabilityBlockSchema,
+  availabilityBlockIdSchema,
 } from '../validators/listingValidators';
 import { AppError } from '../utils/errorHandler';
+import { deleteUploadUrls, processListingUploads } from '../middleware/listingUpload';
 const parse = <T>(
   schema: { parse: (value: unknown) => T },
   value: unknown,
@@ -107,4 +111,39 @@ export const remove: RequestHandler = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+export const uploadImages: RequestHandler = async (req, res, next) => {
+  let urls: string[] = [];
+  try {
+    urls = await processListingUploads((req.files as Express.Multer.File[] | undefined) || []);
+    if (!urls.length) throw new AppError(400, 'At least one image is required');
+    const item = await ListingService.appendImages(
+      parse(listingIdSchema, req.params).id, req.user!.userId, req.user!.role, urls,
+    );
+    res.status(201).json({ item });
+  } catch (error) {
+    await deleteUploadUrls(urls).catch(() => undefined);
+    next(error);
+  }
+};
+export const reorderImages: RequestHandler = async (req, res, next) => {
+  try {
+    const data = imageOrderSchema.parse(req.body);
+    res.json({ item: await ListingService.reorderImages(parse(listingIdSchema, req.params).id, req.user!.userId, req.user!.role, data.imageIds) });
+  } catch (error) { next(error); }
+};
+export const addAvailabilityBlock: RequestHandler = async (req, res, next) => {
+  try {
+    const data = availabilityBlockSchema.parse(req.body);
+    res.status(201).json({ item: await ListingService.addAvailabilityBlock(parse(listingIdSchema, req.params).id, req.user!.userId, req.user!.role, data.startDate, data.endDate, data.note) });
+  } catch (error) { next(error); }
+};
+export const removeAvailabilityBlock: RequestHandler = async (req, res, next) => {
+  try {
+    const listingId = parse(listingIdSchema, req.params).id;
+    const blockId = availabilityBlockIdSchema.parse(req.params).blockId;
+    await ListingService.removeAvailabilityBlock(listingId, blockId, req.user!.role);
+    res.status(204).send();
+  } catch (error) { next(error); }
 };

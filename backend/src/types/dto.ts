@@ -27,6 +27,7 @@ export interface ListingSearchParams {
   areaId?: number;
   propertyType?: string;
   bedrooms?: number;
+  beds?: number;
   bathrooms?: number;
   amenityIds?: number[];
   minRating?: number;
@@ -54,6 +55,7 @@ export interface CreateListingDto {
   serviceType?: ServiceType;
   guestCapacity?: number;
   bedrooms?: number;
+  beds?: number;
   bathrooms?: number;
 }
 export type UpdateListingDto = Partial<Omit<CreateListingDto, 'providerId'>>;

@@ -1,4 +1,4 @@
-export type ListingStatus = 'approved' | 'pending' | 'rejected';
+export type ListingStatus = 'approved' | 'pending' | 'rejected' | 'changes_requested';
 export interface User {
   userId: number;
   firstName?: string;
@@ -40,6 +40,7 @@ export interface Listing {
   serviceType?: string;
   guestCapacity?: number;
   bedrooms?: number;
+  beds?: number;
   bathrooms?: number;
   propertyType?: { propertyTypeId: number; name: string; slug: string };
   area?: { areaId: number; name: string; cityId: number };

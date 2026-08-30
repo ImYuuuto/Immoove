@@ -20,3 +20,15 @@
 - Region selection must clear city and area. City selection must clear area. Cities and areas should be filtered using the parent IDs returned by the options endpoint.
 - Migration 017 adds the `riad` property type and nullable bedroom/bathroom data. Deploy the migration before deploying this frontend.
 - Owner/admin listing create and update payloads may now include `areaId`, `propertyTypeId`, `bedrooms`, and `bathrooms`. Populate the IDs from the discovery-options response rather than asking users to type IDs.
+
+## Owner dashboard
+
+- Owners now use the read-only `/owner` page backed by `GET /api/v1/owner/dashboard`.
+- The response contains `statistics` and the authenticated owner's `properties`; never request or send an owner ID.
+- Owners cannot create, edit, delete, upload/reorder images, configure pricing/availability, or process booking requests. Hide those controls for `OWNER` users.
+- All property mutations and booking moderation remain Admin-only. The API returns `403` if an Owner attempts them directly.
+- Display `pending`, `approved`, `rejected`, and `changes_requested` as distinct publication states. Show `adminNote` when present.
+- Migration 018 must run before this dashboard is deployed because it adds the `changes_requested` listing state and the owner-dashboard index.
+- Admin property forms may send `beds` alongside `bedrooms`, `bathrooms`, and `guestCapacity`.
+- Admin image APIs: `POST /api/v1/listings/:id/images` as multipart `images`, then `PUT /api/v1/listings/:id/images/order` with `{ "imageIds": [...] }`.
+- Admin availability APIs: `POST /api/v1/listings/:id/availability` with `startDate`, `endDate`, and optional `note`; remove a block with `DELETE /api/v1/listings/:id/availability/:blockId`.

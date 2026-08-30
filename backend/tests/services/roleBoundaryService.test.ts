@@ -26,6 +26,13 @@ describe('service-layer canonical role boundaries', () => {
     expect(mockedTransaction).not.toHaveBeenCalled();
   });
 
+  test('prevents an owner from deleting a property through the service layer', async () => {
+    jest.spyOn(ListingService, 'findById').mockResolvedValueOnce({ listingId: 3, providerId: 9 } as never);
+    await expect(ListingService.delete(3, 9, 'OWNER'))
+      .rejects.toMatchObject({ statusCode: 403 });
+    expect(mockedTransaction).not.toHaveBeenCalled();
+  });
+
   test('prevents a client from submitting approval decisions', async () => {
     await expect(ModerationService.decide(2, 9, 'CLIENT', {
       decision: 'approved', reasonCode: 'bypass',

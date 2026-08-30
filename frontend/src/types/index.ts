@@ -11,6 +11,7 @@ export type Listing = {
   serviceType?: ServiceType | string;
   guestCapacity?: number;
   bedrooms?: number;
+  beds?: number;
   bathrooms?: number;
   propertyType?: { propertyTypeId: number; name: string; slug: string };
   coverImageUrl?: string | null;

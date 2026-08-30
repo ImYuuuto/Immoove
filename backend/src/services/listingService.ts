@@ -37,6 +37,7 @@ function mapListing(row: any): ListingWithRelations {
     serviceType: row.service_type,
     guestCapacity: row.guest_capacity,
     bedrooms: row.bedrooms,
+    beds: row.beds,
     bathrooms: row.bathrooms,
     isFeatured: row.is_featured,
     images: [],
@@ -62,7 +63,12 @@ async function hydrate(
       [listing.listingId],
     ),
     query<any>(
-      'SELECT booking_id, start_date, end_date FROM bookings WHERE listing_id = $1 ORDER BY start_date',
+      `SELECT booking_id, start_date, end_date, 'booking' AS source
+       FROM bookings WHERE listing_id = $1 AND status NOT IN ('cancelled','rejected','refunded')
+       UNION ALL
+       SELECT NULL::integer AS booking_id, start_date, end_date, 'admin_block' AS source
+       FROM listing_availability_blocks WHERE listing_id = $1
+       ORDER BY start_date`,
       [listing.listingId],
     ),
     query<any>(
@@ -119,7 +125,7 @@ async function hydrate(
     })),
     features: amenities,
     amenities,
-    bookings: bookings.rows.map((row) => ({
+    bookings: bookings.rows.filter(row => row.booking_id).map((row) => ({
       bookingId: row.booking_id,
       startDate: row.start_date,
       endDate: row.end_date,
@@ -412,7 +418,7 @@ export class ListingService {
   static async create(data: CreateListingDto): Promise<ListingWithRelations> {
     const id = await transaction(async (client) => {
       const inserted = await client.query<{ listing_id: number }>(
-        'INSERT INTO listings (provider_id, category_id, location_id, area_id, property_type_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, guest_capacity, bedrooms, bathrooms, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,\'pending\',false) RETURNING listing_id',
+        'INSERT INTO listings (provider_id, category_id, location_id, area_id, property_type_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, guest_capacity, bedrooms, beds, bathrooms, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,\'pending\',false) RETURNING listing_id',
         [
           data.providerId || null,
           data.categoryId,
@@ -430,6 +436,7 @@ export class ListingService {
           data.serviceType || null,
           data.guestCapacity || null,
           data.bedrooms ?? null,
+          data.beds ?? null,
           data.bathrooms ?? null,
         ],
       );
@@ -467,10 +474,8 @@ export class ListingService {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
     const staff = role === 'ADMIN';
-    if (!staff && role !== 'OWNER')
-      throw new AppError(403, 'Only owners may manage properties');
-    if (!staff && current.providerId !== userId)
-      throw new AppError(403, 'You cannot update this listing');
+    if (!staff)
+      throw new AppError(403, 'Administrator access required');
     const columns: Record<string, unknown> = {
       category_id: data.categoryId,
       location_id: data.locationId,
@@ -490,9 +495,8 @@ export class ListingService {
       service_type: data.serviceType,
       guest_capacity: data.guestCapacity,
       bedrooms: data.bedrooms,
+      beds: data.beds,
       bathrooms: data.bathrooms,
-      status: staff ? undefined : 'pending',
-      is_active: staff ? undefined : false,
     };
     await transaction(async (client) => {
       const entries = Object.entries(columns).filter(
@@ -541,6 +545,72 @@ export class ListingService {
     return listing;
   }
 
+  static async appendImages(listingId: number, actorId: number, role: string, urls: string[]) {
+    if (role !== 'ADMIN') throw new AppError(403, 'Administrator access required');
+    if (!(await this.findById(listingId))) throw new AppError(404, 'Listing not found');
+    await transaction(async client => {
+      const offset = await client.query<{ next_order: number }>(
+        'SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM listing_images WHERE listing_id = $1',
+        [listingId],
+      );
+      const start = Number(offset.rows[0]?.next_order || 0);
+      for (const [index, url] of urls.entries())
+        await client.query(
+          'INSERT INTO listing_images(listing_id,url,sort_order) VALUES($1,$2,$3)',
+          [listingId, url, start + index],
+        );
+      await client.query(
+        'INSERT INTO audit_logs(actor_id,action,entity_type,entity_id) VALUES($1,$2,$3,$4)',
+        [actorId, 'images:upload', 'listing', listingId],
+      );
+    });
+    await invalidateCache('listings');
+    return this.findById(listingId);
+  }
+
+  static async reorderImages(listingId: number, actorId: number, role: string, imageIds: number[]) {
+    if (role !== 'ADMIN') throw new AppError(403, 'Administrator access required');
+    await transaction(async client => {
+      const owned = await client.query<{ id: number }>(
+        'SELECT id FROM listing_images WHERE listing_id=$1 AND id=ANY($2::int[])',
+        [listingId, imageIds],
+      );
+      if (owned.rows.length !== imageIds.length)
+        throw new AppError(400, 'Every image must belong to the listing');
+      for (const [sortOrder, imageId] of imageIds.entries())
+        await client.query('UPDATE listing_images SET sort_order=$1 WHERE id=$2', [sortOrder, imageId]);
+      await client.query(
+        'INSERT INTO audit_logs(actor_id,action,entity_type,entity_id) VALUES($1,$2,$3,$4)',
+        [actorId, 'images:reorder', 'listing', listingId],
+      );
+    });
+    await invalidateCache('listings');
+    return this.findById(listingId);
+  }
+
+  static async addAvailabilityBlock(listingId: number, actorId: number, role: string, startDate: Date, endDate: Date, note?: string) {
+    if (role !== 'ADMIN') throw new AppError(403, 'Administrator access required');
+    const result = await query<any>(
+      `INSERT INTO listing_availability_blocks(listing_id,start_date,end_date,note,created_by)
+       SELECT $1,$2,$3,$4,$5 WHERE EXISTS(SELECT 1 FROM listings WHERE listing_id=$1)
+       RETURNING block_id,start_date,end_date,note`,
+      [listingId, startDate, endDate, sanitizeOptionalText(note) || null, actorId],
+    );
+    if (!result.rows[0]) throw new AppError(404, 'Listing not found');
+    await invalidateCache('listings');
+    return { blockId: result.rows[0].block_id, startDate: result.rows[0].start_date, endDate: result.rows[0].end_date, note: result.rows[0].note };
+  }
+
+  static async removeAvailabilityBlock(listingId: number, blockId: number, role: string) {
+    if (role !== 'ADMIN') throw new AppError(403, 'Administrator access required');
+    const result = await query(
+      'DELETE FROM listing_availability_blocks WHERE block_id=$1 AND listing_id=$2 RETURNING block_id',
+      [blockId, listingId],
+    );
+    if (!result.rows[0]) throw new AppError(404, 'Availability block not found');
+    await invalidateCache('listings');
+  }
+
   static async setStatus(
     listingId: number,
     actorId: number,
@@ -574,13 +644,8 @@ export class ListingService {
   static async delete(listingId: number, userId: number, role: string) {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
-    if (role !== 'ADMIN' && role !== 'OWNER')
-      throw new AppError(403, 'Only owners may manage properties');
-    if (
-      role !== 'ADMIN' &&
-      current.providerId !== userId
-    )
-      throw new AppError(403, 'You cannot delete this listing');
+    if (role !== 'ADMIN')
+      throw new AppError(403, 'Administrator access required');
     await transaction(async (client) => {
       await client.query(
         'INSERT INTO audit_logs (actor_id, action, entity_type, entity_id) VALUES ($1, $2, $3, $4)',

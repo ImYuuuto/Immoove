@@ -11,7 +11,7 @@ export const listingQuerySchema = z.object({
   providerId: id.optional(),
   search: z.string().trim().min(1).optional(),
   slug: z.string().trim().min(1).optional(),
-  status: z.enum(['approved', 'pending', 'rejected']).optional(),
+  status: z.enum(['approved', 'pending', 'rejected', 'changes_requested']).optional(),
   featured: z
     .enum(['true', 'false'])
     .transform((value) => value === 'true')
@@ -36,6 +36,7 @@ const common = {
     .optional(),
   guestCapacity: z.coerce.number().int().positive().max(1000).optional(),
   bedrooms: z.coerce.number().int().nonnegative().max(100).optional(),
+  beds: z.coerce.number().int().nonnegative().max(200).optional(),
   bathrooms: z.coerce.number().int().nonnegative().max(100).optional(),
 };
 export const createListingSchema = z.object({
@@ -50,9 +51,20 @@ export const updateListingSchema = z
     'At least one field is required',
   );
 export const statusSchema = z.object({
-  status: z.enum(['approved', 'pending', 'rejected']),
+  status: z.enum(['approved', 'pending', 'rejected', 'changes_requested']),
   reason: z.string().max(1000).optional(),
 });
+export const imageOrderSchema = z.object({
+  imageIds: z.array(id).min(1).max(50),
+});
+export const availabilityBlockSchema = z.object({
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+  note: z.string().trim().max(500).optional(),
+}).refine(value => value.endDate > value.startDate, {
+  message: 'endDate must be after startDate', path: ['endDate'],
+});
+export const availabilityBlockIdSchema = z.object({ blockId: id });
 export const createBookingSchema = z
   .object({
     listingId: id,

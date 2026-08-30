@@ -193,7 +193,7 @@ export class ModerationService {
       if (item.status === 'decided') throw new AppError(409, 'Moderation case is already decided');
       if (item.assigned_to && item.assigned_to !== actorId) throw new AppError(409, 'Moderation case is assigned to another moderator');
 
-      const targetStatus = data.decision === 'approved' ? 'approved' : data.decision === 'escalated' ? null : 'rejected';
+      const targetStatus = data.decision === 'approved' ? 'approved' : data.decision === 'changes_requested' ? 'changes_requested' : data.decision === 'escalated' ? null : 'rejected';
       let previousState: Record<string, unknown> = {};
       let nextState: Record<string, unknown> = {};
       if (item.entity_type === 'listing') {
@@ -203,7 +203,7 @@ export class ModerationService {
         if (targetStatus) {
           const updated = await client.query<any>(
             `UPDATE listings SET status = $1, is_active = ($1 = 'approved'), reviewed_at = now(), reviewed_by = $2,
-              rejection_reason = CASE WHEN $1 = 'rejected' THEN $3 ELSE NULL END, updated_at = now()
+              rejection_reason = CASE WHEN $1 IN ('rejected', 'changes_requested') THEN $3 ELSE NULL END, updated_at = now()
              WHERE listing_id = $4 RETURNING status, is_active`,
             [targetStatus, actorId, data.note || data.reasonCode, item.entity_id],
           );

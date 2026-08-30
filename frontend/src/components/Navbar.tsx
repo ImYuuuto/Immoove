@@ -83,8 +83,12 @@ export default function Navbar({
           {text.about}
         </a>
 
-        {(user?.role === 'OWNER' || user?.role === 'ADMIN') && (
-          <button onClick={onAnnouncement}>{text.services}</button>
+        {user?.role === 'ADMIN' && <button onClick={onAnnouncement}>{text.services}</button>}
+
+        {user?.role === 'OWNER' && (
+          <a className="admin-link" href="/owner" onClick={() => setOpen(false)}>
+            Owner dashboard
+          </a>
         )}
 
         {user?.role === 'ADMIN' && (

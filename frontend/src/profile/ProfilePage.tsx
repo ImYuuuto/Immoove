@@ -281,7 +281,22 @@ export default function ProfilePage() {
         </article>
       </section>
 
-      {(user.role === 'OWNER' || user.role === 'ADMIN') && (
+      {user.role === 'OWNER' && (
+        <section className="profile-owned">
+          <div className="profile-panel-heading">
+            <div>
+              <small>OWNER</small>
+              <h2>Property dashboard</h2>
+              <p>View your properties, publication status, bookings, ratings, and statistics.</p>
+            </div>
+            <a className="profile-login" href="/owner">
+              Open dashboard
+            </a>
+          </div>
+        </section>
+      )}
+
+      {user.role === 'ADMIN' && (
         <section className="profile-owned">
           <div className="profile-panel-heading">
             <div>

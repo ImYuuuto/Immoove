@@ -9,7 +9,7 @@ router.get('/listings/featured', controller.featured);
 router.post(
   '/announcements/request',
   auth,
-  requireAuth,
+  requireRoles('ADMIN'),
   listingImagesUpload,
   controller.createAnnouncement,
 );
