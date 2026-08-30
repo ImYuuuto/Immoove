@@ -17,3 +17,8 @@ If validation fails, stop writes and run
 `src/migrations/rollback/014-housing-role-location-normalization.rollback.sql`.
 The rollback uses the snapshot tables created by migration 014. Keep the
 external dump until the production retention window has elapsed.
+
+Normal application deployment must use `npm run migrate` or
+`npm run migrate:node`. Both commands use `schema_migrations`, validate SHA-256
+checksums, and serialize concurrent migration containers. Do not execute the
+historical SQL files as a shell chain.

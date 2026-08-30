@@ -1,4 +1,5 @@
 export type ServiceType = 'VACATION_RENTAL' | 'CAR_RENTAL' | 'RESTAURANT_CAFE' | 'ACTIVITY';
+export type UserRole = 'CLIENT' | 'OWNER' | 'ADMIN';
 
 export type Listing = {
   listingId?: number;
@@ -14,6 +15,11 @@ export type Listing = {
   location?: { name: string };
   rating?: { average: number | null; count: number };
   createdAt?: string;
+  status?: string;
+  isActive?: boolean;
+  archivedAt?: string | null;
+  categorySlug?: string;
+  category?: { slug?: string; name?: string };
 };
 export type Post = {
   post_id?: number;
@@ -57,7 +63,7 @@ export type BookingRecord = BookingDraft &
   BookingContact & { bookingId: number; userId: number; total: number };
 export type AuthUser = {
   userId: number;
-  role: string;
+  role: UserRole;
   email?: string;
   phone?: string | null;
   firstName?: string;

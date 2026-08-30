@@ -1,8 +1,11 @@
 import { memo } from 'react';
 import { useAdminCopy } from '../adminI18n';
+import { roleLabel } from '../../i18n/labels';
+import { useLanguage } from '../../i18n/language';
 
 export const Status = memo(function Status({ value }: { value: string }) {
   const copy = useAdminCopy();
+  const { language } = useLanguage();
   const normalized = value.toLowerCase();
   const label =
     normalized === 'approved'
@@ -11,12 +14,8 @@ export const Status = memo(function Status({ value }: { value: string }) {
         ? copy.rejected
         : normalized === 'pending'
           ? copy.pendingStatus
-          : normalized === 'moderator'
-            ? copy.moderator
-            : normalized === 'admin'
-              ? copy.admin
-              : normalized === 'user'
-                ? copy.user
-                : value;
+          : ['CLIENT', 'OWNER', 'ADMIN'].includes(value)
+            ? roleLabel(value, language)
+            : value;
   return <span className={`status status-${normalized}`}>{label}</span>;
 });

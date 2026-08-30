@@ -30,7 +30,7 @@ export function useAdminData() {
     setLoading(true);
     try {
       const session = await api<{ user: User }>('/auth/session');
-      if (!['ADMIN', 'admin'].includes(session.user.role)) throw new Error(copy.adminRequired);
+      if (session.user.role !== 'ADMIN') throw new Error(copy.adminRequired);
       setUser(session.user);
       const [listingData, announcementData, bookingData, userData, overviewData, auditData] =
         await Promise.all([

@@ -22,9 +22,9 @@ const serviceTypes: Record<Language, Record<string, string>> = {
 };
 
 const roles: Record<Language, Record<string, string>> = {
-  fr: { user: 'Utilisateur', moderator: 'Modérateur', staff: 'Équipe', admin: 'Administrateur' },
-  en: { user: 'User', moderator: 'Moderator', staff: 'Staff', admin: 'Administrator' },
-  ar: { user: 'مستخدم', moderator: 'مشرف', staff: 'فريق الإشراف', admin: 'مدير' },
+  fr: { CLIENT: 'Client', OWNER: 'Propriétaire', ADMIN: 'Administrateur' },
+  en: { CLIENT: 'Client', OWNER: 'Owner', ADMIN: 'Administrator' },
+  ar: { CLIENT: 'عميل', OWNER: 'مالك', ADMIN: 'مدير' },
 };
 
 export function serviceTypeLabel(
@@ -40,5 +40,5 @@ export function serviceTypeLabel(
 
 export function roleLabel(value: string | null | undefined, language: Language) {
   if (!value) return '';
-  return roles[language][value.toLowerCase()] || value;
+  return roles[language][value] || value;
 }

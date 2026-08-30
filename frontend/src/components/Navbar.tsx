@@ -10,10 +10,12 @@ export default function Navbar({
   open,
   setOpen,
   onAnnouncement,
+  onUserChange,
 }: {
   open: boolean;
   setOpen: (value: boolean) => void;
   onAnnouncement: () => void;
+  onUserChange?: (user: AuthUser | null) => void;
 }) {
   const { language, text, setLanguage } = useLanguage();
   const [authOpen, setAuthOpen] = useState(false);
@@ -30,21 +32,27 @@ export default function Navbar({
     request<{ user: AuthUser }>('/auth/session')
       .then(async (session) => {
         const profile = await request<{ user: AuthUser }>('/profile').catch(() => null);
-        setUser(profile?.user || session.user);
+        const nextUser = profile?.user || session.user;
+        setUser(nextUser);
+        onUserChange?.(nextUser);
       })
-      .catch(() => setUser(null))
+      .catch(() => {
+        setUser(null);
+        onUserChange?.(null);
+      })
       .finally(() => setAuthLoading(false));
-  }, []);
+  }, [onUserChange]);
 
   useEffect(() => {
     const requireLogin = () => {
       setUser(null);
+      onUserChange?.(null);
       setAuthOpen(true);
     };
     window.addEventListener('auth:unauthorized', requireLogin);
     if (new URLSearchParams(window.location.search).get('login') === '1') setAuthOpen(true);
     return () => window.removeEventListener('auth:unauthorized', requireLogin);
-  }, []);
+  }, [onUserChange]);
 
   const changeLanguage = (language: Language) => {
     setLanguage(language);
@@ -71,28 +79,11 @@ export default function Navbar({
           {text.about}
         </a>
 
-        <button
-          onClick={() => {
-            if (user) {
-              onAnnouncement();
-              return;
-            }
-            setMessage(text.loginRequiredPublish);
-            setAuthOpen(true);
-          }}
-        >
-          {text.services}
-        </button>
+        {user?.role === 'OWNER' && <button onClick={onAnnouncement}>{text.services}</button>}
 
-        {user && ['ADMIN', 'admin'].includes(user.role) && (
+        {user?.role === 'ADMIN' && (
           <a className="admin-link" href="/admin" onClick={() => setOpen(false)}>
             {text.admin}
-          </a>
-        )}
-
-        {user && ['moderator', 'staff'].includes(user.role) && (
-          <a className="admin-link" href="/moderator" onClick={() => setOpen(false)}>
-            {language === 'ar' ? 'الإشراف' : language === 'fr' ? 'Modération' : 'Moderation'}
           </a>
         )}
 
@@ -220,6 +211,7 @@ export default function Navbar({
               return;
             }
             setUser(nextUser);
+            onUserChange?.(nextUser);
             setAuthLoading(false);
           }}
         />

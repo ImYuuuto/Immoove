@@ -15,6 +15,13 @@ function initialPage() {
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
+const categoryServiceTypes: Record<string, string> = {
+  housing: 'VACATION_RENTAL',
+  services: 'RESTAURANT_CAFE',
+  'hobbies-and-activities': 'ACTIVITY',
+  'renting-cars': 'CAR_RENTAL',
+};
+
 export default function CategoryPage({ slug }: { slug: string }) {
   const copy = useCategoryCopy();
   const { language, text } = useLanguage();
@@ -60,6 +67,13 @@ export default function CategoryPage({ slug }: { slug: string }) {
 
   const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-GB' : 'fr-FR';
   const totalPages = data?.pagination.totalPages || 1;
+  const visibleItems = (data?.items || []).filter((listing) => {
+    if (listing.isActive === false || listing.archivedAt || listing.status?.toLowerCase() === 'archived') return false;
+    const listingSlug = listing.categorySlug || listing.category?.slug;
+    if (listingSlug && listingSlug !== slug) return false;
+    const expectedServiceType = categoryServiceTypes[slug];
+    return !expectedServiceType || !listing.serviceType || listing.serviceType === expectedServiceType;
+  });
 
   return (
     <main className="category-page">
@@ -103,9 +117,9 @@ export default function CategoryPage({ slug }: { slug: string }) {
             </p>
           </section>
           <section className="category-results">
-            {data.items.length ? (
+            {visibleItems.length ? (
               <div className="listing-grid">
-                {data.items.map((listing, index) => (
+                {visibleItems.map((listing, index) => (
                   <ListingCard
                     listing={listing}
                     categorySlug={slug}

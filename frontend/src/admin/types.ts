@@ -1,8 +1,10 @@
+import type { UserRole } from '../types';
+
 export type View =
   'overview' | 'analytics' | 'listings' | 'announcements' | 'bookings' | 'users' | 'audit';
 export type User = {
   userId: number;
-  role: string;
+  role: UserRole;
   accountStatus?: 'active' | 'suspended';
   firstName?: string;
   lastName?: string;

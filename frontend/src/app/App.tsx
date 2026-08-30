@@ -10,7 +10,7 @@ import { EditorialSection, Newsletter, WhyBouzid } from '../components/LuxurySec
 import Navbar from '../components/Navbar';
 import UserBookings from '../components/UserBookings';
 import { fallbackListings, fallbackPosts, images } from '../data/content';
-import type { Listing, Post, SearchFilters } from '../types';
+import type { AuthUser, Listing, Post, SearchFilters } from '../types';
 import { request } from '../utils/request';
 import { decodeText } from '../utils/decodeText';
 import { formatTranslation, useLanguage } from '../i18n/language';
@@ -23,6 +23,8 @@ export default function App() {
   const [modal, setModal] = useState(false);
 
   const [message, setMessage] = useState('');
+
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
 
   const [listings, setListings] = useState(fallbackListings);
 
@@ -100,7 +102,7 @@ export default function App() {
 
   return (
     <div id="top">
-      <Navbar open={open} setOpen={setOpen} onAnnouncement={() => setModal(true)} />
+      <Navbar open={open} setOpen={setOpen} onAnnouncement={() => setModal(true)} onUserChange={setCurrentUser} />
 
       <main>
         {/* HERO */}
@@ -171,7 +173,7 @@ export default function App() {
 
         {/* CATEGORIES */}
 
-        <CategoryGrid onAnnouncement={() => setModal(true)} />
+        <CategoryGrid onAnnouncement={() => setModal(true)} showAnnouncement={currentUser?.role === 'OWNER'} />
 
         {/* ESCAPES */}
 
@@ -286,10 +288,10 @@ export default function App() {
 
             <p>{text.hostText}</p>
 
-            <button className="light-button" onClick={() => setModal(true)}>
+            {currentUser?.role === 'OWNER' && <button className="light-button" onClick={() => setModal(true)}>
               {text.addAddress}
               <ArrowUpRight size={18} />
-            </button>
+            </button>}
           </div>
         </section>
 
@@ -331,7 +333,7 @@ export default function App() {
 
       {/* ANNOUNCEMENT MODAL */}
 
-      {modal && <AnnouncementModal onClose={() => setModal(false)} onMessage={notify} />}
+      {modal && currentUser?.role === 'OWNER' && <AnnouncementModal onClose={() => setModal(false)} onMessage={notify} />}
 
       {/* TOAST */}
 

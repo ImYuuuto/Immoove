@@ -46,7 +46,7 @@ export default function ModeratorDashboard() {
     setLoading(true);
     try {
       const session = await request<{ user: ModeratorUser }>('/auth/session');
-      if (!['moderator', 'staff', 'admin', 'ADMIN'].includes(session.user.role))
+      if (session.user.role !== 'ADMIN')
         throw new Error(copy.accessRequired);
       const [queue, decisionHistory, performance] = await Promise.all([
         request<{ items: ModerationCase[] }>(`/moderation/queue?scope=${scope}&limit=100`),
@@ -324,8 +324,7 @@ export default function ModeratorDashboard() {
                     >
                       {copy.claimBeforeReview}
                     </button>
-                  ) : selected.assignedTo !== user?.userId &&
-                    !['admin', 'ADMIN'].includes(user?.role || '') ? (
+                  ) : selected.assignedTo !== user?.userId && user?.role !== 'ADMIN' ? (
                     <p className="review-notice">{copy.assignedElsewhere}</p>
                   ) : selected.entityType === 'booking' ? (
                     <div className="decision-form">

@@ -1,4 +1,6 @@
-export type ModeratorUser = { userId: number; role: string; firstName?: string; lastName?: string };
+import type { UserRole } from '../types';
+
+export type ModeratorUser = { userId: number; role: UserRole; firstName?: string; lastName?: string };
 export type ModerationCase = {
   caseId: number;
   entityType: 'listing' | 'announcement' | 'booking';

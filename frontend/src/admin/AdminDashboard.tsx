@@ -77,7 +77,7 @@ export default function AdminDashboard() {
         body: JSON.stringify({ status: 'APPROVED', reason: 'Approved for publication' }),
       }),
     );
-  const updateRole = (id: number, role: 'user' | 'moderator') =>
+  const updateRole = (id: number, role: 'CLIENT' | 'OWNER') =>
     runAction(() => api(`/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }));
   const updateUserStatus = (id: number, status: 'active' | 'suspended') =>
     runAction(() =>

@@ -1,11 +1,11 @@
-import type { Listing, ServiceType } from '../types';
+import type { Listing, ServiceType, UserRole } from '../types';
 
 export type ProfileUser = {
   userId: number;
   firstName: string;
   lastName: string;
   email: string;
-  role: string;
+  role: UserRole;
   avatarUrl?: string | null;
 };
 

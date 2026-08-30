@@ -11,7 +11,7 @@ import type {
 } from '../types';
 import { formatDate } from '../utils';
 import { decodeText } from '../../utils/decodeText';
-import { serviceTypeLabel } from '../../i18n/labels';
+import { roleLabel, serviceTypeLabel } from '../../i18n/labels';
 import { categoryLabel } from '../../categories/categoryLabels';
 import { useLanguage } from '../../i18n/language';
 import { Status } from './Status';
@@ -524,11 +524,12 @@ export function UsersView({
   pagination: Pagination | null;
   currentUserId?: number;
   onSearch: (search: string) => void;
-  onRole: (id: number, role: 'user' | 'moderator') => void;
+  onRole: (id: number, role: 'CLIENT' | 'OWNER') => void;
   onStatus: (id: number, status: 'active' | 'suspended') => void;
 }) {
   const copy = useAdminCopy();
   const extra = useAdminExtraCopy();
+  const { language } = useLanguage();
   const [search, setSearch] = useState('');
   return (
     <section className="admin-content">
@@ -582,16 +583,16 @@ export function UsersView({
                 <Status value={item.role} />
               </span>
               <span className="actions">
-                {item.userId !== currentUserId && !['ADMIN', 'admin'].includes(item.role) && (
+                {item.userId !== currentUserId && item.role !== 'ADMIN' && (
                   <>
                     <select
                       value={item.role}
                       onChange={(event) =>
-                        onRole(item.userId, event.target.value as 'user' | 'moderator')
+                        onRole(item.userId, event.target.value as 'CLIENT' | 'OWNER')
                       }
                     >
-                      <option value="user">{copy.user}</option>
-                      <option value="moderator">{copy.moderator}</option>
+                      <option value="CLIENT">{roleLabel('CLIENT', language)}</option>
+                      <option value="OWNER">{roleLabel('OWNER', language)}</option>
                     </select>
                     <button
                       className={item.accountStatus === 'suspended' ? 'approve' : 'reject'}

@@ -12,7 +12,6 @@ const ListingPage = lazy(() => import('./listing/ListingPage'));
 const CheckoutPage = lazy(() => import('./listing/CheckoutPage'));
 const CategoryPage = lazy(() => import('./categories/CategoryPage'));
 const CategoriesPage = lazy(() => import('./categories/CategoriesPage'));
-const ModeratorDashboard = lazy(() => import('./moderator/ModeratorDashboard'));
 const NotFoundPage = lazy(() => import('./components/NotFoundPage'));
 
 if (window.location.hash) {
@@ -22,7 +21,6 @@ if (window.location.hash) {
 const route = window.location.pathname.replace(/\/+$/, '');
 const isAdminRoute = route === '/admin';
 const isProfileRoute = route === '/profile';
-const isModeratorRoute = route === '/moderator';
 const categoryListingMatch = route.match(/^\/categories\/([a-z0-9-]+)\/listing\/(\d+)$/);
 const listingMatch = route.match(/^\/listings?\/(\d+)$/);
 const checkoutMatch = route.match(/^\/checkout\/(\d+)$/);
@@ -39,10 +37,6 @@ createRoot(document.getElementById('root')!).render(
     ) : isProfileRoute ? (
       <Suspense fallback={<div className="profile-state">{languageText().loading}</div>}>
         <ProfilePage />
-      </Suspense>
-    ) : isModeratorRoute ? (
-      <Suspense fallback={<div className="admin-loading">{languageText().loading}</div>}>
-        <ModeratorDashboard />
       </Suspense>
     ) : categoryListingMatch ? (
       <Suspense fallback={<div className="listing-state">{languageText().loading}</div>}>
@@ -78,6 +72,6 @@ createRoot(document.getElementById('root')!).render(
   </>,
 );
 
-if (!isAdminRoute && !isProfileRoute && !isModeratorRoute) {
+if (!isAdminRoute && !isProfileRoute) {
   window.setTimeout(() => applyLanguage(activeLanguage), 0);
 }

@@ -28,9 +28,11 @@ export default function ProfilePage() {
     setLoading(true);
     setError('');
     try {
-      const [profile, ownListings, saved] = await Promise.all([
-        request<{ user: ProfileUser }>('/profile'),
-        request<{ items: ProfileListing[] }>('/listings/mine'),
+      const profile = await request<{ user: ProfileUser }>('/profile');
+      const [ownListings, saved] = await Promise.all([
+        profile.user.role === 'OWNER'
+          ? request<{ items: ProfileListing[] }>('/listings/mine')
+          : Promise.resolve({ items: [] as ProfileListing[] }),
         request<{ items: ProfileListing[] }>('/favorites'),
       ]);
       setUser(profile.user);
@@ -277,7 +279,7 @@ export default function ProfilePage() {
         </article>
       </section>
 
-      <section className="profile-owned">
+      {user.role === 'OWNER' && <section className="profile-owned">
         <div className="profile-panel-heading">
           <div>
             <small>{text.yourServices}</small>
@@ -301,7 +303,7 @@ export default function ProfilePage() {
         ) : (
           <div className="profile-empty">{text.noListings}</div>
         )}
-      </section>
+      </section>}
 
       <section className="profile-danger">
         <div>

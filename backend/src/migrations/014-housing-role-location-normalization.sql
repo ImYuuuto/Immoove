@@ -1,5 +1,3 @@
-BEGIN;
-
 LOCK TABLE users, listings, moderation_cases IN SHARE ROW EXCLUSIVE MODE;
 
 -- Exact rollback snapshots. These are intentionally retained until the
@@ -183,5 +181,3 @@ CREATE INDEX IF NOT EXISTS listings_property_type_idx ON listings(property_type_
 CREATE INDEX IF NOT EXISTS listings_area_idx ON listings(area_id);
 CREATE INDEX IF NOT EXISTS cities_region_idx ON cities(region_id);
 CREATE INDEX IF NOT EXISTS areas_city_idx ON areas(city_id);
-
-COMMIT;
