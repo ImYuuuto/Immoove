@@ -33,7 +33,7 @@ export function EditorialSection() {
   );
 }
 
-export function WhyBouzid() {
+export function WhyImmoove() {
   const { text } = useLanguage();
   const reasons = [
     [text.reason1Title, text.reason1Text],
@@ -42,7 +42,7 @@ export function WhyBouzid() {
   ];
   return (
     <>
-      <section className="why-bouzid section" id="experiences">
+      <section className="why-immoove section" id="experiences">
         <small className="eyebrow reveal">{text.whyEyebrow}</small>
         <h2 className="luxury-title reveal">
           {text.whyLine1}

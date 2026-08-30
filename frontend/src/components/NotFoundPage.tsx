@@ -9,7 +9,7 @@ const copy = {
     body: 'La page que vous cherchez a peut-être changé d’adresse, ou n’a jamais existé.',
     home: 'Retour à l’accueil',
     explore: 'Explorer les adresses',
-    titleTag: 'Page introuvable — Bouzid Escapes',
+    titleTag: 'Page introuvable — Immoove',
   },
   en: {
     eyebrow: 'OFF THE MAP',
@@ -17,7 +17,7 @@ const copy = {
     body: 'The page you are looking for may have moved, or it may never have existed.',
     home: 'Back to home',
     explore: 'Explore our addresses',
-    titleTag: 'Page not found — Bouzid Escapes',
+    titleTag: 'Page not found — Immoove',
   },
   ar: {
     eyebrow: 'خارج الخريطة',
@@ -25,7 +25,7 @@ const copy = {
     body: 'ربما انتقلت الصفحة التي تبحثون عنها إلى عنوان آخر، أو أنها لم تكن موجودة.',
     home: 'العودة إلى الرئيسية',
     explore: 'استكشفوا عناويننا',
-    titleTag: 'الصفحة غير موجودة — Bouzid Escapes',
+    titleTag: 'الصفحة غير موجودة — Immoove',
   },
 };
 
@@ -44,9 +44,9 @@ export default function NotFoundPage() {
   return (
     <main className="not-found-page">
       <header className="not-found-nav">
-        <a className="brand" href="/" aria-label="Bouzid Escapes">
+        <a className="brand" href="/" aria-label="Immoove">
           <b>B</b>
-          bouzid<span>.</span>
+          immoove<span>.</span>
         </a>
         <a href="/categories">
           <Compass size={17} />

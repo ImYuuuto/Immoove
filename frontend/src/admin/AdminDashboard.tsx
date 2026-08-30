@@ -149,7 +149,7 @@ export default function AdminDashboard() {
       <main className="admin-main">
         <header className="admin-header">
           <div>
-            <small>BOUZID ESCAPES / ADMIN</small>
+            <small>IMMOOVE / ADMIN</small>
             <h1>{titles[view]}</h1>
           </div>
           <div className="admin-user">

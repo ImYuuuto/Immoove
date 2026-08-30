@@ -2,6 +2,7 @@ import { RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../utils/errorHandler';
 import { COOKIE_NAME } from '../controllers/authController';
+import { JWT_AUDIENCE, JWT_ISSUER } from '../config/authBrand';
 import { query } from '../config/db';
 export interface AuthUser {
   userId: number;
@@ -20,8 +21,8 @@ export const auth: RequestHandler = async (req, _res, next) => {
   if (token && secret) {
     try {
       const payload = jwt.verify(token, secret, {
-        issuer: 'sidi-bouzid-api',
-        audience: 'sidi-bouzid-web',
+        issuer: JWT_ISSUER,
+        audience: JWT_AUDIENCE,
       });
       if (
         typeof payload === 'object' &&

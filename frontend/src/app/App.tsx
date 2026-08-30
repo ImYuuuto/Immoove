@@ -6,7 +6,7 @@ import Dining from '../components/Dining';
 import Heading from '../components/Heading';
 import HeroSearch from '../components/HeroSearch';
 import ListingCard from '../components/ListingCard';
-import { EditorialSection, Newsletter, WhyBouzid } from '../components/LuxurySections';
+import { EditorialSection, Newsletter, WhyImmoove } from '../components/LuxurySections';
 import Navbar from '../components/Navbar';
 import UserBookings from '../components/UserBookings';
 import { fallbackListings, fallbackPosts, images } from '../data/content';
@@ -90,7 +90,7 @@ export default function App() {
         method: 'POST',
 
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('bouzid_token') || ''}`,
+          Authorization: `Bearer ${localStorage.getItem('immoove_token') || ''}`,
         },
       });
 
@@ -129,7 +129,7 @@ export default function App() {
 
           <div className="hero-shade" />
           <div className="location-badge">
-            <MapPin size={14} /> SIDI BOUZID <i /> EL JADIDA <i /> MOROCCO
+            <MapPin size={14} /> MARRAKECH <i /> AGADIR <i /> MOROCCO
           </div>
 
           <div className="hero-copy">
@@ -225,7 +225,7 @@ export default function App() {
 
         <Dining />
 
-        <WhyBouzid />
+        <WhyImmoove />
 
         {currentUser && currentUser.role !== 'ADMIN' && <UserBookings />}
 
@@ -314,7 +314,7 @@ export default function App() {
         <div className="footer-main">
           <div className="footer-intro">
             <a className="brand" href="/">
-              <b>B</b> bouzid<span>.</span>
+              <b>I</b> immoove<span>.</span>
             </a>
             <p>{text.footerText}</p>
           </div>
@@ -327,7 +327,7 @@ export default function App() {
           <div className="footer-location">
             <small>{text.findUs}</small>
             <p>
-              Sidi Bouzid
+              Morocco
               <br />
               El Jadida, Maroc
             </p>
@@ -335,7 +335,7 @@ export default function App() {
           </div>
         </div>
         <div className="footer-bottom">
-          <span>© 2026 Bouzid Escapes</span>
+          <span>© 2026 Immoove</span>
           <span className="footer-legal-links">
             <a href={`/terms?language=${language}`}>{text.termsOfUse}</a>
             <a href={`/privacy?language=${language}`}>{text.privacyPolicy}</a>

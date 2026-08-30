@@ -2,7 +2,8 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { RequestHandler, Response } from 'express';
 import { AppError } from '../utils/errorHandler';
 
-export const CSRF_COOKIE_NAME = 'sidibouzid_csrf';
+export const CSRF_COOKIE_NAME = 'immoove_csrf';
+export const LEGACY_CSRF_COOKIE_NAMES = ['sidibouzid_csrf'] as const;
 export const CSRF_HEADER_NAME = 'x-csrf-token';
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -19,6 +20,7 @@ const csrfCookieOptions = {
 };
 
 export function issueCsrfToken(res: Response): string {
+  clearLegacyCsrfTokens(res);
   const token = randomBytes(32).toString('base64url');
   res.cookie(CSRF_COOKIE_NAME, token, csrfCookieOptions);
   return token;
@@ -26,6 +28,12 @@ export function issueCsrfToken(res: Response): string {
 
 export function clearCsrfToken(res: Response): void {
   res.clearCookie(CSRF_COOKIE_NAME, csrfCookieOptions);
+  clearLegacyCsrfTokens(res);
+}
+
+export function clearLegacyCsrfTokens(res: Response): void {
+  for (const name of LEGACY_CSRF_COOKIE_NAMES)
+    res.clearCookie(name, csrfCookieOptions);
 }
 
 function tokensMatch(cookieToken: unknown, headerToken: unknown): boolean {

@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { query } from '../../src/config/db';
 import { COOKIE_NAME } from '../../src/controllers/authController';
+import { JWT_AUDIENCE, JWT_ISSUER } from '../../src/config/authBrand';
 import { auth, requireAdmin, requireRoles } from '../../src/middleware/auth';
 
 jest.mock('../../src/config/db', () => ({ query: jest.fn() }));
@@ -11,8 +12,8 @@ const mockedQuery = query as jest.MockedFunction<typeof query>;
 
 function createToken(sessionVersion: number, role = 'CLIENT') {
   return jwt.sign({ userId: 7, role, sessionVersion }, secret, {
-    issuer: 'sidi-bouzid-api',
-    audience: 'sidi-bouzid-web',
+    issuer: JWT_ISSUER,
+    audience: JWT_AUDIENCE,
   });
 }
 

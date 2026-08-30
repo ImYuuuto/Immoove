@@ -124,7 +124,7 @@ export default function ProfilePage() {
       <main className="profile-page">
         <header className="profile-topbar">
           <a className="brand" href="/">
-            <b>B</b>bouzid<span>.</span>
+            <b>I</b>immoove<span>.</span>
           </a>
           <button className="profile-login" onClick={() => setAuthOpen(true)}>
             {text.login}
@@ -157,7 +157,7 @@ export default function ProfilePage() {
     <main className="profile-page">
       <header className="profile-topbar">
         <a className="brand" href="/">
-          <b>B</b>bouzid<span>.</span>
+          <b>I</b>immoove<span>.</span>
         </a>
         <a href="/">
           <ArrowLeft size={17} />

@@ -8,8 +8,14 @@ import {
 import { AuthService } from '../services/authService';
 import { AppError } from '../utils/errorHandler';
 import { clearCsrfToken, issueCsrfToken } from '../middleware/csrf';
+import {
+  ACCESS_COOKIE_NAME,
+  JWT_AUDIENCE,
+  JWT_ISSUER,
+  LEGACY_ACCESS_COOKIE_NAMES,
+} from '../config/authBrand';
 
-export const COOKIE_NAME = 'sidibouzid_access';
+export const COOKIE_NAME = ACCESS_COOKIE_NAME;
 const isProduction = process.env.NODE_ENV === 'production';
 const cookieSecure = process.env.COOKIE_SECURE
   ? process.env.COOKIE_SECURE === 'true'
@@ -19,6 +25,7 @@ function issueCookie(
   res: Parameters<RequestHandler>[1],
   user: { userId: number; role: string; sessionVersion: number },
 ) {
+  clearLegacyAccessCookies(res);
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new AppError(500, 'JWT_SECRET is not configured');
   const token = jwt.sign(
@@ -30,8 +37,8 @@ function issueCookie(
     secret,
     {
       expiresIn: '15m',
-      issuer: 'sidi-bouzid-api',
-      audience: 'sidi-bouzid-web',
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
     },
   );
   res.cookie(COOKIE_NAME, token, {
@@ -41,6 +48,29 @@ function issueCookie(
     maxAge: 15 * 60 * 1000,
     path: '/',
   });
+}
+
+export function clearLegacyAccessCookies(res: Parameters<RequestHandler>[1]) {
+  for (const name of LEGACY_ACCESS_COOKIE_NAMES) {
+    res.clearCookie(name, {
+      httpOnly: true,
+      secure: cookieSecure,
+      sameSite: 'lax',
+      path: '/',
+    });
+  }
+}
+
+export function clearAccessCookies(res: Parameters<RequestHandler>[1]) {
+  for (const name of [COOKIE_NAME]) {
+    res.clearCookie(name, {
+      httpOnly: true,
+      secure: cookieSecure,
+      sameSite: 'lax',
+      path: '/',
+    });
+  }
+  clearLegacyAccessCookies(res);
 }
 
 export const register: RequestHandler = async (req, res, next) => {
@@ -67,12 +97,7 @@ export const login: RequestHandler = async (req, res, next) => {
   }
 };
 export const logout: RequestHandler = (_req, res) => {
-  res.clearCookie(COOKIE_NAME, {
-    httpOnly: true,
-    secure: cookieSecure,
-    sameSite: 'lax',
-    path: '/',
-  });
+  clearAccessCookies(res);
   clearCsrfToken(res);
   res.status(204).send();
 };
@@ -84,12 +109,7 @@ export const changePassword: RequestHandler = async (req, res, next) => {
       data.currentPassword,
       data.newPassword,
     );
-    res.clearCookie(COOKIE_NAME, {
-      httpOnly: true,
-      secure: cookieSecure,
-      sameSite: 'lax',
-      path: '/',
-    });
+    clearAccessCookies(res);
     clearCsrfToken(res);
     res.status(204).send();
   } catch (error) {

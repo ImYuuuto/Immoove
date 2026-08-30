@@ -69,7 +69,7 @@ export default function Navbar({
 
       <a className="brand" href="/">
         <b>B</b>
-        bouzid<span>.</span>
+        immoove<span>.</span>
       </a>
 
       {/* NAVIGATION */}

@@ -8,7 +8,7 @@ export default function Dining() {
   const venues = [
     ['/uploads/site/dining/chez-laura.jpg', 'EL JADIDA / 01', 'Restaurant Chez Laura'],
 
-    ['/uploads/site/dining/la-caleche.jpg', 'SIDI BOUZID / 02', 'Café La Calèche'],
+    ['/uploads/site/dining/la-caleche.jpg', 'EL JADIDA / 02', 'Café La Calèche'],
 
     ['/uploads/site/dining/le-spot.jpg', 'LA PLAGE / 03', 'Le Spot'],
   ];

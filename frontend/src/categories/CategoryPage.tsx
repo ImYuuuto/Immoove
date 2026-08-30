@@ -68,18 +68,25 @@ export default function CategoryPage({ slug }: { slug: string }) {
   const locale = language === 'ar' ? 'ar-MA' : language === 'en' ? 'en-GB' : 'fr-FR';
   const totalPages = data?.pagination.totalPages || 1;
   const visibleItems = (data?.items || []).filter((listing) => {
-    if (listing.isActive === false || listing.archivedAt || listing.status?.toLowerCase() === 'archived') return false;
+    if (
+      listing.isActive === false ||
+      listing.archivedAt ||
+      listing.status?.toLowerCase() === 'archived'
+    )
+      return false;
     const listingSlug = listing.categorySlug || listing.category?.slug;
     if (listingSlug && listingSlug !== slug) return false;
     const expectedServiceType = categoryServiceTypes[slug];
-    return !expectedServiceType || !listing.serviceType || listing.serviceType === expectedServiceType;
+    return (
+      !expectedServiceType || !listing.serviceType || listing.serviceType === expectedServiceType
+    );
   });
 
   return (
     <main className="category-page">
       <header className="category-topbar">
         <a className="brand" href="/">
-          <b>B</b>bouzid<span>.</span>
+          <b>I</b>immoove<span>.</span>
         </a>
         <a href="/">
           <ArrowLeft size={17} />

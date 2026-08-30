@@ -39,7 +39,7 @@ export const fallbackPosts: Post[] = [
     cover_image_url: images.explore,
   },
   {
-    title: 'Le rythme doux de Sidi Bouzid',
+    title: 'Le rythme doux du Maroc',
     excerpt: 'Une invitation à prendre le temps de ne rien faire, vraiment.',
     category: 'BIEN-ÊTRE & ÉQUILIBRE',
     cover_image_url: '/uploads/site/categories/beach.jpg',

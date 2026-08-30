@@ -86,7 +86,7 @@ export default function ListingPage({
     <main className="listing-page">
       <header className="listing-topbar">
         <a className="brand" href="/">
-          <b>B</b>bouzid<span>.</span>
+          <b>I</b>immoove<span>.</span>
         </a>
         <a
           href={

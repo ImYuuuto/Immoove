@@ -43,7 +43,7 @@ export function AdminSidebar({
       <div className="admin-brand">
         <span>B</span>
         <div>
-          <b>Bouzid</b>
+          <b>Immoove</b>
           <small>{copy.console}</small>
         </div>
       </div>

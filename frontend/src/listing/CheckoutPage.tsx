@@ -121,7 +121,7 @@ export default function CheckoutPage({ listingId }: { listingId: number }) {
     <main className="checkout-page">
       <header className="listing-topbar">
         <a className="brand" href="/">
-          <b>B</b>bouzid<span>.</span>
+          <b>I</b>immoove<span>.</span>
         </a>
         <a href={`/listings/${listingId}`}>
           <ArrowLeft size={17} />
@@ -131,7 +131,7 @@ export default function CheckoutPage({ listingId }: { listingId: number }) {
       <div className="checkout-layout">
         <form className="checkout-form" onSubmit={submit}>
           <div className="checkout-title">
-            <small>BOUZID ESCAPES</small>
+            <small>IMMOOVE</small>
             <h1>{copy.checkout}</h1>
           </div>
           <section className="checkout-section">

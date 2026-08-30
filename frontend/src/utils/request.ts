@@ -1,8 +1,12 @@
 import { formatTranslation, languageText } from '../i18n/language';
 
 const API = import.meta.env.VITE_API_URL || '/api/v1';
-const AUTH_MARKER = 'bouzid_authenticated';
+const AUTH_MARKER = 'immoove_authenticated';
+const LEGACY_AUTH_MARKER = 'bouzid_authenticated';
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+localStorage.removeItem(LEGACY_AUTH_MARKER);
+localStorage.removeItem('bouzid_token');
 
 export class ApiError extends Error {
   constructor(
@@ -22,7 +26,7 @@ function readCookie(name: string) {
 }
 
 async function getCsrfToken() {
-  const existing = readCookie('sidibouzid_csrf');
+  const existing = readCookie('immoove_csrf');
   if (existing) return existing;
   const response = await fetch(`${API}/auth/csrf-token`, { credentials: 'include' });
   if (!response.ok) throw new Error(languageText().csrfFailed);
@@ -31,6 +35,7 @@ async function getCsrfToken() {
 
 export function clearLocalSession() {
   localStorage.removeItem(AUTH_MARKER);
+  localStorage.removeItem(LEGACY_AUTH_MARKER);
 }
 
 export function redirectToLogin() {

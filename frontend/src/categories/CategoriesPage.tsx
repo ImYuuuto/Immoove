@@ -10,7 +10,7 @@ export default function CategoriesPage() {
     <main className="category-page category-directory-page">
       <header className="category-topbar">
         <a className="brand" href="/">
-          <b>B</b>bouzid<span>.</span>
+          <b>I</b>immoove<span>.</span>
         </a>
         <a href="/">
           <ArrowLeft size={17} />

@@ -1,4 +1,4 @@
-# Sidi Bouzid Listings API
+# Immoove Morocco Listings API
 
 ## Docker setup
 
@@ -14,11 +14,11 @@ The load balancer uses least-connections routing, keeps upstream connections ope
 
 Migration `013-query-indexes.sql` adds idempotent indexes for public listing feeds, category and location filters, owner listings, listing hydration, active booking overlap checks, favorites, moderation history, and trigram-backed title, description, and user-name searches.
 
-The defaults are development-only credentials. To override them, copy `.env.example` to `.env`, set a random `JWT_SECRET` of at least 32 characters, and edit the `POSTGRES_*` values before starting Docker. The database is private to the Compose network; connect to it from the API using the service hostname `db`. Authentication uses short-lived JWTs in an HttpOnly, SameSite cookie. The `x-user-id`/`x-user-role` shortcut works only when `ALLOW_DEV_AUTH=true` outside production.
+The defaults are development-only credentials. To override them, copy `.env.example` to `.env`, set a random `JWT_SECRET` of at least 32 characters, and edit the `POSTGRES_*` values before starting Docker. The existing `sidibouzid` PostgreSQL, Compose, volume, and migration-lock identifiers are intentionally retained for now because renaming persistent infrastructure needs a separate backup and migration plan. The database is private to the Compose network; connect to it from the API using the service hostname `db`. Authentication uses short-lived JWTs in an HttpOnly, SameSite cookie. The `x-user-id`/`x-user-role` shortcut works only when `ALLOW_DEV_AUTH=true` outside production.
 
 ### LAN HTTP development security note
 
-Browsers do not accept `Secure` cookies from a plain-HTTP LAN address such as `http://192.168.1.20:5173`. For trusted local-network testing only, add the LAN frontend origin to `CORS_ORIGIN` and set `COOKIE_SECURE=false` in `.env`. Before any public, production, or untrusted-network deployment, serve the site over HTTPS, remove LAN origins from `CORS_ORIGIN`, and set `COOKIE_SECURE=true`. Production remains secure by default when `COOKIE_SECURE` is omitted.
+Browsers do not accept `Secure` cookies from a plain-HTTP LAN address such as `http://192.168.1.20:5173`. For trusted local-network testing only, add the LAN frontend origin to `CORS_ORIGIN` and set `COOKIE_SECURE=false` in `.env`. Before any public, production, or untrusted-network deployment, serve the site over HTTPS, remove LAN origins from `CORS_ORIGIN`, set `PUBLIC_HTTPS=true`, and restore `COOKIE_SECURE=true`. The API refuses to start if public HTTPS is declared while secure cookies are disabled.
 
 ## Local setup
 
@@ -40,7 +40,7 @@ JSON request bodies are limited to 102,400 bytes by default and oversized reques
 
 Feature endpoints are available under `/api/v1` (the legacy `/api` prefix remains supported): `GET /listings/search`, `GET /listings/featured`, `POST /announcements/request`, `PATCH /announcements/:id` for admins, `GET /blog/posts`, `GET /favorites`, and `POST /favorites/:listingId/toggle`. Migration `003-platform-features.sql` adds listing service metadata, the `listing_categories` many-to-many table, host announcement requests, blog posts, and favorites.
 
-Authentication endpoints are `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `PATCH /api/v1/auth/password`, `GET /api/v1/auth/session`, and `GET /api/v1/auth/csrf-token`. Password changes accept `{ "currentPassword": string, "newPassword": string }`, invalidate every JWT issued to the user, clear the current browser's cookies, and return `204`. The frontend must use credentialed requests and the backend `CORS_ORIGIN` must allow its origin. Login and registration responses include a CSRF token and also set it in the readable `sidibouzid_csrf` cookie. Cookie-authenticated `POST`, `PUT`, `PATCH`, and `DELETE` requests must send that value in the `X-CSRF-Token` header. A fresh token can be requested from the CSRF endpoint. Bearer-authenticated API clients do not need the CSRF header.
+Authentication endpoints are `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `PATCH /api/v1/auth/password`, `GET /api/v1/auth/session`, and `GET /api/v1/auth/csrf-token`. Password changes accept `{ "currentPassword": string, "newPassword": string }`, invalidate every JWT issued to the user, clear the current browser's cookies, and return `204`. The frontend must use credentialed requests and the backend `CORS_ORIGIN` must allow its origin. Login and registration set `immoove_access` and return a CSRF token that is also stored in the readable `immoove_csrf` cookie. Cookie-authenticated `POST`, `PUT`, `PATCH`, and `DELETE` requests must send that value in the `X-CSRF-Token` header. Legacy `sidibouzid_access` and `sidibouzid_csrf` cookies are cleared during the authentication flow. The issuer/audience rename invalidates existing sessions, so users sign in once after deployment. Bearer-authenticated API clients do not need the CSRF header.
 
 Failed login attempts always return `401` with `Invalid email or password`, whether the email is unknown or the password is incorrect. The unknown-email path still performs password hashing to reduce timing-based account enumeration. There is currently no forgot/reset-password endpoint.
 
@@ -58,4 +58,4 @@ Category navigation uses `GET /api/v1/categories` and `GET /api/v1/categories/:s
 
 Migration `011-category-sample-listings.sql` adds two approved sample listings per public category, with gallery images and amenities. It is idempotent and can be reapplied safely.
 
-Development admin sample: `amina@example.com` / `BouzidAdmin2026!`. Change or remove this credential before using a non-development environment.
+Development admin sample after migration 016: `amina@example.com` / `ImmooveAdmin2026!`. Change or remove this credential before using a non-development environment.
