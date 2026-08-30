@@ -9,7 +9,7 @@ router.get('/listings/featured', controller.featured);
 router.post(
   '/announcements/request',
   auth,
-  requireRoles('ADMIN'),
+  requireAuth,
   listingImagesUpload,
   controller.createAnnouncement,
 );
@@ -25,7 +25,6 @@ router.patch(
   requireRoles('ADMIN'),
   controller.reviewAnnouncement,
 );
-router.get('/blog/posts', controller.posts);
 router.get('/favorites', auth, requireAuth, controller.favorites);
 router.post(
   '/favorites/:listingId/toggle',

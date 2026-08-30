@@ -3,21 +3,12 @@ import type { Language } from '../types';
 const serviceTypes: Record<Language, Record<string, string>> = {
   fr: {
     VACATION_RENTAL: 'Location de vacances',
-    CAR_RENTAL: 'Location de voiture',
-    RESTAURANT_CAFE: 'Restaurant et café',
-    ACTIVITY: 'Activité',
   },
   en: {
     VACATION_RENTAL: 'Vacation rental',
-    CAR_RENTAL: 'Car rental',
-    RESTAURANT_CAFE: 'Restaurant and café',
-    ACTIVITY: 'Activity',
   },
   ar: {
     VACATION_RENTAL: 'إقامة للعطلات',
-    CAR_RENTAL: 'تأجير السيارات',
-    RESTAURANT_CAFE: 'مطعم ومقهى',
-    ACTIVITY: 'نشاط',
   },
 };
 

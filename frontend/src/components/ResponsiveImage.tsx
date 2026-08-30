@@ -3,19 +3,9 @@ import type { ImgHTMLAttributes } from 'react';
 type Asset = { width: number; height: number; widths: number[] };
 
 const siteAssets: Record<string, Asset> = {
-  '/uploads/site/categories/activities.jpg': {
-    width: 900,
-    height: 600,
-    widths: [320, 480, 640, 800, 900],
-  },
   '/uploads/site/categories/beach.jpg': {
     width: 900,
     height: 598,
-    widths: [320, 480, 640, 800, 900],
-  },
-  '/uploads/site/categories/restaurants.jpg': {
-    width: 900,
-    height: 600,
     widths: [320, 480, 640, 800, 900],
   },
   '/uploads/site/categories/stays.jpg': {
@@ -23,22 +13,10 @@ const siteAssets: Record<string, Asset> = {
     height: 675,
     widths: [320, 480, 640, 800, 960, 1200],
   },
-  '/uploads/site/dining/chez-laura.jpg': {
-    width: 1200,
-    height: 900,
-    widths: [320, 480, 640, 800, 960, 1200],
-  },
-  '/uploads/site/dining/la-caleche.jpg': { width: 800, height: 529, widths: [320, 480, 640, 800] },
-  '/uploads/site/dining/le-spot.jpg': { width: 800, height: 533, widths: [320, 480, 640, 800] },
   '/uploads/site/hero/coastal-hero.jpg': {
     width: 2200,
     height: 1467,
     widths: [320, 480, 640, 800, 960, 1200, 1600, 2200],
-  },
-  '/uploads/site/journal/coastal-flavours.jpg': {
-    width: 900,
-    height: 600,
-    widths: [320, 480, 640, 800, 900],
   },
   '/uploads/site/listings/dar-el-bahri.jpg': {
     width: 1000,

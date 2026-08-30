@@ -29,3 +29,6 @@ Thumbs.db
 # Prisma
 *.db
 *.db-journal
+
+# Local recovery artifacts
+backend/rollback/cleanup-baseline/

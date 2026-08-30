@@ -1,4 +1,6 @@
-export type ServiceType = 'VACATION_RENTAL' | 'CAR_RENTAL' | 'RESTAURANT_CAFE' | 'ACTIVITY';
+export type PropertyTypeSlug = 'apartment' | 'studio' | 'villa';
+export type RentalTerm = 'short_term' | 'long_term' | 'both';
+export type ServiceType = 'VACATION_RENTAL';
 export type UserRole = 'CLIENT' | 'OWNER' | 'ADMIN';
 
 export type Listing = {
@@ -25,18 +27,11 @@ export type Listing = {
   categorySlug?: string;
   category?: { slug?: string; name?: string };
 };
-export type Post = {
-  post_id?: number;
-  title: string;
-  excerpt?: string;
-  category?: string;
-  cover_image_url?: string;
-};
 export type SearchFilters = {
   check_in?: string;
   check_out?: string;
   guests?: string;
-  service_type?: ServiceType | '';
+  rental_term?: RentalTerm | '';
 };
 export type Announcement = {
   service_type: ServiceType;
@@ -45,10 +40,10 @@ export type Announcement = {
   address: string;
   contact_phone: string;
 };
-export type CategorySlug = 'housing' | 'services' | 'hobbies-and-activities' | 'renting-cars';
-export type PricingUnit = 'night' | 'day' | 'hour' | 'service';
+export type PricingUnit = 'night' | 'month';
 export type ListingSubmission = {
-  categorySlug: CategorySlug;
+  propertyTypeSlug: PropertyTypeSlug;
+  rentalTerm: RentalTerm;
   title: string;
   description: string;
   locationName: string;

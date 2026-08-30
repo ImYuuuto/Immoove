@@ -718,7 +718,6 @@ img {
 }
 
 .hero .eyebrow,
-.dining .eyebrow,
 .host .eyebrow {
   color: var(--sand);
 }
@@ -1054,8 +1053,7 @@ img {
   bottom: 27px;
 }
 
-.category-card small,
-.dining-grid small {
+.category-card small {
   font-size: 9px;
   letter-spacing: 1.7px;
   font-weight: 700;
@@ -1421,214 +1419,6 @@ img {
 
   font-style: normal;
   font-weight: 400;
-}
-
-/* =========================================================
-   DINING
-   ========================================================= */
-
-.dining {
-  background:
-    radial-gradient(circle at 10% 10%, rgba(232, 189, 143, 0.12), transparent 25%),
-    linear-gradient(135deg, #052736, var(--navy));
-
-  color: white;
-
-  position: relative;
-
-  overflow: hidden;
-}
-
-.dining::before {
-  content: '';
-
-  position: absolute;
-
-  width: 300px;
-  height: 300px;
-
-  border: 1px solid rgba(232, 189, 143, 0.1);
-
-  border-radius: 50%;
-
-  right: -120px;
-  top: -120px;
-}
-
-.dining-intro {
-  display: flex;
-
-  justify-content: space-between;
-  align-items: end;
-}
-
-.dining-intro > p {
-  max-width: 300px;
-
-  margin: 0 4% 48px 0;
-
-  color: #b8c9ca;
-
-  line-height: 1.7;
-}
-
-.dining-grid {
-  display: grid;
-
-  grid-template-columns:
-    1.2fr
-    0.8fr
-    0.8fr;
-
-  gap: 16px;
-
-  margin-bottom: 40px;
-}
-
-.dining-grid article {
-  height: 430px;
-
-  position: relative;
-
-  overflow: hidden;
-
-  border-radius: 14px;
-}
-
-.dining-grid article::after {
-  content: '';
-
-  position: absolute;
-  inset: 0;
-
-  background: linear-gradient(0deg, rgba(3, 25, 34, 0.92), transparent 65%);
-}
-
-.dining-grid img {
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-
-  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.dining-grid article:hover img {
-  transform: scale(1.1);
-}
-
-.dining-grid article > div {
-  position: absolute;
-
-  z-index: 2;
-
-  left: 24px;
-  bottom: 27px;
-}
-
-.dining-grid small {
-  color: var(--sand);
-}
-
-.dining-grid h3 {
-  margin: 8px 0;
-
-  font:
-    600 30px 'Playfair Display',
-    serif;
-}
-
-/* =========================================================
-   JOURNAL
-   ========================================================= */
-
-.journal {
-  background: linear-gradient(180deg, #fff, #f8f5ee);
-}
-
-.journal-grid {
-  display: grid;
-
-  grid-template-columns: repeat(3, 1fr);
-
-  gap: 25px;
-}
-
-.post {
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.post:nth-child(odd):hover {
-  transform: translateY(-10px);
-}
-
-.post:nth-child(even):hover {
-  transform: translateX(7px) translateY(-6px);
-}
-
-.post img {
-  width: 100%;
-  height: 240px;
-
-  object-fit: cover;
-
-  border-radius: 13px;
-
-  transition:
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.7s ease;
-}
-
-.post:hover img {
-  transform: scale(1.025);
-
-  box-shadow: 0 20px 45px rgba(6, 43, 59, 0.13);
-}
-
-.post small {
-  display: block;
-
-  color: var(--coral);
-
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  font-weight: 700;
-
-  margin-top: 18px;
-}
-
-.post h3 {
-  margin: 10px 0;
-
-  font:
-    600 26px/1.15 'Playfair Display',
-    serif;
-}
-
-.post p {
-  color: var(--muted);
-
-  line-height: 1.6;
-}
-
-.post > a {
-  display: inline-flex;
-  align-items: center;
-
-  gap: 5px;
-
-  font-size: 12px;
-  font-weight: 700;
-
-  margin-top: 5px;
-
-  transition: var(--transition);
-}
-
-.post > a:hover {
-  color: var(--coral);
-
-  transform: translateX(5px);
 }
 
 /* =========================================================
@@ -2229,16 +2019,11 @@ footer > p {
   right: auto;
 }
 
-[dir='rtl'] .dining-intro,
 [dir='rtl'] .heading-row {
   direction: rtl;
 }
 
 [dir='rtl'] .heading-row > a:hover {
-  transform: translateX(-5px);
-}
-
-[dir='rtl'] .post > a:hover {
   transform: translateX(-5px);
 }
 
@@ -2290,13 +2075,6 @@ textarea:focus-visible {
     grid-row: span 1;
   }
 
-  .dining-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .dining-grid article:first-child {
-    grid-column: span 2;
-  }
 }
 
 /* =========================================================
@@ -2452,34 +2230,13 @@ textarea:focus-visible {
     height: 320px;
   }
 
-  .listing-grid,
-  .journal-grid {
+  .listing-grid {
     grid-template-columns: 1fr;
   }
 
   .listing-card:nth-child(odd):hover,
   .listing-card:nth-child(even):hover {
     transform: translateY(-8px);
-  }
-
-  .dining-intro {
-    display: block;
-  }
-
-  .dining-intro > p {
-    margin: 0 0 30px;
-  }
-
-  .dining-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .dining-grid article {
-    height: 320px;
-  }
-
-  .dining-grid article:first-child {
-    grid-column: span 2;
   }
 
   .heading-row {
@@ -2593,16 +2350,6 @@ textarea:focus-visible {
 
   .listing-image {
     height: 260px;
-  }
-
-  .dining-grid {
-    display: block;
-  }
-
-  .dining-grid article {
-    margin-bottom: 15px;
-
-    height: 300px;
   }
 
   .modal {
@@ -3158,8 +2905,6 @@ textarea:focus-visible {
 /* Responsive media wrappers reserve the component's existing layout box. */
 .category-card > picture,
 .listing-image > picture,
-.dining-grid article > picture,
-.post > picture,
 .profile-avatar > picture,
 .favorite-list > div > div > picture,
 .profile-listing-image > picture,

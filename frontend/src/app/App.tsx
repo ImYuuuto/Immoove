@@ -2,17 +2,15 @@ import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowUpRight, MapPin } from 'lucide-react';
 import AnnouncementModal from '../components/AnnouncementModal';
 import CategoryGrid from '../components/CategoryGrid';
-import Dining from '../components/Dining';
 import Heading from '../components/Heading';
 import HeroSearch from '../components/HeroSearch';
 import ListingCard from '../components/ListingCard';
 import { EditorialSection, Newsletter, WhyImmoove } from '../components/LuxurySections';
 import Navbar from '../components/Navbar';
 import UserBookings from '../components/UserBookings';
-import { fallbackListings, fallbackPosts, images } from '../data/content';
-import type { AuthUser, Listing, Post, SearchFilters } from '../types';
+import { fallbackListings } from '../data/content';
+import type { AuthUser, Listing, SearchFilters } from '../types';
 import { request } from '../utils/request';
-import { decodeText } from '../utils/decodeText';
 import { formatTranslation, useLanguage } from '../i18n/language';
 import ResponsiveImage from '../components/ResponsiveImage';
 
@@ -28,26 +26,15 @@ export default function App() {
 
   const [listings, setListings] = useState(fallbackListings);
 
-  const [posts, setPosts] = useState(fallbackPosts);
-
   useEffect(() => {
-    Promise.all([
-      request<{
+    request<{
         rentals: Listing[];
-      }>('/listings/featured'),
-
-      request<{
-        items: Post[];
-      }>('/blog/posts?limit=3'),
-    ])
-      .then(([featured, blog]) => {
+      }>('/listings/featured')
+      .then((featured) => {
         if (featured.rentals?.length) {
           setListings(featured.rentals);
         }
 
-        if (blog.items?.length) {
-          setPosts(blog.items);
-        }
       })
       .catch(() => {});
   }, []);
@@ -124,7 +111,7 @@ export default function App() {
             height={432}
             poster="/uploads/site/hero/coastal-hero-1200.webp"
           >
-            <source src="/videos/sidi-bouzid-hero.mp4" type="video/mp4" />
+            <source src="/videos/morocco-hero.mp4" type="video/mp4" />
           </video>
 
           <div className="hero-shade" />
@@ -180,7 +167,7 @@ export default function App() {
 
         <CategoryGrid
           onAnnouncement={() => setModal(true)}
-          showAnnouncement={currentUser?.role === 'OWNER' || currentUser?.role === 'ADMIN'}
+          showAnnouncement={Boolean(currentUser)}
         />
 
         {/* ESCAPES */}
@@ -221,61 +208,9 @@ export default function App() {
 
         <EditorialSection />
 
-        {/* DINING */}
-
-        <Dining />
-
         <WhyImmoove />
 
         {currentUser && currentUser.role !== 'ADMIN' && <UserBookings />}
-
-        {/* JOURNAL */}
-
-        <section className="section journal" id="story">
-          <div className="heading-row">
-            <Heading
-              eyebrow={text.journal}
-              title={
-                <>
-                  {text.inspirationLine1}
-                  <br />
-                  {text.inspirationLine2}
-                  <span>.</span>
-                </>
-              }
-            />
-
-            <a href="/">
-              {text.allArticles}
-              <ArrowUpRight size={16} />
-            </a>
-          </div>
-
-          <div className="journal-grid">
-            {posts.slice(0, 3).map((post) => (
-              <article className="post" key={post.post_id || post.title}>
-                <ResponsiveImage
-                  src={post.cover_image_url || images.explore}
-                  alt=""
-                  width={900}
-                  height={600}
-                  sizes="(max-width: 760px) calc(100vw - 44px), 33vw"
-                />
-
-                <small>{decodeText(post.category) || text.ideas}</small>
-
-                <h3>{decodeText(post.title)}</h3>
-
-                <p>{decodeText(post.excerpt)}</p>
-
-                <a href="/">
-                  {text.read}
-                  <ArrowUpRight size={14} />
-                </a>
-              </article>
-            ))}
-          </div>
-        </section>
 
         {/* HOST */}
 
@@ -296,7 +231,7 @@ export default function App() {
 
             <p>{text.hostText}</p>
 
-            {(currentUser?.role === 'OWNER' || currentUser?.role === 'ADMIN') && (
+            {currentUser && (
               <button className="light-button" onClick={() => setModal(true)}>
                 {text.addAddress}
                 <ArrowUpRight size={18} />
@@ -322,7 +257,6 @@ export default function App() {
             <small>{text.exploreFooter}</small>
             <a href="/properties">{text.stays}</a>
             <a href="/properties">{text.ourAddresses}</a>
-            <a href="/">{text.journal}</a>
           </nav>
           <div className="footer-location">
             <small>{text.findUs}</small>
@@ -346,7 +280,7 @@ export default function App() {
 
       {/* ANNOUNCEMENT MODAL */}
 
-      {modal && (currentUser?.role === 'OWNER' || currentUser?.role === 'ADMIN') && (
+      {modal && currentUser && (
         <AnnouncementModal onClose={() => setModal(false)} onMessage={notify} />
       )}
 

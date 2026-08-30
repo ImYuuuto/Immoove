@@ -4,25 +4,17 @@ import { decodeStoredText, sanitizeRequiredText } from '../utils/sanitize';
 import { invalidateCache } from '../config/cache';
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
 
 export function billableUnits(
   startDate: string | Date,
   endDate: string | Date,
   pricingUnit?: string | null,
-  serviceType?: string | null,
+  _serviceType?: string | null,
 ) {
   const duration = new Date(endDate).getTime() - new Date(startDate).getTime();
   const unit = (pricingUnit || '').toLowerCase();
-  if (unit.includes('hour') || unit.includes('heure'))
-    return Math.ceil(duration / MILLISECONDS_PER_HOUR);
-  if (
-    unit.includes('service') ||
-    unit.includes('fixed') ||
-    unit.includes('session') ||
-    (!unit && ['RESTAURANT_CAFE', 'ACTIVITY'].includes(serviceType || ''))
-  )
-    return 1;
+  if (unit.includes('month') || unit.includes('mois'))
+    return Math.ceil(duration / (30 * MILLISECONDS_PER_DAY));
   return Math.ceil(duration / MILLISECONDS_PER_DAY);
 }
 

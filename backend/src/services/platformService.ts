@@ -7,32 +7,33 @@ import { deleteUploadUrls } from '../middleware/listingUpload';
 export class PlatformService {
   static async listAnnouncements() {
     const result = await query<any>(
-      `SELECT ar.*, c.slug AS category_slug,
+      `SELECT ar.*, pt.slug AS property_type_slug,
        COALESCE(json_agg(ari.url ORDER BY ari.sort_order) FILTER (WHERE ari.id IS NOT NULL), '[]') AS images
-       FROM announcement_requests ar LEFT JOIN categories c ON c.category_id = ar.category_id
+       FROM announcement_requests ar LEFT JOIN property_types pt ON pt.property_type_id = ar.property_type_id
        LEFT JOIN announcement_request_images ari ON ari.request_id = ar.request_id
-       GROUP BY ar.request_id, c.slug ORDER BY ar.created_at DESC`,
+       GROUP BY ar.request_id, pt.slug ORDER BY ar.created_at DESC`,
     );
     return result.rows;
   }
   static async createAnnouncement(data: {
     requesterId: number;
-    categorySlug: string;
+    propertyTypeSlug: 'apartment' | 'studio' | 'villa';
+    rentalTerm: 'short_term' | 'long_term' | 'both';
     title: string;
     description: string;
     locationName: string; mapUrl: string; basePrice: number; pricingUnit: string;
     guestCapacity?: number; contactName: string; contactPhone: string; contactEmail: string;
     imageUrls: string[];
   }) {
-    const serviceTypes: Record<string, string> = { housing: 'VACATION_RENTAL', services: 'RESTAURANT_CAFE', 'hobbies-and-activities': 'ACTIVITY', 'renting-cars': 'CAR_RENTAL' };
     return transaction(async (client) => {
-      const category = await client.query<{ category_id: number }>('SELECT category_id FROM categories WHERE slug = $1', [data.categorySlug]);
-      if (!category.rows[0]) throw new AppError(400, 'Unknown category');
+      const category = await client.query<{ category_id: number }>("SELECT category_id FROM categories WHERE slug='housing'");
+      const propertyType = await client.query<{ property_type_id: number }>('SELECT property_type_id FROM property_types WHERE slug=$1 AND is_active=true', [data.propertyTypeSlug]);
+      if (!category.rows[0] || !propertyType.rows[0]) throw new AppError(400, 'Unknown property type');
       const result = await client.query<any>(
         `INSERT INTO announcement_requests
-        (requester_id, service_type, category_id, title, description, address, map_url, base_price, pricing_unit, guest_capacity, contact_name, contact_phone, contact_email)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
-        [data.requesterId, serviceTypes[data.categorySlug], category.rows[0].category_id,
+        (requester_id, service_type, category_id, property_type_id, rental_term, title, description, address, map_url, base_price, pricing_unit, guest_capacity, contact_name, contact_phone, contact_email)
+        VALUES ($1,'VACATION_RENTAL',$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+        [data.requesterId, category.rows[0].category_id, propertyType.rows[0].property_type_id, data.rentalTerm,
           sanitizeRequiredText(data.title, 'title'), sanitizeRequiredText(data.description, 'description'),
           sanitizeRequiredText(data.locationName, 'locationName'), data.mapUrl, data.basePrice, data.pricingUnit,
           data.guestCapacity || null, sanitizeRequiredText(data.contactName, 'contactName'),
@@ -43,7 +44,7 @@ export class PlatformService {
         [result.rows[0].request_id, url, index],
       );
       await client.query('INSERT INTO moderation_cases (entity_type, entity_id, due_at) VALUES (\'announcement\',$1,now()+interval \'24 hours\') ON CONFLICT DO NOTHING', [result.rows[0].request_id]);
-      return { ...result.rows[0], categorySlug: data.categorySlug, images: data.imageUrls };
+      return { ...result.rows[0], propertyTypeSlug: data.propertyTypeSlug, images: data.imageUrls };
     });
   }
   static async reviewAnnouncement(
@@ -55,8 +56,8 @@ export class PlatformService {
   ) {
     if (reviewerRole !== 'ADMIN') throw new AppError(403, 'Administrator access required');
     const outcome = await transaction(async (client) => {
-      const current = await client.query<any>(`SELECT ar.*, c.slug AS category_slug
-        FROM announcement_requests ar JOIN categories c ON c.category_id=ar.category_id
+      const current = await client.query<any>(`SELECT ar.*, pt.slug AS property_type_slug
+        FROM announcement_requests ar JOIN property_types pt ON pt.property_type_id=ar.property_type_id
         WHERE ar.request_id=$1 FOR UPDATE OF ar`, [requestId]);
       const row = current.rows[0];
       if (!row) throw new AppError(404, 'Publication request not found');
@@ -73,9 +74,9 @@ export class PlatformService {
         );
         const location = await client.query<{ location_id: number }>('INSERT INTO locations(name) VALUES ($1) RETURNING location_id', [row.address]);
         const listing = await client.query<{ listing_id: number }>(`INSERT INTO listings
-          (provider_id,category_id,location_id,title,description,base_price,pricing_unit,contact_name,contact_phone,contact_email,cover_image_url,service_type,guest_capacity,status,is_active,map_url,reviewed_by,reviewed_at)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'approved',true,$14,$15,now()) RETURNING listing_id`,
-          [row.requester_id,row.category_id,location.rows[0].location_id,row.title,row.description,row.base_price,row.pricing_unit,row.contact_name,row.contact_phone,row.contact_email,row.images[0]||null,row.service_type,row.guest_capacity,row.map_url,reviewerId]);
+          (provider_id,category_id,property_type_id,rental_term,location_id,title,description,base_price,pricing_unit,contact_name,contact_phone,contact_email,cover_image_url,service_type,guest_capacity,status,is_active,map_url,reviewed_by,reviewed_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'VACATION_RENTAL',$14,'approved',true,$15,$16,now()) RETURNING listing_id`,
+          [row.requester_id,row.category_id,row.property_type_id,row.rental_term,location.rows[0].location_id,row.title,row.description,row.base_price,row.pricing_unit,row.contact_name,row.contact_phone,row.contact_email,row.images[0]||null,row.guest_capacity,row.map_url,reviewerId]);
         listingId = listing.rows[0].listing_id;
         for (const [index,url] of row.images.entries()) await client.query('INSERT INTO listing_images(listing_id,url,sort_order) VALUES ($1,$2,$3)',[listingId,url,index]);
       }
@@ -96,38 +97,6 @@ export class PlatformService {
     });
     await deleteUploadUrls(outcome.deleteUrls);
     return outcome.item;
-  }
-  static async listPosts(params: {
-    category?: string;
-    page: number;
-    limit: number;
-  }) {
-    const values: unknown[] = [];
-    const filters = ['is_published = true'];
-    if (params.category) {
-      values.push(params.category);
-      filters.push(`category = $${values.length}`);
-    }
-    const where = `WHERE ${filters.join(' AND ')}`;
-    const count = await query<{ count: string }>(
-      `SELECT COUNT(*) AS count FROM blog_posts ${where}`,
-      values,
-    );
-    const offset = (params.page - 1) * params.limit;
-    const posts = await query<any>(
-      `SELECT post_id, slug, category, title, excerpt, content, cover_image_url, published_at FROM blog_posts ${where} ORDER BY published_at DESC NULLS LAST LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
-      [...values, params.limit, offset],
-    );
-    const total = Number(count.rows[0]?.count || 0);
-    return {
-      items: posts.rows,
-      pagination: {
-        total,
-        page: params.page,
-        limit: params.limit,
-        totalPages: Math.ceil(total / params.limit),
-      },
-    };
   }
   static async toggleFavorite(userId: number, listingId: number) {
     return transaction(async (client) => {

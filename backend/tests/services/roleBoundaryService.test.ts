@@ -1,6 +1,6 @@
 import { query, transaction } from '../../src/config/db';
 import { ListingService } from '../../src/services/listingService';
-import { ModerationService } from '../../src/services/staffService';
+import { AdminApprovalService } from '../../src/services/adminService';
 import { PlatformService } from '../../src/services/platformService';
 import { UserService } from '../../src/services/userService';
 
@@ -34,7 +34,7 @@ describe('service-layer canonical role boundaries', () => {
   });
 
   test('prevents a client from submitting approval decisions', async () => {
-    await expect(ModerationService.decide(2, 9, 'CLIENT', {
+    await expect(AdminApprovalService.decide(2, 9, 'CLIENT', {
       decision: 'approved', reasonCode: 'bypass',
     })).rejects.toMatchObject({ statusCode: 403 });
     expect(mockedTransaction).not.toHaveBeenCalled();

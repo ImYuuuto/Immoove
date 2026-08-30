@@ -1,15 +1,15 @@
 import { type ChangeEvent, type FormEvent, useState } from 'react';
 import { ArrowUpRight, ImagePlus, X } from 'lucide-react';
-import type { CategorySlug, ListingSubmission, PricingUnit } from '../types';
+import type { ListingSubmission, PricingUnit, PropertyTypeSlug, RentalTerm } from '../types';
 import { request } from '../utils/request';
 import { useLanguage } from '../i18n/language';
-import { categoryLabel } from '../categories/categoryLabels';
 import { useAnnouncementCopy } from './announcementI18n';
 
 const acceptedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const maximumImageSize = 5 * 1024 * 1024;
 const initialData: ListingSubmission = {
-  categorySlug: 'housing',
+  propertyTypeSlug: 'apartment',
+  rentalTerm: 'short_term',
   title: '',
   description: '',
   locationName: '',
@@ -69,7 +69,8 @@ export default function AnnouncementModal({
     setSubmitting(true);
     try {
       const form = new FormData();
-      form.append('categorySlug', data.categorySlug);
+      form.append('propertyTypeSlug', data.propertyTypeSlug);
+      form.append('rentalTerm', data.rentalTerm);
       form.append('title', data.title);
       form.append('description', data.description);
       form.append('locationName', data.locationName);
@@ -101,23 +102,29 @@ export default function AnnouncementModal({
         <button type="button" className="modal-close" onClick={onClose} aria-label={text.close}>
           <X />
         </button>
-        <small className="eyebrow">{text.joinBouzid}</small>
+        <small className="eyebrow">IMMOOVE</small>
         <h2>{text.publish}</h2>
         <p>{text.publishText}</p>
         <label className="modal-field">
-          <span>{copy.category}</span>
+          <span>{copy.propertyType}</span>
           <select
-            value={data.categorySlug}
-            onChange={(event) => update('categorySlug', event.target.value as CategorySlug)}
+            value={data.propertyTypeSlug}
+            onChange={(event) => update('propertyTypeSlug', event.target.value as PropertyTypeSlug)}
           >
-            <option value="housing">{categoryLabel('housing', language, 'Housing')}</option>
-            <option value="services">{categoryLabel('services', language, 'Services')}</option>
-            <option value="hobbies-and-activities">
-              {categoryLabel('hobbies-and-activities', language, 'Hobbies and activities')}
-            </option>
-            <option value="renting-cars">
-              {categoryLabel('renting-cars', language, 'Car rental')}
-            </option>
+            <option value="apartment">{language === 'fr' ? 'Appartement' : language === 'ar' ? 'شقة' : 'Apartment'}</option>
+            <option value="studio">{language === 'ar' ? 'استوديو' : 'Studio'}</option>
+            <option value="villa">{language === 'ar' ? 'فيلا' : 'Villa'}</option>
+          </select>
+        </label>
+        <label className="modal-field">
+          <span>{copy.rentalTerm}</span>
+          <select
+            value={data.rentalTerm}
+            onChange={(event) => update('rentalTerm', event.target.value as RentalTerm)}
+          >
+            <option value="short_term">{text.shortTerm}</option>
+            <option value="long_term">{text.longTerm}</option>
+            <option value="both">{text.bothRentalTerms}</option>
           </select>
         </label>
         <label className="modal-field">
@@ -183,9 +190,7 @@ export default function AnnouncementModal({
               onChange={(event) => update('pricingUnit', event.target.value as PricingUnit)}
             >
               <option value="night">{copy.night}</option>
-              <option value="day">{copy.day}</option>
-              <option value="hour">{copy.hour}</option>
-              <option value="service">{copy.service}</option>
+              <option value="month">{copy.month}</option>
             </select>
           </label>
         </div>

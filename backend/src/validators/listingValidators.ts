@@ -31,9 +31,8 @@ const common = {
   imageUrls: z.array(z.string().url()).max(50).optional(),
   featureIds: z.array(id).max(50).optional(),
   categoryIds: z.array(id).min(1).max(20).optional(),
-  serviceType: z
-    .enum(['VACATION_RENTAL', 'CAR_RENTAL', 'RESTAURANT_CAFE', 'ACTIVITY'])
-    .optional(),
+  serviceType: z.literal('VACATION_RENTAL').optional(),
+  rentalTerm: z.enum(['short_term', 'long_term', 'both']).optional(),
   guestCapacity: z.coerce.number().int().positive().max(1000).optional(),
   bedrooms: z.coerce.number().int().nonnegative().max(100).optional(),
   beds: z.coerce.number().int().nonnegative().max(200).optional(),

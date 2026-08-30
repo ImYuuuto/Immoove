@@ -13,7 +13,6 @@ import type {
 import { formatDate } from '../utils';
 import { decodeText } from '../../utils/decodeText';
 import { roleLabel, serviceTypeLabel } from '../../i18n/labels';
-import { categoryLabel } from '../../categories/categoryLabels';
 import { useLanguage } from '../../i18n/language';
 import { Status } from './Status';
 import { useAdminCopy } from '../adminI18n';
@@ -167,7 +166,7 @@ export function AdminAnalyticsView({
             {overview?.categories.map((item) => (
               <div key={item.slug}>
                 <span>
-                  <b>{categoryLabel(item.slug, language, decodeText(item.name))}</b>
+                  <b>{decodeText(item.name)}</b>
                   <small>
                     {item.listings} {extra.listings} · {item.bookings} {extra.bookings}
                   </small>
@@ -189,7 +188,7 @@ export function AuditView({ items }: { items: AuditEntry[] }) {
       <div className="table-card">
         <div className="panel-heading">
           <div>
-            <h2>{extra.staffActivity}</h2>
+            <h2>{extra.adminActivity}</h2>
             <p>{extra.auditText}</p>
           </div>
         </div>

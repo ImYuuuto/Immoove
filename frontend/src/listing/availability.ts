@@ -3,11 +3,7 @@ import type { AvailabilityInterval, BookingMode, ListingDetail } from './types';
 export const SESSION_TIMES = ['09:00', '12:00', '15:00', '18:00'];
 
 export function bookingMode(listing: ListingDetail): BookingMode {
-  const unit = (listing.pricingUnit || '').toLowerCase();
-  if (unit.includes('hour') || unit.includes('heure')) return 'hourly';
-  if (unit.includes('fixed') || unit.includes('service') || unit.includes('session'))
-    return 'fixed';
-  if (!unit && ['RESTAURANT_CAFE', 'ACTIVITY'].includes(listing.serviceType || '')) return 'fixed';
+  void listing;
   return 'range';
 }
 
@@ -42,10 +38,12 @@ export function overlapsAvailability(
 
 export function pricingUnitLabel(
   unit: string | undefined,
-  copy: { night: string; day: string; hour: string; service: string },
-  serviceType?: string,
+  copy: { night: string; month: string; day: string; hour: string; service: string },
+  _serviceType?: string,
 ) {
   const normalized = (unit || '').toLowerCase();
+  if (normalized.includes('month') || normalized.includes('mois') || normalized.includes('شهر'))
+    return copy.month;
   if (normalized.includes('hour') || normalized.includes('heure')) return copy.hour;
   if (normalized.includes('day') || normalized.includes('jour')) return copy.day;
   if (
@@ -53,8 +51,6 @@ export function pricingUnitLabel(
     normalized.includes('service') ||
     normalized.includes('session')
   )
-    return copy.service;
-  if (!normalized && ['RESTAURANT_CAFE', 'ACTIVITY'].includes(serviceType || ''))
     return copy.service;
   return copy.night;
 }

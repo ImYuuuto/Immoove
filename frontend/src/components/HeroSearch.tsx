@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
-import type { SearchFilters, ServiceType } from '../types';
+import type { RentalTerm, SearchFilters } from '../types';
 import { useLanguage } from '../i18n/language';
 
 export default function HeroSearch({ onSearch }: { onSearch: (filters: SearchFilters) => void }) {
@@ -49,19 +49,16 @@ export default function HeroSearch({ onSearch }: { onSearch: (filters: SearchFil
       </label>
 
       <label>
-        <small>{text.service}</small>
+        <small>{text.rentalTerm}</small>
 
         <select
           defaultValue=""
-          onChange={(e) => update('service_type', e.target.value as ServiceType | '')}
+          onChange={(e) => update('rental_term', e.target.value as RentalTerm | '')}
         >
-          <option value="">{text.allServices}</option>
-
-          <option value="VACATION_RENTAL">{text.stay}</option>
-
-          <option value="RESTAURANT_CAFE">{text.dining}</option>
-
-          <option value="ACTIVITY">{text.explore}</option>
+          <option value="">{text.allRentalTerms}</option>
+          <option value="short_term">{text.shortTerm}</option>
+          <option value="long_term">{text.longTerm}</option>
+          <option value="both">{text.bothRentalTerms}</option>
         </select>
       </label>
 

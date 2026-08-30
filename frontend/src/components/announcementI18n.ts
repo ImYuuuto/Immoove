@@ -1,7 +1,8 @@
 import { useLanguage } from '../i18n/language';
 
 const fr = {
-  category: 'Catégorie',
+  propertyType: 'Type de logement',
+  rentalTerm: 'Durée de location',
   title: 'Titre de l’annonce',
   description: 'Description',
   location: 'Nom du lieu',
@@ -16,6 +17,7 @@ const fr = {
   imageHelp: 'Ajoutez de 1 à 8 images JPEG, PNG ou WebP (5 Mo maximum chacune).',
   selectedImages: '{count} photo(s) sélectionnée(s)',
   night: 'Par nuit',
+  month: 'Par mois',
   day: 'Par jour',
   hour: 'Par heure',
   service: 'Par service',
@@ -28,7 +30,8 @@ const fr = {
 };
 type Copy = { [K in keyof typeof fr]: string };
 const en: Copy = {
-  category: 'Category',
+  propertyType: 'Property type',
+  rentalTerm: 'Rental term',
   title: 'Listing title',
   description: 'Description',
   location: 'Location name',
@@ -43,6 +46,7 @@ const en: Copy = {
   imageHelp: 'Add 1–8 JPEG, PNG, or WebP images (maximum 5 MB each).',
   selectedImages: '{count} image(s) selected',
   night: 'Per night',
+  month: 'Per month',
   day: 'Per day',
   hour: 'Per hour',
   service: 'Per service',
@@ -54,7 +58,8 @@ const en: Copy = {
   submit: 'Send request',
 };
 const ar: Copy = {
-  category: 'الفئة',
+  propertyType: 'نوع العقار',
+  rentalTerm: 'مدة الإيجار',
   title: 'عنوان الإعلان',
   description: 'الوصف',
   location: 'اسم الموقع',
@@ -69,6 +74,7 @@ const ar: Copy = {
   imageHelp: 'أضيفوا من صورة إلى 8 صور بصيغة JPEG أو PNG أو WebP (5 ميغابايت كحد أقصى لكل صورة).',
   selectedImages: 'تم اختيار {count} صورة',
   night: 'لكل ليلة',
+  month: 'لكل شهر',
   day: 'لكل يوم',
   hour: 'لكل ساعة',
   service: 'لكل خدمة',

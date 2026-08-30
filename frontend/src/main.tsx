@@ -12,7 +12,7 @@ const OwnerDashboard = lazy(() => import('./owner/OwnerDashboard'));
 const ProfilePage = lazy(() => import('./profile/ProfilePage'));
 const ListingPage = lazy(() => import('./listing/ListingPage'));
 const CheckoutPage = lazy(() => import('./listing/CheckoutPage'));
-const CategoriesPage = lazy(() => import('./categories/CategoriesPage'));
+const PropertyDirectoryPage = lazy(() => import('./properties/PropertyDirectoryPage'));
 const NotFoundPage = lazy(() => import('./components/NotFoundPage'));
 const LegalPage = lazy(() => import('./legal/LegalPage'));
 
@@ -34,7 +34,7 @@ const isOwnerRoute = route === '/owner';
 const isProfileRoute = route === '/profile';
 const listingMatch = route.match(/^\/listings?\/(\d+)$/);
 const checkoutMatch = route.match(/^\/checkout\/(\d+)$/);
-const propertyMatch = route.match(/^\/properties\/(apartments|villas|houses|riads|other-stays)$/);
+const propertyMatch = route.match(/^\/properties\/(apartments|studios|villas)$/);
 const isPropertiesRoute = route === '/properties';
 const isHomeRoute = route === '' || route === '/';
 const legalMatch = route.match(/^\/(terms|privacy)$/);
@@ -67,7 +67,7 @@ createRoot(document.getElementById('root')!).render(
       </Suspense>
     ) : isPropertiesRoute || propertyMatch ? (
       <Suspense fallback={<div className="category-state">{languageText().loading}</div>}>
-        <CategoriesPage propertyPath={propertyMatch?.[1]} />
+        <PropertyDirectoryPage propertyPath={propertyMatch?.[1]} />
       </Suspense>
     ) : isHomeRoute ? (
       <App />

@@ -13,7 +13,8 @@ export interface GetListingsParams {
   featured?: boolean;
   publicOnly?: boolean;
 }
-export type ServiceType = 'VACATION_RENTAL' | 'CAR_RENTAL' | 'RESTAURANT_CAFE' | 'ACTIVITY';
+export type ServiceType = 'VACATION_RENTAL';
+export type RentalTerm = 'short_term' | 'long_term' | 'both';
 export type UserRole = 'CLIENT' | 'OWNER' | 'ADMIN';
 export interface ListingSearchParams {
   checkIn?: Date;
@@ -21,7 +22,7 @@ export interface ListingSearchParams {
   guests?: number;
   minPrice?: number;
   maxPrice?: number;
-  serviceType?: ServiceType;
+  rentalTerm?: RentalTerm;
   regionId?: number;
   cityId?: number;
   areaId?: number;
@@ -53,6 +54,7 @@ export interface CreateListingDto {
   featureIds?: number[];
   categoryIds?: number[];
   serviceType?: ServiceType;
+  rentalTerm?: RentalTerm;
   guestCapacity?: number;
   bedrooms?: number;
   beds?: number;

@@ -72,23 +72,23 @@ export function WhyImmoove() {
           </h2>
           <p>{text.mapText}</p>
           <div className="map-legend">
-            ● {text.villas} &nbsp; ● {text.restaurants} &nbsp; ● {text.beach} &nbsp; ●{' '}
-            {text.activities}
+            ● {text.apartments} &nbsp; ● {text.studios} &nbsp; ● {text.villas} &nbsp; ●{' '}
+            {text.cities}
           </div>
         </div>
         <div className="local-map reveal">
           <span>{text.ocean}</span>
           <button className="pin p1">
-            <MapPin /> {text.villas}
+            <MapPin /> {text.apartments}
           </button>
           <button className="pin p2">
-            <MapPin /> {text.restaurants}
+            <MapPin /> {text.studios}
           </button>
           <button className="pin p3">
-            <MapPin /> {text.beach}
+            <MapPin /> {text.villas}
           </button>
           <button className="pin p4">
-            <MapPin /> {text.activities}
+            <MapPin /> {text.cities}
           </button>
         </div>
       </section>

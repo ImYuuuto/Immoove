@@ -35,6 +35,7 @@ function mapListing(row: any): ListingWithRelations {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     serviceType: row.service_type,
+    rentalTerm: row.rental_term,
     guestCapacity: row.guest_capacity,
     bedrooms: row.bedrooms,
     beds: row.beds,
@@ -288,7 +289,10 @@ export class ListingService {
       add('l.base_price >= ?', filters.minPrice);
     if (filters.maxPrice !== undefined)
       add('l.base_price <= ?', filters.maxPrice);
-    if (filters.serviceType) add('l.service_type = ?', filters.serviceType);
+    if (filters.rentalTerm) {
+      params.push(filters.rentalTerm);
+      clauses.push(`(l.rental_term = $${params.length} OR l.rental_term = 'both')`);
+    }
     if (filters.regionId)
       add('EXISTS (SELECT 1 FROM areas a JOIN cities ci ON ci.city_id = a.city_id WHERE a.area_id = l.area_id AND ci.region_id = ?)', filters.regionId);
     if (filters.cityId)
@@ -344,14 +348,14 @@ export class ListingService {
     const [propertyTypes, regions, cities, areas, amenities] = await Promise.all([
       query<any>(`SELECT property_type_id, name, slug FROM property_types
                   WHERE is_active = true ORDER BY name`),
-      query<any>('SELECT region_id, name FROM regions WHERE name <> \'Unassigned\' ORDER BY name'),
+      query<any>('SELECT region_id, name FROM regions WHERE name <> \'Unassigned\' AND is_active=true ORDER BY name'),
       query<any>(`SELECT ci.city_id, ci.region_id, ci.name FROM cities ci
                   JOIN regions r ON r.region_id = ci.region_id
-                  WHERE ci.name <> 'Unassigned' AND r.name <> 'Unassigned' ORDER BY ci.name`),
+                  WHERE ci.name <> 'Unassigned' AND r.name <> 'Unassigned' AND ci.is_active=true AND r.is_active=true ORDER BY ci.name`),
       query<any>(`SELECT a.area_id, a.city_id, a.name FROM areas a
                   JOIN cities ci ON ci.city_id = a.city_id
                   JOIN regions r ON r.region_id = ci.region_id
-                  WHERE a.requires_review = false AND ci.name <> 'Unassigned' AND r.name <> 'Unassigned'
+                  WHERE a.requires_review = false AND a.is_active=true AND ci.is_active=true AND r.is_active=true AND ci.name <> 'Unassigned' AND r.name <> 'Unassigned'
                   ORDER BY a.name`),
       query<any>('SELECT feature_id, name FROM features ORDER BY name'),
     ]);
@@ -369,8 +373,8 @@ export class ListingService {
   }
 
   private static async featuredUncached() {
-    const rows = await query<{ listing_id: number; service_type: string }>(
-      'SELECT listing_id, service_type FROM listings WHERE status = \'approved\' AND is_active = true AND is_featured = true ORDER BY created_at DESC',
+    const rows = await query<{ listing_id: number }>(
+      "SELECT listing_id FROM listings WHERE status='approved' AND is_active=true AND is_featured=true AND archived_at IS NULL AND service_type='VACATION_RENTAL' ORDER BY created_at DESC",
     );
     const items = await Promise.all(
       rows.rows.map((row) =>
@@ -378,17 +382,7 @@ export class ListingService {
       ),
     );
     return {
-      rentals: items.filter(
-        (item, index) =>
-          item && rows.rows[index].service_type === 'VACATION_RENTAL',
-      ),
-      dining: items.filter(
-        (item, index) =>
-          item && rows.rows[index].service_type === 'RESTAURANT_CAFE',
-      ),
-      activities: items.filter(
-        (item, index) => item && rows.rows[index].service_type === 'ACTIVITY',
-      ),
+      rentals: items.filter((item): item is ListingWithRelations => item !== null),
     };
   }
 
@@ -418,7 +412,7 @@ export class ListingService {
   static async create(data: CreateListingDto): Promise<ListingWithRelations> {
     const id = await transaction(async (client) => {
       const inserted = await client.query<{ listing_id: number }>(
-        'INSERT INTO listings (provider_id, category_id, location_id, area_id, property_type_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, guest_capacity, bedrooms, beds, bathrooms, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,\'pending\',false) RETURNING listing_id',
+        'INSERT INTO listings (provider_id, category_id, location_id, area_id, property_type_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, rental_term, guest_capacity, bedrooms, beds, bathrooms, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,\'pending\',false) RETURNING listing_id',
         [
           data.providerId || null,
           data.categoryId,
@@ -433,7 +427,8 @@ export class ListingService {
           sanitizeOptionalText(data.contactPhone) || null,
           data.contactEmail || null,
           data.coverImageUrl || null,
-          data.serviceType || null,
+          'VACATION_RENTAL',
+          data.rentalTerm || 'short_term',
           data.guestCapacity || null,
           data.bedrooms ?? null,
           data.beds ?? null,
@@ -473,8 +468,8 @@ export class ListingService {
   ): Promise<ListingWithRelations> {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
-    const staff = role === 'ADMIN';
-    if (!staff)
+    const admin = role === 'ADMIN';
+    if (!admin)
       throw new AppError(403, 'Administrator access required');
     const columns: Record<string, unknown> = {
       category_id: data.categoryId,
@@ -493,6 +488,7 @@ export class ListingService {
       contact_email: data.contactEmail,
       cover_image_url: data.coverImageUrl,
       service_type: data.serviceType,
+      rental_term: data.rentalTerm,
       guest_capacity: data.guestCapacity,
       bedrooms: data.bedrooms,
       beds: data.beds,

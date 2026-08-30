@@ -38,6 +38,7 @@ export interface Listing {
   createdAt: string;
   updatedAt: string;
   serviceType?: string;
+  rentalTerm?: 'short_term' | 'long_term' | 'both';
   guestCapacity?: number;
   bedrooms?: number;
   beds?: number;

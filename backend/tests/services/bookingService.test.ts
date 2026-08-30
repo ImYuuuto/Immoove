@@ -48,14 +48,13 @@ describe('BookingService server-side pricing', () => {
     ).not.toHaveProperty('total');
   });
 
-  test('calculates night, hour, and fixed-service billing units', () => {
+  test('calculates nightly and monthly billing units', () => {
     const start = '2026-09-01T12:00:00.000Z';
     const end = '2026-09-01T14:30:00.000Z';
 
     expect(billableUnits(start, end, 'night')).toBe(1);
-    expect(billableUnits(start, end, 'hour')).toBe(3);
-    expect(billableUnits(start, end, 'service')).toBe(1);
-    expect(billableUnits(start, end, null, 'ACTIVITY')).toBe(1);
+    expect(billableUnits(start, end, 'month')).toBe(1);
+    expect(billableUnits('2026-01-01', '2026-02-01', 'month')).toBe(2);
   });
 
   test('creates a booking using database price multiplied by billable days', async () => {

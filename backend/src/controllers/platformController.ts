@@ -4,7 +4,6 @@ import { AppError } from '../utils/errorHandler';
 import {
   announcementReviewSchema,
   announcementSchema,
-  blogQuerySchema,
   favoriteIdSchema,
   searchSchema,
 } from '../validators/platformValidators';
@@ -21,7 +20,7 @@ export const search: RequestHandler = async (req, res, next) => {
         guests: data.guests,
         minPrice: data.min_price,
         maxPrice: data.max_price,
-        serviceType: data.service_type,
+        rentalTerm: data.rental_term,
         regionId: data.region_id,
         cityId: data.city_id,
         areaId: data.area_id,
@@ -55,7 +54,8 @@ export const createAnnouncement: RequestHandler = async (req, res, next) => {
     const data = announcementSchema.parse(req.body);
     const item = await PlatformService.createAnnouncement({
       requesterId: req.user.userId,
-      categorySlug: data.categorySlug,
+      propertyTypeSlug: data.propertyTypeSlug,
+      rentalTerm: data.rentalTerm,
       title: data.title,
       description: data.description,
       locationName: data.locationName, mapUrl: data.mapUrl, basePrice: data.basePrice,
@@ -95,14 +95,6 @@ export const reviewAnnouncement: RequestHandler = async (req, res, next) => {
       data.reason,
     );
     res.json({ item });
-  } catch (error) {
-    next(error);
-  }
-};
-export const posts: RequestHandler = async (req, res, next) => {
-  try {
-    const data = blogQuerySchema.parse(req.query);
-    res.json(await PlatformService.listPosts(data));
   } catch (error) {
     next(error);
   }

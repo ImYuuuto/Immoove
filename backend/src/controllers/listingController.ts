@@ -43,14 +43,14 @@ export const get: RequestHandler = async (req, res, next) => {
       parse(listingIdSchema, req.params).id,
     );
     if (!listing) throw new AppError(404, 'Listing not found');
-    const staff =
+    const admin =
       req.user &&
       req.user.role === 'ADMIN';
     const owner =
       req.user?.role === 'OWNER' && req.user.userId === listing.providerId;
     if (
       (!listing.isActive || listing.status !== 'approved') &&
-      !staff &&
+      !admin &&
       !owner
     )
       throw new AppError(404, 'Listing not found');

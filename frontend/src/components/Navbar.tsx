@@ -68,7 +68,7 @@ export default function Navbar({
       {/* BRAND */}
 
       <a className="brand" href="/">
-        <b>B</b>
+        <b>I</b>
         immoove<span>.</span>
       </a>
 
@@ -83,7 +83,7 @@ export default function Navbar({
           {text.about}
         </a>
 
-        {user?.role === 'ADMIN' && <button onClick={onAnnouncement}>{text.services}</button>}
+        {user && <button onClick={onAnnouncement}>{text.services}</button>}
 
         {user?.role === 'OWNER' && (
           <a className="admin-link" href="/owner" onClick={() => setOpen(false)}>
