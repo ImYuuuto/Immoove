@@ -64,15 +64,15 @@ describe('JWT session version validation', () => {
 });
 
 describe('staff permissions', () => {
-  test('separates administrator and moderator capabilities', () => {
-    expect(permissionsForRole('admin')).toEqual(expect.arrayContaining(['analytics.read', 'user.manage', 'content.moderate']));
-    expect(permissionsForRole('moderator')).toEqual(expect.arrayContaining(['moderation.queue', 'content.moderate']));
-    expect(permissionsForRole('moderator')).not.toContain('analytics.read');
-    expect(permissionsForRole('user')).toEqual([]);
+  test('grants staff capabilities only to normalized administrators', () => {
+    expect(permissionsForRole('ADMIN')).toEqual(expect.arrayContaining(['analytics.read', 'user.manage', 'content.moderate']));
+    expect(permissionsForRole('OWNER')).toEqual([]);
+    expect(permissionsForRole('CLIENT')).toEqual([]);
+    expect(permissionsForRole('moderator')).toEqual([]);
   });
 
-  test('rejects a moderator from administrator analytics', () => {
-    const req = { user: { userId: 9, role: 'moderator' } } as Request;
+  test('rejects an owner from administrator analytics', () => {
+    const req = { user: { userId: 9, role: 'OWNER' } } as Request;
     const next = jest.fn();
     requirePermission('analytics.read')(req, {} as Response, next);
     expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));

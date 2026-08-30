@@ -15,13 +15,13 @@ router.post(
 router.get(
   '/announcements',
   auth,
-  requireRoles('ADMIN', 'admin'),
+  requireRoles('ADMIN'),
   controller.announcements,
 );
 router.patch(
   '/announcements/:id',
   auth,
-  requireRoles('ADMIN', 'admin'),
+  requireRoles('ADMIN'),
   controller.reviewAnnouncement,
 );
 router.get('/blog/posts', controller.posts);

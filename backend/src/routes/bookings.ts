@@ -6,6 +6,6 @@ router.use(auth);
 router.get('/', requireAuth, controller.list);
 router.get('/:id', requireAuth, controller.get);
 router.post('/', requireAuth, controller.create);
-router.patch('/:id', requireRoles('ADMIN', 'admin'), controller.update);
-router.delete('/:id', requireRoles('ADMIN', 'admin'), controller.remove);
+router.patch('/:id', requireRoles('ADMIN'), controller.update);
+router.delete('/:id', requireRoles('ADMIN'), controller.remove);
 export default router;

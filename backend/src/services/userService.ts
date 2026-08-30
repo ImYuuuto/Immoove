@@ -7,7 +7,7 @@ export class UserService {
     let where = '';
     if (params.search) {
       values.push(`%${params.search}%`);
-      where = "WHERE (COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')) ILIKE $1";
+      where = 'WHERE (COALESCE(first_name, \'\') || \' \' || COALESCE(last_name, \'\')) ILIKE $1';
     }
     const count = await query<{ count: string }>(`SELECT COUNT(*) AS count FROM users ${where}`, values);
     const offset = (params.page - 1) * params.limit;
@@ -48,10 +48,10 @@ export class UserService {
       : null;
   }
 
-  static async setRole(id: number, role: 'user' | 'moderator', actorId: number) {
+  static async setRole(id: number, role: 'CLIENT' | 'OWNER' | 'ADMIN', actorId: number) {
     if (id === actorId) throw new AppError(400, 'Administrators cannot change their own role');
     const result = await query<any>(
-      'UPDATE users SET role = $1 WHERE user_id = $2 AND role NOT IN (\'ADMIN\', \'admin\') RETURNING user_id, first_name, last_name, email, phone, role, created_at',
+      'UPDATE users SET role = $1, session_version = session_version + 1 WHERE user_id = $2 AND role <> \'ADMIN\' RETURNING user_id, first_name, last_name, email, phone, role, created_at',
       [role, id],
     );
     if (!result.rows[0]) throw new AppError(404, 'User not found or role cannot be changed');
@@ -64,7 +64,7 @@ export class UserService {
     if (id === actorId) throw new AppError(400, 'Administrators cannot change their own account status');
     const result = await query<any>(
       `UPDATE users SET account_status = $1, session_version = CASE WHEN $1 = 'suspended' THEN session_version + 1 ELSE session_version END
-       WHERE user_id = $2 AND role NOT IN ('ADMIN', 'admin')
+       WHERE user_id = $2 AND role <> 'ADMIN'
        RETURNING user_id, first_name, last_name, email, phone, role, account_status, created_at`,
       [status, id],
     );

@@ -30,7 +30,7 @@ describe('profile listing ownership', () => {
       callback(client as unknown as PoolClient),
     );
 
-    await ListingService.update(10, 1, 'user', { title: 'Updated' });
+    await ListingService.update(10, 1, 'OWNER', { title: 'Updated' });
 
     const [sql, values] = client.query.mock.calls[0];
     expect(sql).toContain('status = $3');
@@ -38,7 +38,7 @@ describe('profile listing ownership', () => {
     expect(values).toEqual([10, 'Updated', 'pending', false]);
   });
 
-  test('does not reset status when staff edits a listing', async () => {
+  test('does not reset status when an administrator edits a listing', async () => {
     const current = { listingId: 10, providerId: 1 } as never;
     jest
       .spyOn(ListingService, 'findById')
@@ -49,7 +49,7 @@ describe('profile listing ownership', () => {
       callback(client as unknown as PoolClient),
     );
 
-    await ListingService.update(10, 2, 'admin', { title: 'Staff edit' });
+    await ListingService.update(10, 2, 'ADMIN', { title: 'Staff edit' });
 
     expect(client.query.mock.calls[0][0]).not.toContain('status =');
     expect(client.query.mock.calls[0][0]).not.toContain('is_active =');

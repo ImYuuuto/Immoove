@@ -19,7 +19,7 @@ export const list: RequestHandler = async (req, res, next) => {
         ...parse(listingQuerySchema, req.query),
         publicOnly:
           !req.user ||
-          !['ADMIN', 'admin', 'moderator', 'staff'].includes(req.user.role),
+          req.user.role !== 'ADMIN',
       }),
     );
   } catch (error) {
@@ -41,7 +41,7 @@ export const get: RequestHandler = async (req, res, next) => {
     if (!listing) throw new AppError(404, 'Listing not found');
     const staff =
       req.user &&
-      ['ADMIN', 'admin', 'moderator', 'staff'].includes(req.user.role);
+      req.user.role === 'ADMIN';
     const owner = req.user?.userId === listing.providerId;
     if (
       (!listing.isActive || listing.status !== 'approved') &&

@@ -185,7 +185,7 @@ export class ListingService {
       clauses.push(clause.replace('?', `$${params.length}`));
     };
     if (filters.publicOnly)
-      clauses.push("l.status = 'approved' AND l.is_active = true");
+      clauses.push('l.status = \'approved\' AND l.is_active = true');
     if (filters.categoryId) add('l.category_id = ?', filters.categoryId);
     if (filters.locationId) add('l.location_id = ?', filters.locationId);
     if (filters.providerId) add('l.provider_id = ?', filters.providerId);
@@ -233,7 +233,7 @@ export class ListingService {
   private static async searchUncached(
     filters: import('../types/dto').ListingSearchParams,
   ) {
-    const clauses = ["l.status = 'approved'", 'l.is_active = true'];
+    const clauses = ['l.status = \'approved\'', 'l.is_active = true'];
     const params: unknown[] = [];
     const add = (sql: string, value: unknown) => {
       params.push(value);
@@ -289,7 +289,7 @@ export class ListingService {
 
   private static async featuredUncached() {
     const rows = await query<{ listing_id: number; service_type: string }>(
-      "SELECT listing_id, service_type FROM listings WHERE status = 'approved' AND is_active = true AND is_featured = true ORDER BY created_at DESC",
+      'SELECT listing_id, service_type FROM listings WHERE status = \'approved\' AND is_active = true AND is_featured = true ORDER BY created_at DESC',
     );
     const items = await Promise.all(
       rows.rows.map((row) =>
@@ -328,7 +328,7 @@ export class ListingService {
     options: { publicOnly?: boolean } = {},
   ): Promise<ListingWithRelations | null> {
     const result = await query<any>(
-      `SELECT l.* FROM listings l WHERE l.listing_id = $1${options.publicOnly ? " AND l.status = 'approved' AND l.is_active = true" : ''}`,
+      `SELECT l.* FROM listings l WHERE l.listing_id = $1${options.publicOnly ? ' AND l.status = \'approved\' AND l.is_active = true' : ''}`,
       [listingId],
     );
     return result.rows[0] ? hydrate(mapListing(result.rows[0])) : null;
@@ -337,7 +337,7 @@ export class ListingService {
   static async create(data: CreateListingDto): Promise<ListingWithRelations> {
     const id = await transaction(async (client) => {
       const inserted = await client.query<{ listing_id: number }>(
-        "INSERT INTO listings (provider_id, category_id, location_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, guest_capacity, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'pending',false) RETURNING listing_id",
+        'INSERT INTO listings (provider_id, category_id, location_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, guest_capacity, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,\'pending\',false) RETURNING listing_id',
         [
           data.providerId || null,
           data.categoryId,
@@ -387,7 +387,7 @@ export class ListingService {
   ): Promise<ListingWithRelations> {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
-    const staff = ['ADMIN', 'admin', 'moderator', 'staff'].includes(role);
+    const staff = role === 'ADMIN';
     if (!staff && current.providerId !== userId)
       throw new AppError(403, 'You cannot update this listing');
     const columns: Record<string, unknown> = {
@@ -464,7 +464,7 @@ export class ListingService {
   ) {
     const result = await transaction(async (client) => {
       const updated = await client.query<any>(
-        "UPDATE listings SET status = $1, is_active = ($1 = 'approved'), updated_at = now() WHERE listing_id = $2 RETURNING *",
+        'UPDATE listings SET status = $1, is_active = ($1 = \'approved\'), updated_at = now() WHERE listing_id = $2 RETURNING *',
         [status, listingId],
       );
       if (!updated.rows[0]) throw new AppError(404, 'Listing not found');
@@ -488,7 +488,7 @@ export class ListingService {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
     if (
-      !['ADMIN', 'admin', 'moderator', 'staff'].includes(role) &&
+      role !== 'ADMIN' &&
       current.providerId !== userId
     )
       throw new AppError(403, 'You cannot delete this listing');

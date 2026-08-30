@@ -209,7 +209,7 @@ export class ModerationService {
           nextState = updated.rows[0];
         } else nextState = previousState;
       } else if (item.entity_type === 'announcement') {
-        const isAdmin = ['ADMIN','admin'].includes(actorRole);
+        const isAdmin = actorRole === 'ADMIN';
         if (!isAdmin && !['rejected','escalated'].includes(data.decision)) throw new AppError(403, 'Moderators may only reject or escalate publication requests');
         if (isAdmin && item.status === 'escalated') throw new AppError(409, 'Use the final publication review endpoint');
         const current = await client.query<any>('SELECT status FROM announcement_requests WHERE request_id = $1 FOR UPDATE', [item.entity_id]);

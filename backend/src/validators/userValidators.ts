@@ -11,7 +11,7 @@ export const userQuerySchema = z.object({
 });
 
 export const userRoleSchema = z.object({
-  role: z.enum(['user', 'moderator']),
+  role: z.enum(['CLIENT', 'OWNER', 'ADMIN']),
 });
 
 export const userStatusSchema = z.object({

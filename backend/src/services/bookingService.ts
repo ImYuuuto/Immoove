@@ -91,7 +91,7 @@ export class BookingService {
       if (listing.rows[0].status !== 'approved' || !listing.rows[0].is_active)
         throw new AppError(409, 'Listing is not available for booking');
       const conflict = await client.query(
-        "SELECT 1 FROM bookings WHERE listing_id = $1 AND status NOT IN ('rejected','cancelled','refunded') AND start_date < $3 AND end_date > $2 LIMIT 1",
+        'SELECT 1 FROM bookings WHERE listing_id = $1 AND status NOT IN (\'rejected\',\'cancelled\',\'refunded\') AND start_date < $3 AND end_date > $2 LIMIT 1',
         [data.listingId, data.startDate, data.endDate],
       );
       if (conflict.rowCount)

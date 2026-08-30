@@ -20,6 +20,7 @@ require('dotenv').config();
       '011-category-sample-listings.sql',
       '012-publication-moderation.sql',
       '013-query-indexes.sql',
+      '014-housing-role-location-normalization.sql',
     ])
       await client.query(
         fs.readFileSync(

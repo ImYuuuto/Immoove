@@ -29,28 +29,11 @@ const adminPermissions: Permission[] = [
   'settings.manage',
   'user.manage',
 ];
-const moderatorPermissions: Permission[] = [
-  'booking.manage',
-  'content.moderate',
-  'moderation.metrics.read',
-  'moderation.queue',
-];
-
 export function permissionsForRole(role: string): Permission[] {
-  if (['ADMIN', 'admin'].includes(role)) return adminPermissions;
-  if (['moderator', 'staff'].includes(role)) return moderatorPermissions;
+  if (role === 'ADMIN') return adminPermissions;
   return [];
 }
-const roles = [
-  'CLIENT',
-  'HOST',
-  'ADMIN',
-  'user',
-  'provider',
-  'staff',
-  'moderator',
-  'admin',
-];
+const roles = ['CLIENT', 'OWNER', 'ADMIN'];
 export const auth: RequestHandler = async (req, _res, next) => {
   const authorization = req.header('authorization');
   const cookieToken = req.cookies?.[COOKIE_NAME];
@@ -108,7 +91,7 @@ export const auth: RequestHandler = async (req, _res, next) => {
 export const requireAuth: RequestHandler = (req, _res, next) =>
   req.user ? next() : next(new AppError(401, 'Authentication required'));
 export const requireStaff: RequestHandler = (req, _res, next) =>
-  req.user && ['ADMIN', 'admin', 'moderator', 'staff'].includes(req.user.role)
+  req.user?.role === 'ADMIN'
     ? next()
     : next(
         new AppError(
