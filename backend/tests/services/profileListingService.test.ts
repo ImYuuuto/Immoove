@@ -54,4 +54,11 @@ describe('profile listing ownership', () => {
     expect(client.query.mock.calls[0][0]).not.toContain('status =');
     expect(client.query.mock.calls[0][0]).not.toContain('is_active =');
   });
+
+  test('rejects a client even when a legacy listing references that client', async () => {
+    const callsBefore = mockedTransaction.mock.calls.length;
+    jest.spyOn(ListingService, 'findById').mockResolvedValueOnce({ listingId: 10, providerId: 1 } as never);
+    await expect(ListingService.update(10, 1, 'CLIENT', { title: 'Bypass' })).rejects.toMatchObject({ statusCode: 403 });
+    expect(mockedTransaction.mock.calls).toHaveLength(callsBefore);
+  });
 });

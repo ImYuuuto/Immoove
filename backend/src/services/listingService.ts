@@ -461,9 +461,11 @@ export class ListingService {
   static async setStatus(
     listingId: number,
     actorId: number,
+    actorRole: string,
     status: ListingStatus,
     reason?: string,
   ) {
+    if (actorRole !== 'ADMIN') throw new AppError(403, 'Administrator access required');
     const result = await transaction(async (client) => {
       const updated = await client.query<any>(
         'UPDATE listings SET status = $1, is_active = ($1 = \'approved\'), updated_at = now() WHERE listing_id = $2 RETURNING *',

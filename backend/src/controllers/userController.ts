@@ -22,7 +22,7 @@ export const setRole: RequestHandler = async (req, res, next) => {
   try {
     const { id } = userIdSchema.parse(req.params);
     const { role } = userRoleSchema.parse(req.body);
-    res.json({ item: await UserService.setRole(id, role, req.user!.userId) });
+    res.json({ item: await UserService.setRole(id, role, req.user!.userId, req.user!.role) });
   } catch (error) {
     next(error);
   }
@@ -31,6 +31,6 @@ export const setStatus: RequestHandler = async (req, res, next) => {
   try {
     const { id } = userIdSchema.parse(req.params);
     const { status, reason } = userStatusSchema.parse(req.body);
-    res.json({ item: await UserService.setStatus(id, status, req.user!.userId, reason) });
+    res.json({ item: await UserService.setStatus(id, status, req.user!.userId, req.user!.role, reason) });
   } catch (error) { next(error); }
 };

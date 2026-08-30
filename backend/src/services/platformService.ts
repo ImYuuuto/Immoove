@@ -49,9 +49,11 @@ export class PlatformService {
   static async reviewAnnouncement(
     requestId: number,
     reviewerId: number,
+    reviewerRole: string,
     status: string,
     reason?: string,
   ) {
+    if (reviewerRole !== 'ADMIN') throw new AppError(403, 'Administrator access required');
     const outcome = await transaction(async (client) => {
       const current = await client.query<any>(`SELECT ar.*, c.slug AS category_slug
         FROM announcement_requests ar JOIN categories c ON c.category_id=ar.category_id
@@ -60,7 +62,8 @@ export class PlatformService {
       if (!row) throw new AppError(404, 'Publication request not found');
       const images = await client.query<{url:string}>('SELECT url FROM announcement_request_images WHERE request_id=$1 ORDER BY sort_order',[requestId]);
       row.images = images.rows.map(image => image.url);
-      if (row.status !== 'ESCALATED') throw new AppError(409, 'Only escalated requests can receive final admin review');
+      if (!['PENDING', 'ESCALATED'].includes(row.status))
+        throw new AppError(409, 'Publication request has already received final review');
       let listingId: number | null = null;
       if (status === 'APPROVED') {
         await client.query(

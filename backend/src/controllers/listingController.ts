@@ -87,6 +87,7 @@ export const setStatus: RequestHandler = async (req, res, next) => {
     const item = await ListingService.setStatus(
       parse(listingIdSchema, req.params).id,
       req.user!.userId,
+      req.user!.role,
       body.status,
       body.reason,
     );

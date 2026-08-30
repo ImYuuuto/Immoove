@@ -184,6 +184,7 @@ export class ModerationService {
   }
 
   static async decide(caseId: number, actorId: number, actorRole: string, data: { decision: 'approved' | 'rejected' | 'changes_requested' | 'escalated'; reasonCode: string; note?: string }) {
+    if (actorRole !== 'ADMIN') throw new AppError(403, 'Administrator access required');
     let deleteUrls: string[] = [];
     const response = await transaction(async (client) => {
       const caseResult = await client.query<any>('SELECT * FROM moderation_cases WHERE case_id = $1 FOR UPDATE', [caseId]);
@@ -254,7 +255,8 @@ export class ModerationService {
     return response;
   }
 
-  static async moderateBooking(bookingId: number, actorId: number, status: 'processing'|'confirmed'|'rejected', reason?: string) {
+  static async moderateBooking(bookingId: number, actorId: number, actorRole: string, status: 'processing'|'confirmed'|'rejected', reason?: string) {
+    if (actorRole !== 'ADMIN') throw new AppError(403, 'Administrator access required');
     return transaction(async client => {
       const result = await client.query<any>(`UPDATE bookings SET status=$1,processed_by=$2,processed_at=now(),
         rejection_reason=CASE WHEN $1='rejected' THEN $3 ELSE NULL END WHERE booking_id=$4 AND status IN ('pending','processing') RETURNING *`,

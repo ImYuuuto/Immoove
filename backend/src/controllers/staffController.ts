@@ -23,7 +23,7 @@ export const decide: RequestHandler = async (req, res, next) => {
   catch (error) { next(error); }
 };
 export const moderateBooking: RequestHandler = async (req, res, next) => {
-  try { const data=bookingModerationSchema.parse(req.body); res.json({item:await ModerationService.moderateBooking(moderationCaseSchema.parse(req.params).id,req.user!.userId,data.status,data.reason)}); }
+  try { const data=bookingModerationSchema.parse(req.body); res.json({item:await ModerationService.moderateBooking(moderationCaseSchema.parse(req.params).id,req.user!.userId,req.user!.role,data.status,data.reason)}); }
   catch(error){ next(error); }
 };
 export const history: RequestHandler = async (req, res, next) => {

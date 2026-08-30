@@ -154,12 +154,24 @@ describe('BookingService server-side pricing', () => {
       });
     useClient(query);
 
-    await BookingService.update(10, {
+    await BookingService.update(10, 1, 'ADMIN', {
       endDate: new Date('2026-09-03T13:00:00.000Z'),
       total: 0.01,
     } as never);
 
     expect(query.mock.calls[3][0]).toContain('SELECT base_price * $5');
     expect(query.mock.calls[3][1][4]).toBe(3);
+  });
+
+  test('rejects a client attempting to cancel another client booking', async () => {
+    const query = jest.fn().mockResolvedValueOnce({
+      rows: [{ booking_id: 10, user_id: 8 }],
+    });
+    useClient(query);
+
+    await expect(
+      BookingService.update(10, 7, 'CLIENT', { status: 'cancelled' }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    expect(query).toHaveBeenCalledTimes(1);
   });
 });

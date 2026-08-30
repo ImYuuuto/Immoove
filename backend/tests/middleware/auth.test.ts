@@ -2,15 +2,15 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { query } from '../../src/config/db';
 import { COOKIE_NAME } from '../../src/controllers/authController';
-import { auth, permissionsForRole, requirePermission } from '../../src/middleware/auth';
+import { auth, requireAdmin, requireRoles } from '../../src/middleware/auth';
 
 jest.mock('../../src/config/db', () => ({ query: jest.fn() }));
 
 const secret = 'test-secret-that-is-long-enough-for-jwt-tests';
 const mockedQuery = query as jest.MockedFunction<typeof query>;
 
-function createToken(sessionVersion: number) {
-  return jwt.sign({ userId: 7, role: 'CLIENT', sessionVersion }, secret, {
+function createToken(sessionVersion: number, role = 'CLIENT') {
+  return jwt.sign({ userId: 7, role, sessionVersion }, secret, {
     issuer: 'sidi-bouzid-api',
     audience: 'sidi-bouzid-web',
   });
@@ -61,21 +61,33 @@ describe('JWT session version validation', () => {
 
     expect(next).toHaveBeenCalledWith(databaseError);
   });
+
+  test.each(['admin', 'moderator', 'staff', 'provider', 'user', 'HOST'])(
+    'rejects non-canonical JWT role %s before querying the account',
+    async (role) => {
+      const { req } = await authenticate(createToken(3, role));
+      expect(req.user).toBeUndefined();
+      expect(mockedQuery).not.toHaveBeenCalled();
+    },
+  );
 });
 
-describe('staff permissions', () => {
-  test('grants staff capabilities only to normalized administrators', () => {
-    expect(permissionsForRole('ADMIN')).toEqual(expect.arrayContaining(['analytics.read', 'user.manage', 'content.moderate']));
-    expect(permissionsForRole('OWNER')).toEqual([]);
-    expect(permissionsForRole('CLIENT')).toEqual([]);
-    expect(permissionsForRole('moderator')).toEqual([]);
+describe('canonical role boundaries', () => {
+  test('rejects an owner from administrator analytics', () => {
+    const req = { user: { userId: 9, role: 'OWNER', requiresTermsAcceptance: false } } as Request;
+    const next = jest.fn();
+    requireAdmin(req, {} as Response, next);
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
   });
 
-  test('rejects an owner from administrator analytics', () => {
-    const req = { user: { userId: 9, role: 'OWNER' } } as Request;
-    const next = jest.fn();
-    requirePermission('analytics.read')(req, {} as Response, next);
-    expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
+  test('allows owners but rejects clients on owner routes', () => {
+    const ownerNext = jest.fn();
+    const clientNext = jest.fn();
+    const middleware = requireRoles('OWNER', 'ADMIN');
+    middleware({ user: { userId: 2, role: 'OWNER', requiresTermsAcceptance: false } } as Request, {} as Response, ownerNext);
+    middleware({ user: { userId: 3, role: 'CLIENT', requiresTermsAcceptance: false } } as Request, {} as Response, clientNext);
+    expect(ownerNext).toHaveBeenCalledWith();
+    expect(clientNext).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
   });
 });
 
@@ -85,7 +97,7 @@ describe('renewed Terms acceptance', () => {
       user: { userId: 7, role: 'CLIENT', requiresTermsAcceptance: true },
     } as Request;
     const next = jest.fn();
-    requirePermission('analytics.read')(req, {} as Response, next);
+    requireAdmin(req, {} as Response, next);
     expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 428 }));
   });
 });

@@ -74,6 +74,7 @@ export const reviewAnnouncement: RequestHandler = async (req, res, next) => {
     const item = await PlatformService.reviewAnnouncement(
       Number(req.params.id),
       req.user.userId,
+      req.user.role,
       data.status,
       data.reason,
     );

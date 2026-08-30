@@ -48,7 +48,8 @@ export class UserService {
       : null;
   }
 
-  static async setRole(id: number, role: 'CLIENT' | 'OWNER' | 'ADMIN', actorId: number) {
+  static async setRole(id: number, role: 'CLIENT' | 'OWNER' | 'ADMIN', actorId: number, actorRole: string) {
+    if (actorRole !== 'ADMIN') throw new AppError(403, 'Administrator access required');
     if (id === actorId) throw new AppError(400, 'Administrators cannot change their own role');
     const result = await query<any>(
       'UPDATE users SET role = $1, session_version = session_version + 1 WHERE user_id = $2 AND role <> \'ADMIN\' RETURNING user_id, first_name, last_name, email, phone, role, created_at',
@@ -60,7 +61,8 @@ export class UserService {
     return { userId: row.user_id, firstName: row.first_name, lastName: row.last_name, email: row.email, phone: row.phone, role: row.role, createdAt: row.created_at };
   }
 
-  static async setStatus(id: number, status: 'active' | 'suspended', actorId: number, reason?: string) {
+  static async setStatus(id: number, status: 'active' | 'suspended', actorId: number, actorRole: string, reason?: string) {
+    if (actorRole !== 'ADMIN') throw new AppError(403, 'Administrator access required');
     if (id === actorId) throw new AppError(400, 'Administrators cannot change their own account status');
     const result = await query<any>(
       `UPDATE users SET account_status = $1, session_version = CASE WHEN $1 = 'suspended' THEN session_version + 1 ELSE session_version END
