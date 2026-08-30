@@ -48,7 +48,7 @@ export default function NotFoundPage() {
           <b>B</b>
           immoove<span>.</span>
         </a>
-        <a href="/categories">
+        <a href="/properties">
           <Compass size={17} />
           {text.explore}
         </a>
@@ -67,7 +67,7 @@ export default function NotFoundPage() {
               <ArrowLeft size={18} />
               {text.home}
             </a>
-            <a className="not-found-secondary" href="/categories">
+            <a className="not-found-secondary" href="/properties">
               {text.explore}
             </a>
           </div>

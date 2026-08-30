@@ -27,7 +27,7 @@ export function EditorialSection() {
           <span>.</span>
         </h2>
         <p>{text.editorialText}</p>
-        <a href="/categories/services">{text.discoverCoast}</a>
+        <a href="/properties">{text.discoverCoast}</a>
       </div>
     </section>
   );

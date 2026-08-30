@@ -50,7 +50,7 @@ export default function Dining() {
         ))}
       </div>
 
-      <a className="outline-button" href="/categories/services">
+      <a className="outline-button" href="/properties">
         {text.exploreMore}
         <ArrowUpRight size={17} />
       </a>

@@ -10,6 +10,9 @@ export type Listing = {
   pricingUnit?: string;
   serviceType?: ServiceType | string;
   guestCapacity?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  propertyType?: { propertyTypeId: number; name: string; slug: string };
   coverImageUrl?: string | null;
   images?: { url: string }[];
   location?: { name: string };

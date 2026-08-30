@@ -9,7 +9,6 @@ export default function ListingCard({
   listing,
   onFavorite,
   onBook,
-  categorySlug,
   imagePriority = false,
 }: {
   listing: Listing;
@@ -19,11 +18,7 @@ export default function ListingCard({
   imagePriority?: boolean;
 }) {
   const { language, text } = useLanguage();
-  const detailUrl = listing.listingId
-    ? categorySlug
-      ? `/categories/${categorySlug}/listing/${listing.listingId}`
-      : `/listings/${listing.listingId}`
-    : '';
+  const detailUrl = listing.listingId ? `/listings/${listing.listingId}` : '';
   const pricingUnits: Record<string, Record<string, string>> = {
     fr: {
       night: 'nuit',

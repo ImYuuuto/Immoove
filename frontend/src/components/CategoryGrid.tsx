@@ -1,8 +1,6 @@
 import { images } from '../data/content';
 import Heading from './Heading';
 import { useLanguage } from '../i18n/language';
-import { useCategories } from '../categories/useCategories';
-import { categoryLabel } from '../categories/categoryLabels';
 import '../categories/category.css';
 import ResponsiveImage from './ResponsiveImage';
 
@@ -14,7 +12,11 @@ export default function CategoryGrid({
   showAnnouncement?: boolean;
 }) {
   const { language, text } = useLanguage();
-  const categories = useCategories();
+  const labels = {
+    fr: ['Appartements', 'Villas', 'Maisons', 'Riads', 'Autres séjours'],
+    en: ['Apartments', 'Villas', 'Houses', 'Riads', 'Other stays'],
+    ar: ['شقق', 'فيلات', 'منازل', 'رياض', 'إقامات أخرى'],
+  }[language];
   const presentation = [
     {
       image: images.stay,
@@ -26,32 +28,36 @@ export default function CategoryGrid({
 
     {
       image: images.explore,
-      number: `02 / ${text.explore.toUpperCase()}`,
-      icon: '🌊',
-      title: text.activities,
-      text: text.activitiesText,
+      number: '02 / VILLA',
+      icon: '🏊',
+      title: labels[1],
+      text: text.villasText,
     },
 
     {
       image: images.food,
-      number: `03 / ${text.dining.toUpperCase()}`,
-      icon: '🍽',
-      title: text.restaurants,
-      text: text.restaurantsText,
+      number: '03 / HOUSE',
+      icon: '🏠',
+      title: labels[2],
+      text: text.villasText,
     },
     {
       image: '/uploads/site/categories/beach.jpg',
-      number: `04 / ${text.carRental.toUpperCase()}`,
-      icon: '🚗',
-      title: text.carRental,
+      number: '04 / RIAD',
+      icon: '🌿',
+      title: labels[3],
+      text: text.beachText,
+    },
+    {
+      image: images.stay,
+      number: '05 / OTHER',
+      icon: '🛏️',
+      title: labels[4],
       text: text.beachText,
     },
   ];
-  const cards = categories.map((category, index) => ({
-    ...category,
-    ...presentation[index % presentation.length],
-    title: categoryLabel(category.slug, language, category.name),
-  }));
+  presentation[0].title = labels[0];
+  const paths = ['apartments', 'villas', 'houses', 'riads', 'other-stays'];
 
   return (
     <section className="section categories" id="categories">
@@ -68,21 +74,16 @@ export default function CategoryGrid({
       />
 
       <div className="category-grid">
-        {cards.map((card) => (
+        {presentation.map((card, index) => (
           <a
-            className={`category-card ${card === cards[0] ? 'large' : ''}`}
-            href={`/categories/${card.slug}`}
-            key={card.categoryId}
+            className={`category-card ${index === 0 ? 'large' : ''}`}
+            href={`/properties/${paths[index]}`}
+            key={paths[index]}
           >
             <ResponsiveImage src={card.image} alt="" sizes="(max-width: 800px) 78vw, 300px" />
 
             <div>
-              <small>
-                {card.number}
-                {card.listingCount !== undefined && (
-                  <span className="category-count">{card.listingCount}</span>
-                )}
-              </small>
+              <small>{card.number}</small>
               <span className="category-icon">{card.icon}</span>
 
               <h3>{card.title}</h3>

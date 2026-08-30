@@ -75,7 +75,7 @@ export default function Navbar({
       {/* NAVIGATION */}
 
       <nav className={open ? 'nav-links open' : 'nav-links'}>
-        <a href="/categories" onClick={() => setOpen(false)}>
+        <a href="/properties" onClick={() => setOpen(false)}>
           {text.discover}
         </a>
 

@@ -11,7 +11,6 @@ const AdminDashboard = lazy(() => import('./admin/AdminDashboard'));
 const ProfilePage = lazy(() => import('./profile/ProfilePage'));
 const ListingPage = lazy(() => import('./listing/ListingPage'));
 const CheckoutPage = lazy(() => import('./listing/CheckoutPage'));
-const CategoryPage = lazy(() => import('./categories/CategoryPage'));
 const CategoriesPage = lazy(() => import('./categories/CategoriesPage'));
 const NotFoundPage = lazy(() => import('./components/NotFoundPage'));
 const LegalPage = lazy(() => import('./legal/LegalPage'));
@@ -20,14 +19,21 @@ if (window.location.hash) {
   window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
 }
 
-const route = window.location.pathname.replace(/\/+$/, '');
+let route = window.location.pathname.replace(/\/+$/, '');
+const legacyListing = route.match(/^\/categories\/[a-z0-9-]+\/listing\/(\d+)$/);
+if (legacyListing) {
+  route = `/listings/${legacyListing[1]}`;
+  window.history.replaceState(null, '', `${route}${window.location.search}`);
+} else if (route === '/categories' || /^\/categories\/[a-z0-9-]+$/.test(route)) {
+  route = '/properties';
+  window.history.replaceState(null, '', `${route}${window.location.search}`);
+}
 const isAdminRoute = route === '/admin';
 const isProfileRoute = route === '/profile';
-const categoryListingMatch = route.match(/^\/categories\/([a-z0-9-]+)\/listing\/(\d+)$/);
 const listingMatch = route.match(/^\/listings?\/(\d+)$/);
 const checkoutMatch = route.match(/^\/checkout\/(\d+)$/);
-const categoryMatch = route.match(/^\/categories\/([a-z0-9-]+)$/);
-const isCategoriesRoute = route === '/categories';
+const propertyMatch = route.match(/^\/properties\/(apartments|villas|houses|riads|other-stays)$/);
+const isPropertiesRoute = route === '/properties';
 const isHomeRoute = route === '' || route === '/';
 const legalMatch = route.match(/^\/(terms|privacy)$/);
 
@@ -45,13 +51,6 @@ createRoot(document.getElementById('root')!).render(
       <Suspense fallback={<div className="profile-state">{languageText().loading}</div>}>
         <ProfilePage />
       </Suspense>
-    ) : categoryListingMatch ? (
-      <Suspense fallback={<div className="listing-state">{languageText().loading}</div>}>
-        <ListingPage
-          listingId={Number(categoryListingMatch[2])}
-          categorySlug={categoryListingMatch[1]}
-        />
-      </Suspense>
     ) : listingMatch ? (
       <Suspense fallback={<div className="listing-state">{languageText().loading}</div>}>
         <ListingPage listingId={Number(listingMatch[1])} />
@@ -60,13 +59,9 @@ createRoot(document.getElementById('root')!).render(
       <Suspense fallback={<div className="listing-state">{languageText().loading}</div>}>
         <CheckoutPage listingId={Number(checkoutMatch[1])} />
       </Suspense>
-    ) : isCategoriesRoute ? (
+    ) : isPropertiesRoute || propertyMatch ? (
       <Suspense fallback={<div className="category-state">{languageText().loading}</div>}>
-        <CategoriesPage />
-      </Suspense>
-    ) : categoryMatch ? (
-      <Suspense fallback={<div className="category-state">{languageText().loading}</div>}>
-        <CategoryPage slug={categoryMatch[1]} />
+        <CategoriesPage propertyPath={propertyMatch?.[1]} />
       </Suspense>
     ) : isHomeRoute ? (
       <App />

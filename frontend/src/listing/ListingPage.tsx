@@ -27,12 +27,9 @@ export default function ListingPage({
     try {
       const result = await request<{ item: ListingDetail }>(`/listings/${listingId}`);
       setListing(result.item);
-      const slug = result.item.category?.slug || categorySlug;
-      if (slug) {
-        const canonicalPath = `/categories/${slug}/listing/${listingId}`;
-        if (window.location.pathname !== canonicalPath)
-          window.history.replaceState(null, '', canonicalPath);
-      }
+      const canonicalPath = `/listings/${listingId}`;
+      if (window.location.pathname !== canonicalPath)
+        window.history.replaceState(null, '', canonicalPath);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : copy.unavailable);
     } finally {
@@ -88,13 +85,7 @@ export default function ListingPage({
         <a className="brand" href="/">
           <b>I</b>immoove<span>.</span>
         </a>
-        <a
-          href={
-            listing.category?.slug || categorySlug
-              ? `/categories/${listing.category?.slug || categorySlug}`
-              : '/categories'
-          }
-        >
+        <a href="/properties">
           <ArrowLeft size={17} />
           {copy.back}
         </a>

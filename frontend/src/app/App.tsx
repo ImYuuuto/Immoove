@@ -143,14 +143,14 @@ export default function App() {
 
             <p>{text.heroText}</p>
 
-            <a className="light-button" href="/categories">
+            <a className="light-button" href="/properties">
               {text.prepare}
               <ArrowUpRight size={18} />
             </a>
           </div>
 
           <HeroSearch onSearch={search} />
-          <a className="scroll-indicator" href="/categories">
+          <a className="scroll-indicator" href="/properties">
             {text.scroll} <ArrowDown size={14} />
           </a>
         </section>
@@ -199,7 +199,7 @@ export default function App() {
               }
             />
 
-            <a href="/categories">
+            <a href="/properties">
               {text.allAddresses}
               <ArrowUpRight size={16} />
             </a>
@@ -320,8 +320,8 @@ export default function App() {
           </div>
           <nav aria-label="Footer navigation">
             <small>{text.exploreFooter}</small>
-            <a href="/categories/housing">{text.stays}</a>
-            <a href="/categories">{text.ourAddresses}</a>
+            <a href="/properties">{text.stays}</a>
+            <a href="/properties">{text.ourAddresses}</a>
             <a href="/">{text.journal}</a>
           </nav>
           <div className="footer-location">
