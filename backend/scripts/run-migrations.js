@@ -21,6 +21,7 @@ const migrationFiles = [
   '014-housing-role-location-normalization.sql',
   '015-legal-consent.sql',
   '016-morocco-wide-rebrand.sql',
+  '017-property-discovery.sql',
 ];
 
 const migrationDirectory = path.join(__dirname, '..', 'src', 'migrations');

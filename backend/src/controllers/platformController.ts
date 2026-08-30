@@ -22,6 +22,15 @@ export const search: RequestHandler = async (req, res, next) => {
         minPrice: data.min_price,
         maxPrice: data.max_price,
         serviceType: data.service_type,
+        regionId: data.region_id,
+        cityId: data.city_id,
+        areaId: data.area_id,
+        propertyType: data.property_type,
+        bedrooms: data.bedrooms,
+        bathrooms: data.bathrooms,
+        amenityIds: data.amenities?.split(',').map(Number),
+        minRating: data.min_rating,
+        instantAvailable: data.instant_available,
         page: data.page,
         limit: data.limit,
       }),
@@ -57,6 +66,13 @@ export const createAnnouncement: RequestHandler = async (req, res, next) => {
     res.status(201).json({ item });
   } catch (error) {
     await deleteUploadUrls(imageUrls).catch(() => undefined);
+    next(error);
+  }
+};
+export const propertyDiscoveryOptions: RequestHandler = async (_req, res, next) => {
+  try {
+    res.json(await ListingService.propertyDiscoveryOptions());
+  } catch (error) {
     next(error);
   }
 };

@@ -80,6 +80,34 @@ describe('ListingService', () => {
     });
   });
 
+  it('applies property discovery filters at the database boundary', async () => {
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ count: '0' }] } as never)
+      .mockResolvedValueOnce({ rows: [] } as never);
+
+    await ListingService.search({
+      page: 1,
+      limit: 18,
+      regionId: 2,
+      cityId: 3,
+      areaId: 4,
+      propertyType: 'riad',
+      bedrooms: 2,
+      bathrooms: 1,
+      amenityIds: [5, 7],
+      minRating: 4,
+      instantAvailable: true,
+    });
+
+    const [sql, params] = mockedQuery.mock.calls[0];
+    expect(sql).toEqual(expect.stringContaining('housing.slug = \'housing\''));
+    expect(sql).toEqual(expect.stringContaining('pt.slug'));
+    expect(sql).toEqual(expect.stringContaining('listing_features'));
+    expect(sql).toEqual(expect.stringContaining('AVG(rv.rating)'));
+    expect(sql).toEqual(expect.stringContaining('active_booking.end_date > now()'));
+    expect(params).toEqual([2, 3, 4, 'riad', 2, 1, 5, 7, 4]);
+  });
+
   it('hydrates public detail with amenities, reviews, rating, and private availability', async () => {
     mockedQuery
       .mockResolvedValueOnce({

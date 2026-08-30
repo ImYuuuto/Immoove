@@ -39,6 +39,12 @@ export interface Listing {
   updatedAt: string;
   serviceType?: string;
   guestCapacity?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  propertyType?: { propertyTypeId: number; name: string; slug: string };
+  area?: { areaId: number; name: string; cityId: number };
+  city?: { cityId: number; name: string; regionId: number };
+  region?: { regionId: number; name: string };
   isFeatured?: boolean;
 }
 export interface AnnouncementRequest {

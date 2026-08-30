@@ -1,6 +1,19 @@
 import { z } from 'zod';
 const id = z.coerce.number().int().positive();
-export const searchSchema = z.object({ check_in: z.coerce.date().optional(), check_out: z.coerce.date().optional(), guests: z.coerce.number().int().positive().max(100).optional(), min_price: z.coerce.number().nonnegative().optional(), max_price: z.coerce.number().nonnegative().optional(), service_type: z.enum(['VACATION_RENTAL', 'CAR_RENTAL', 'RESTAURANT_CAFE', 'ACTIVITY']).optional(), page: z.coerce.number().int().positive().default(1), limit: z.coerce.number().int().positive().max(100).default(20) }).refine(value => !value.check_in || !value.check_out || value.check_out > value.check_in, { message: 'check_out must be after check_in', path: ['check_out'] }).refine(value => value.min_price === undefined || value.max_price === undefined || value.max_price >= value.min_price, { message: 'max_price must be greater than min_price', path: ['max_price'] });
+export const searchSchema = z.object({
+  check_in: z.coerce.date().optional(), check_out: z.coerce.date().optional(),
+  guests: z.coerce.number().int().positive().max(100).optional(),
+  min_price: z.coerce.number().nonnegative().optional(), max_price: z.coerce.number().nonnegative().optional(),
+  service_type: z.enum(['VACATION_RENTAL', 'CAR_RENTAL', 'RESTAURANT_CAFE', 'ACTIVITY']).optional(),
+  region_id: id.optional(), city_id: id.optional(), area_id: id.optional(),
+  property_type: z.string().trim().regex(/^[a-z0-9-]+$/).max(60).optional(),
+  bedrooms: z.coerce.number().int().nonnegative().max(100).optional(),
+  bathrooms: z.coerce.number().int().nonnegative().max(100).optional(),
+  amenities: z.string().regex(/^\d+(,\d+)*$/).optional(),
+  min_rating: z.coerce.number().min(1).max(5).optional(),
+  instant_available: z.enum(['true', 'false']).transform(value => value === 'true').optional(),
+  page: z.coerce.number().int().positive().default(1), limit: z.coerce.number().int().positive().max(100).default(20),
+}).refine(value => !value.check_in || !value.check_out || value.check_out > value.check_in, { message: 'check_out must be after check_in', path: ['check_out'] }).refine(value => value.min_price === undefined || value.max_price === undefined || value.max_price >= value.min_price, { message: 'max_price must be greater than min_price', path: ['max_price'] });
 export const announcementSchema = z.object({
   categorySlug: z.enum(['housing', 'services', 'hobbies-and-activities', 'renting-cars']),
   title: z.string().trim().min(3).max(200), description: z.string().trim().min(20).max(5000),

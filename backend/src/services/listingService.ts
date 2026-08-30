@@ -36,6 +36,8 @@ function mapListing(row: any): ListingWithRelations {
     updatedAt: row.updated_at,
     serviceType: row.service_type,
     guestCapacity: row.guest_capacity,
+    bedrooms: row.bedrooms,
+    bathrooms: row.bathrooms,
     isFeatured: row.is_featured,
     images: [],
     features: [],
@@ -68,7 +70,20 @@ async function hydrate(
       [listing.listingId],
     ),
     query<any>(
-      'SELECT c.category_id, c.name, c.slug, l.location_id, l.name AS location_name, l.lat, l.lng, u.user_id, u.first_name, u.last_name FROM listings x LEFT JOIN categories c ON c.category_id = x.category_id LEFT JOIN locations l ON l.location_id = x.location_id LEFT JOIN users u ON u.user_id = x.provider_id WHERE x.listing_id = $1',
+      `SELECT c.category_id, c.name, c.slug, l.location_id, l.name AS location_name, l.lat, l.lng,
+              u.user_id, u.first_name, u.last_name,
+              pt.property_type_id, pt.name AS property_type_name, pt.slug AS property_type_slug,
+              a.area_id, a.name AS area_name, ci.city_id, ci.name AS city_name,
+              r.region_id, r.name AS region_name
+       FROM listings x
+       LEFT JOIN categories c ON c.category_id = x.category_id
+       LEFT JOIN locations l ON l.location_id = x.location_id
+       LEFT JOIN users u ON u.user_id = x.provider_id
+       LEFT JOIN property_types pt ON pt.property_type_id = x.property_type_id
+       LEFT JOIN areas a ON a.area_id = x.area_id
+       LEFT JOIN cities ci ON ci.city_id = a.city_id
+       LEFT JOIN regions r ON r.region_id = ci.region_id
+       WHERE x.listing_id = $1`,
       [listing.listingId],
     ),
   ]);
@@ -129,6 +144,12 @@ async function hydrate(
           lng: parseNumeric(meta.lng) || 0,
         }
       : undefined,
+    propertyType: meta?.property_type_id
+      ? { propertyTypeId: meta.property_type_id, name: meta.property_type_name, slug: meta.property_type_slug }
+      : undefined,
+    area: meta?.area_id ? { areaId: meta.area_id, name: meta.area_name, cityId: meta.city_id } : undefined,
+    city: meta?.city_id ? { cityId: meta.city_id, name: meta.city_name, regionId: meta.region_id } : undefined,
+    region: meta?.region_id ? { regionId: meta.region_id, name: meta.region_name } : undefined,
     provider: meta?.user_id
       ? {
           userId: meta.user_id,
@@ -233,7 +254,15 @@ export class ListingService {
   private static async searchUncached(
     filters: import('../types/dto').ListingSearchParams,
   ) {
-    const clauses = ['l.status = \'approved\'', 'l.is_active = true'];
+    const clauses = [
+      'l.status = \'approved\'',
+      'l.is_active = true',
+      'l.archived_at IS NULL',
+      `(l.service_type = 'VACATION_RENTAL' OR EXISTS (
+        SELECT 1 FROM categories housing
+        WHERE housing.category_id = l.category_id AND housing.slug = 'housing'
+      ))`,
+    ];
     const params: unknown[] = [];
     const add = (sql: string, value: unknown) => {
       params.push(value);
@@ -242,7 +271,7 @@ export class ListingService {
     if (filters.checkIn && filters.checkOut) {
       params.push(filters.checkOut, filters.checkIn);
       clauses.push(
-        `NOT EXISTS (SELECT 1 FROM bookings b WHERE b.listing_id = l.listing_id AND b.start_date < $${params.length - 1} AND b.end_date > $${params.length})`,
+        `NOT EXISTS (SELECT 1 FROM bookings b WHERE b.listing_id = l.listing_id AND b.status NOT IN ('cancelled', 'rejected', 'refunded') AND b.start_date < $${params.length - 1} AND b.end_date > $${params.length})`,
       );
     }
     if (filters.guests) {
@@ -254,6 +283,28 @@ export class ListingService {
     if (filters.maxPrice !== undefined)
       add('l.base_price <= ?', filters.maxPrice);
     if (filters.serviceType) add('l.service_type = ?', filters.serviceType);
+    if (filters.regionId)
+      add('EXISTS (SELECT 1 FROM areas a JOIN cities ci ON ci.city_id = a.city_id WHERE a.area_id = l.area_id AND ci.region_id = ?)', filters.regionId);
+    if (filters.cityId)
+      add('EXISTS (SELECT 1 FROM areas a WHERE a.area_id = l.area_id AND a.city_id = ?)', filters.cityId);
+    if (filters.areaId) add('l.area_id = ?', filters.areaId);
+    if (filters.propertyType)
+      add('EXISTS (SELECT 1 FROM property_types pt WHERE pt.property_type_id = l.property_type_id AND pt.slug = ? AND pt.is_active = true)', filters.propertyType);
+    if (filters.bedrooms !== undefined) add('l.bedrooms >= ?', filters.bedrooms);
+    if (filters.bathrooms !== undefined) add('l.bathrooms >= ?', filters.bathrooms);
+    for (const amenityId of filters.amenityIds || [])
+      add('EXISTS (SELECT 1 FROM listing_features lf WHERE lf.listing_id = l.listing_id AND lf.feature_id = ?)', amenityId);
+    if (filters.minRating !== undefined)
+      add(`COALESCE((SELECT AVG(rv.rating) FROM reviews rv
+           JOIN bookings rb ON rb.booking_id = rv.booking_id
+           WHERE rb.listing_id = l.listing_id), 0) >= ?`, filters.minRating);
+    if (filters.instantAvailable && !(filters.checkIn && filters.checkOut))
+      clauses.push(`NOT EXISTS (
+        SELECT 1 FROM bookings active_booking
+        WHERE active_booking.listing_id = l.listing_id
+          AND active_booking.status NOT IN ('cancelled', 'rejected', 'refunded')
+          AND active_booking.end_date > now()
+      )`);
     const where = `WHERE ${clauses.join(' AND ')}`;
     const count = await query<{ count: string }>(
       `SELECT COUNT(*) AS count FROM listings l ${where}`,
@@ -280,6 +331,30 @@ export class ListingService {
         limit: filters.limit,
         totalPages: Math.ceil(total / filters.limit),
       },
+    };
+  }
+
+  static async propertyDiscoveryOptions() {
+    const [propertyTypes, regions, cities, areas, amenities] = await Promise.all([
+      query<any>(`SELECT property_type_id, name, slug FROM property_types
+                  WHERE is_active = true ORDER BY name`),
+      query<any>('SELECT region_id, name FROM regions WHERE name <> \'Unassigned\' ORDER BY name'),
+      query<any>(`SELECT ci.city_id, ci.region_id, ci.name FROM cities ci
+                  JOIN regions r ON r.region_id = ci.region_id
+                  WHERE ci.name <> 'Unassigned' AND r.name <> 'Unassigned' ORDER BY ci.name`),
+      query<any>(`SELECT a.area_id, a.city_id, a.name FROM areas a
+                  JOIN cities ci ON ci.city_id = a.city_id
+                  JOIN regions r ON r.region_id = ci.region_id
+                  WHERE a.requires_review = false AND ci.name <> 'Unassigned' AND r.name <> 'Unassigned'
+                  ORDER BY a.name`),
+      query<any>('SELECT feature_id, name FROM features ORDER BY name'),
+    ]);
+    return {
+      propertyTypes: propertyTypes.rows.map(row => ({ propertyTypeId: row.property_type_id, name: decodeStoredText(row.name), slug: row.slug })),
+      regions: regions.rows.map(row => ({ regionId: row.region_id, name: decodeStoredText(row.name) })),
+      cities: cities.rows.map(row => ({ cityId: row.city_id, regionId: row.region_id, name: decodeStoredText(row.name) })),
+      areas: areas.rows.map(row => ({ areaId: row.area_id, cityId: row.city_id, name: decodeStoredText(row.name) })),
+      amenities: amenities.rows.map(row => ({ featureId: row.feature_id, name: decodeStoredText(row.name) })),
     };
   }
 
@@ -337,11 +412,13 @@ export class ListingService {
   static async create(data: CreateListingDto): Promise<ListingWithRelations> {
     const id = await transaction(async (client) => {
       const inserted = await client.query<{ listing_id: number }>(
-        'INSERT INTO listings (provider_id, category_id, location_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, guest_capacity, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,\'pending\',false) RETURNING listing_id',
+        'INSERT INTO listings (provider_id, category_id, location_id, area_id, property_type_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, guest_capacity, bedrooms, bathrooms, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,\'pending\',false) RETURNING listing_id',
         [
           data.providerId || null,
           data.categoryId,
           data.locationId || null,
+          data.areaId || null,
+          data.propertyTypeId || null,
           sanitizeRequiredText(data.title, 'title'),
           sanitizeOptionalText(data.description) || null,
           data.basePrice,
@@ -352,6 +429,8 @@ export class ListingService {
           data.coverImageUrl || null,
           data.serviceType || null,
           data.guestCapacity || null,
+          data.bedrooms ?? null,
+          data.bathrooms ?? null,
         ],
       );
       const listingId = inserted.rows[0].listing_id;
@@ -395,6 +474,8 @@ export class ListingService {
     const columns: Record<string, unknown> = {
       category_id: data.categoryId,
       location_id: data.locationId,
+      area_id: data.areaId,
+      property_type_id: data.propertyTypeId,
       title:
         data.title === undefined
           ? undefined
@@ -408,6 +489,8 @@ export class ListingService {
       cover_image_url: data.coverImageUrl,
       service_type: data.serviceType,
       guest_capacity: data.guestCapacity,
+      bedrooms: data.bedrooms,
+      bathrooms: data.bathrooms,
       status: staff ? undefined : 'pending',
       is_active: staff ? undefined : false,
     };

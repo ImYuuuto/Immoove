@@ -4,6 +4,7 @@ import { auth, requireAuth, requireRoles } from '../middleware/auth';
 import { listingImagesUpload } from '../middleware/listingUpload';
 const router = Router();
 router.get('/listings/search', controller.search);
+router.get('/property-discovery/options', controller.propertyDiscoveryOptions);
 router.get('/listings/featured', controller.featured);
 router.post(
   '/announcements/request',

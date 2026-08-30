@@ -6,6 +6,8 @@ export const listingQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(20),
   categoryId: id.optional(),
   locationId: id.optional(),
+  areaId: id.optional(),
+  propertyTypeId: id.optional(),
   providerId: id.optional(),
   search: z.string().trim().min(1).optional(),
   slug: z.string().trim().min(1).optional(),
@@ -33,6 +35,8 @@ const common = {
     .enum(['VACATION_RENTAL', 'CAR_RENTAL', 'RESTAURANT_CAFE', 'ACTIVITY'])
     .optional(),
   guestCapacity: z.coerce.number().int().positive().max(1000).optional(),
+  bedrooms: z.coerce.number().int().nonnegative().max(100).optional(),
+  bathrooms: z.coerce.number().int().nonnegative().max(100).optional(),
 };
 export const createListingSchema = z.object({
   ...common,
