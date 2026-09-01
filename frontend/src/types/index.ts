@@ -1,7 +1,7 @@
 export type PropertyTypeSlug = 'apartment' | 'studio' | 'villa';
 export type RentalTerm = 'short_term' | 'long_term' | 'both';
 export type ServiceType = 'VACATION_RENTAL';
-export type UserRole = 'CLIENT' | 'OWNER' | 'ADMIN';
+export type UserRole = 'CLIENT' | 'ADMIN';
 
 export type Listing = {
   listingId?: number;

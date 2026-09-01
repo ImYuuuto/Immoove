@@ -9,7 +9,7 @@ export interface AuthUser {
   role: string;
   requiresTermsAcceptance: boolean;
 }
-const roles = ['CLIENT', 'OWNER', 'ADMIN'];
+const roles = ['CLIENT', 'ADMIN'];
 export const auth: RequestHandler = async (req, _res, next) => {
   const authorization = req.header('authorization');
   const cookieToken = req.cookies?.[COOKIE_NAME];

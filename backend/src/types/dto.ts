@@ -15,7 +15,7 @@ export interface GetListingsParams {
 }
 export type ServiceType = 'VACATION_RENTAL';
 export type RentalTerm = 'short_term' | 'long_term' | 'both';
-export type UserRole = 'CLIENT' | 'OWNER' | 'ADMIN';
+export type UserRole = 'CLIENT' | 'ADMIN';
 export interface ListingSearchParams {
   checkIn?: Date;
   checkOut?: Date;

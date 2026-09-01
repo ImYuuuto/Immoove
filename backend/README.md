@@ -50,7 +50,13 @@ Booking requests never accept a client-calculated total. The server locks the pr
 
 User-controlled plain-text fields are sanitized at the service boundary before database writes. Unsafe HTML tags and attributes are stripped, dangerous script/style content is discarded, and remaining HTML-sensitive entities are encoded. SQL values continue to use PostgreSQL parameters rather than string escaping. Passwords, validated emails, validated URLs, enums, and search-only values are not passed through the HTML sanitizer.
 
-Authenticated profile endpoints are `GET`, `PATCH`, and `DELETE /api/v1/profile`. Owner property edits return to `pending` until an Admin approves them. Roles are exactly `CLIENT`, `OWNER`, and `ADMIN`; a Client becomes an Owner after the first property submission is approved.
+Authenticated profile endpoints are `GET`, `PATCH`, and `DELETE /api/v1/profile`. User property edits return to `pending` until an Admin approves them. Account roles are exactly `CLIENT` and `ADMIN`; property ownership is represented by the listing’s `provider_id` rather than a separate account role.
+
+The profile hub also uses `GET /api/v1/profile/summary` for account counts and `PATCH /api/v1/profile/contact` for email or Moroccan phone updates. Contact changes require `currentPassword`; email changes increment the session version and require signing in again. `DELETE /api/v1/profile` requires `{ "currentPassword": string, "confirmation": "DELETE" }`, deactivates rather than hard-deletes the account, refuses accounts with active booking obligations, and protects the last active Admin.
+
+Successful or attempted name, email, and phone updates share per-IP and per-account limits. Defaults allow five profile changes per hour; configure `PROFILE_CHANGE_RATE_LIMIT_MAX` and `PROFILE_CHANGE_RATE_LIMIT_WINDOW_MS`. Incorrect password attempts on contact changes also remain covered by the stricter password-attempt limit.
+
+Authenticated booking history accepts `state=all|upcoming|current|past|cancelled`, `cityId`, `status`, `page`, and `pageSize`. Results include property title, image, type, city, area, payment state, and review eligibility while preserving per-user ownership boundaries.
 
 `GET /api/v1/listings/:id` returns a property gallery, owner, amenities, Morocco location hierarchy, rental term, availability, reviews, and ratings. Supported active property types are `apartment`, `studio`, and `villa`; rental terms are `short_term`, `long_term`, or `both`.
 

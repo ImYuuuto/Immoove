@@ -1,11 +1,10 @@
 import {
   Activity,
   CalendarDays,
-  ClipboardList,
-  CircleCheckBig,
   FileClock,
   LayoutDashboard,
   LogOut,
+  UserRound,
   Store,
   Users,
 } from 'lucide-react';
@@ -16,18 +15,12 @@ import { useAdminExtraCopy } from '../adminExtraI18n';
 export function AdminSidebar({
   view,
   setView,
-  pendingListings,
-  pendingAnnouncements,
-  pendingApprovals,
   open,
   onNavigate,
   onLogout,
 }: {
   view: View;
   setView: (view: View) => void;
-  pendingListings: number;
-  pendingAnnouncements: number;
-  pendingApprovals: number;
   open: boolean;
   onNavigate: () => void;
   onLogout: () => void;
@@ -56,20 +49,9 @@ export function AdminSidebar({
           <Activity size={17} />
           {extra.analytics}
         </button>
-        <button className={view === 'approvals' ? 'active' : ''} onClick={() => go('approvals')}>
-          <CircleCheckBig size={17} />
-          {copy.approvals} <i>{pendingApprovals}</i>
-        </button>
         <button className={view === 'listings' ? 'active' : ''} onClick={() => go('listings')}>
           <Store size={17} />
-          {copy.listings} <i>{pendingListings}</i>
-        </button>
-        <button
-          className={view === 'announcements' ? 'active' : ''}
-          onClick={() => go('announcements')}
-        >
-          <ClipboardList size={17} />
-          {copy.requests} <i>{pendingAnnouncements}</i>
+          {copy.listings}
         </button>
         <button className={view === 'bookings' ? 'active' : ''} onClick={() => go('bookings')}>
           <CalendarDays size={17} />
@@ -84,10 +66,16 @@ export function AdminSidebar({
           {extra.audit}
         </button>
       </nav>
-      <button className="admin-logout" onClick={onLogout}>
-        <LogOut size={17} />
-        {copy.logout}
-      </button>
+      <div className="admin-account-actions">
+        <a className="admin-profile-link" href="/profile">
+          <UserRound size={17} />
+          {copy.backProfile}
+        </a>
+        <button className="admin-logout" onClick={onLogout}>
+          <LogOut size={17} />
+          {copy.logout}
+        </button>
+      </div>
     </aside>
   );
 }

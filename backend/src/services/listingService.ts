@@ -469,8 +469,9 @@ export class ListingService {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
     const admin = role === 'ADMIN';
-    if (!admin)
-      throw new AppError(403, 'Administrator access required');
+    if (!admin && role !== 'CLIENT') throw new AppError(403, 'Invalid account role');
+    if (!admin && current.providerId !== userId)
+      throw new AppError(403, 'You can only edit your own property');
     const columns: Record<string, unknown> = {
       category_id: data.categoryId,
       location_id: data.locationId,
@@ -502,6 +503,12 @@ export class ListingService {
         await client.query(
           `UPDATE listings SET ${entries.map(([key], index) => `${key} = $${index + 2}`).join(', ')}, updated_at = now() WHERE listing_id = $1`,
           [listingId, ...entries.map(([, value]) => value)],
+        );
+      if (!admin)
+        await client.query(
+          `UPDATE listings SET status = 'pending', is_active = false, updated_at = now()
+           WHERE listing_id = $1`,
+          [listingId],
         );
       if (data.imageUrls) {
         await client.query('DELETE FROM listing_images WHERE listing_id = $1', [
@@ -640,8 +647,9 @@ export class ListingService {
   static async delete(listingId: number, userId: number, role: string) {
     const current = await this.findById(listingId);
     if (!current) throw new AppError(404, 'Listing not found');
-    if (role !== 'ADMIN')
-      throw new AppError(403, 'Administrator access required');
+    if (!['CLIENT', 'ADMIN'].includes(role)) throw new AppError(403, 'Invalid account role');
+    if (role !== 'ADMIN' && current.providerId !== userId)
+      throw new AppError(403, 'You can only delete your own property');
     await transaction(async (client) => {
       await client.query(
         'INSERT INTO audit_logs (actor_id, action, entity_type, entity_id) VALUES ($1, $2, $3, $4)',

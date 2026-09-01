@@ -2,7 +2,6 @@ import { query, transaction } from '../../src/config/db';
 import { ListingService } from '../../src/services/listingService';
 import { AdminApprovalService } from '../../src/services/adminService';
 import { PlatformService } from '../../src/services/platformService';
-import { UserService } from '../../src/services/userService';
 
 jest.mock('../../src/config/db', () => ({ query: jest.fn(), transaction: jest.fn() }));
 const mockedQuery = query as jest.MockedFunction<typeof query>;
@@ -20,13 +19,13 @@ describe('service-layer canonical role boundaries', () => {
     },
   );
 
-  test('prevents an owner from approving publication requests', async () => {
+  test('prevents a retired owner role from approving publication requests', async () => {
     await expect(PlatformService.reviewAnnouncement(2, 9, 'OWNER', 'APPROVED', 'no'))
       .rejects.toMatchObject({ statusCode: 403 });
     expect(mockedTransaction).not.toHaveBeenCalled();
   });
 
-  test('prevents an owner from deleting a property through the service layer', async () => {
+  test('prevents a retired owner role from deleting a property through the service layer', async () => {
     jest.spyOn(ListingService, 'findById').mockResolvedValueOnce({ listingId: 3, providerId: 9 } as never);
     await expect(ListingService.delete(3, 9, 'OWNER'))
       .rejects.toMatchObject({ statusCode: 403 });
@@ -38,11 +37,5 @@ describe('service-layer canonical role boundaries', () => {
       decision: 'approved', reasonCode: 'bypass',
     })).rejects.toMatchObject({ statusCode: 403 });
     expect(mockedTransaction).not.toHaveBeenCalled();
-  });
-
-  test('prevents non-admin service callers from changing user roles', async () => {
-    await expect(UserService.setRole(2, 'OWNER', 9, 'OWNER'))
-      .rejects.toMatchObject({ statusCode: 403 });
-    expect(mockedQuery).not.toHaveBeenCalled();
   });
 });

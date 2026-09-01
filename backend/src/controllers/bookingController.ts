@@ -3,15 +3,17 @@ import { BookingService } from '../services/bookingService';
 import { AppError } from '../utils/errorHandler';
 import { createBookingSchema, updateBookingSchema } from '../validators/listingValidators';
 import { userIdSchema } from '../validators/userValidators';
+import { bookingQuerySchema } from '../validators/bookingValidators';
 export const list: RequestHandler = async (req, res, next) => {
   try {
-    res.json({
-      items: await BookingService.findAll(
+    res.json(
+      await BookingService.findAll(
         req.user?.role === 'ADMIN'
           ? undefined
           : req.user?.userId,
+        bookingQuerySchema.parse(req.query),
       ),
-    });
+    );
   } catch (error) {
     next(error);
   }

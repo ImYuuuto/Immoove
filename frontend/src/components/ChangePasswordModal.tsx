@@ -2,7 +2,6 @@ import { type FormEvent, useState } from 'react';
 import { KeyRound, X } from 'lucide-react';
 import { ApiError, redirectToLogin, request } from '../utils/request';
 import { useLanguage } from '../i18n/language';
-import PasswordField from './PasswordField';
 
 export default function ChangePasswordModal({
   onClose,
@@ -12,20 +11,24 @@ export default function ChangePasswordModal({
   onMessage: (message: string) => void;
 }) {
   const { text } = useLanguage();
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [cooldownMessage, setCooldownMessage] = useState('');
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const currentPassword = String(data.get('currentPassword') || '');
+    const newPassword = String(data.get('newPassword') || '');
+    const confirmPassword = String(data.get('confirmPassword') || '');
     if (newPassword !== confirmPassword) {
       onMessage(text.passwordMismatch);
+      form.reset();
       return;
     }
     setSubmitting(true);
     setCooldownMessage('');
+    form.reset();
     try {
       await request<void>('/auth/password', {
         method: 'PATCH',
@@ -62,31 +65,31 @@ export default function ChangePasswordModal({
             {cooldownMessage}
           </div>
         )}
-        <PasswordField
+        <input
+          type="password"
+          name="currentPassword"
           required
           aria-label={text.currentPassword}
           autoComplete="current-password"
           placeholder={text.currentPassword}
-          value={currentPassword}
-          onChange={(event) => setCurrentPassword(event.target.value)}
         />
-        <PasswordField
+        <input
+          type="password"
+          name="newPassword"
           required
           aria-label={text.newPassword}
           minLength={12}
           autoComplete="new-password"
           placeholder={text.newPassword}
-          value={newPassword}
-          onChange={(event) => setNewPassword(event.target.value)}
         />
-        <PasswordField
+        <input
+          type="password"
+          name="confirmPassword"
           required
           aria-label={text.confirmPassword}
           minLength={12}
           autoComplete="new-password"
           placeholder={text.confirmPassword}
-          value={confirmPassword}
-          onChange={(event) => setConfirmPassword(event.target.value)}
         />
         <button className="light-button" type="submit" disabled={submitting}>
           <KeyRound size={17} />

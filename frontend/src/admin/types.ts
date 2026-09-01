@@ -3,9 +3,7 @@ import type { UserRole } from '../types';
 export type View =
   | 'overview'
   | 'analytics'
-  | 'approvals'
   | 'listings'
-  | 'announcements'
   | 'bookings'
   | 'users'
   | 'audit';
@@ -17,7 +15,28 @@ export type User = {
   lastName?: string;
   email?: string;
   phone?: string;
+  avatarUrl?: string | null;
   createdAt?: string;
+};
+export type UserBookingDetail = {
+  bookingId: number;
+  listingId: number;
+  listingTitle: string;
+  coverImageUrl?: string | null;
+  startDate: string;
+  endDate: string;
+  total: number;
+  currency: string;
+  status: string;
+  paymentStatus?: string;
+  createdAt: string;
+  isPrevious: boolean;
+  review: { reviewId: number; rating: number; comment?: string | null; createdAt: string } | null;
+};
+export type UserDetail = User & {
+  bookings: UserBookingDetail[];
+  reviewCount: number;
+  averageRating: number | null;
 };
 export type Listing = {
   listingId: number;

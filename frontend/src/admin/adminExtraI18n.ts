@@ -33,6 +33,11 @@ const fr = {
   suspend: 'Suspendre',
   active: 'Actif',
   suspended: 'Suspendu',
+  userDetails: 'Détails de l’utilisateur', userDetailsFailed: 'Impossible de charger cet utilisateur.',
+  loadingUser: 'Chargement du profil…', close: 'Fermer', phone: 'Téléphone', ratings: 'Notes et avis',
+  currentBookings: 'Réservations actuelles et à venir', previousTrips: 'Voyages précédents',
+  noCurrentBookings: 'Aucune réservation actuelle ou à venir.', noPreviousTrips: 'Aucun voyage précédent.',
+  noComment: 'Aucun commentaire.', userPages: 'Pages des utilisateurs', previous: 'Précédent', next: 'Suivant', page: 'Page',
 };
 type Copy = { [K in keyof typeof fr]: string };
 const en: Copy = {
@@ -67,6 +72,11 @@ const en: Copy = {
   suspend: 'Suspend',
   active: 'Active',
   suspended: 'Suspended',
+  userDetails: 'User details', userDetailsFailed: 'Unable to load this user.',
+  loadingUser: 'Loading profile…', close: 'Close', phone: 'Phone', ratings: 'Ratings and reviews',
+  currentBookings: 'Current and upcoming bookings', previousTrips: 'Previous trips',
+  noCurrentBookings: 'No current or upcoming bookings.', noPreviousTrips: 'No previous trips.',
+  noComment: 'No comment provided.', userPages: 'User pages', previous: 'Previous', next: 'Next', page: 'Page',
 };
 const ar: Copy = {
   analytics: 'التحليلات',
@@ -100,6 +110,11 @@ const ar: Copy = {
   suspend: 'تعليق',
   active: 'نشط',
   suspended: 'معلّق',
+  userDetails: 'تفاصيل المستخدم', userDetailsFailed: 'تعذر تحميل بيانات المستخدم.',
+  loadingUser: 'جارٍ تحميل الملف…', close: 'إغلاق', phone: 'الهاتف', ratings: 'التقييمات والتعليقات',
+  currentBookings: 'الحجوزات الحالية والقادمة', previousTrips: 'الرحلات السابقة',
+  noCurrentBookings: 'لا توجد حجوزات حالية أو قادمة.', noPreviousTrips: 'لا توجد رحلات سابقة.',
+  noComment: 'لا يوجد تعليق.', userPages: 'صفحات المستخدمين', previous: 'السابق', next: 'التالي', page: 'الصفحة',
 };
 
 export function useAdminExtraCopy() {

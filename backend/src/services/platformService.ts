@@ -67,11 +67,6 @@ export class PlatformService {
         throw new AppError(409, 'Publication request has already received final review');
       let listingId: number | null = null;
       if (status === 'APPROVED') {
-        await client.query(
-          `UPDATE users SET role='OWNER',session_version=session_version+1
-           WHERE user_id=$1 AND role='CLIENT'`,
-          [row.requester_id],
-        );
         const location = await client.query<{ location_id: number }>('INSERT INTO locations(name) VALUES ($1) RETURNING location_id', [row.address]);
         const listing = await client.query<{ listing_id: number }>(`INSERT INTO listings
           (provider_id,category_id,property_type_id,rental_term,location_id,title,description,base_price,pricing_unit,contact_name,contact_phone,contact_email,cover_image_url,service_type,guest_capacity,status,is_active,map_url,reviewed_by,reviewed_at)

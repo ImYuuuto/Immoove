@@ -7,7 +7,6 @@ import HeroSearch from '../components/HeroSearch';
 import ListingCard from '../components/ListingCard';
 import { EditorialSection, Newsletter, WhyImmoove } from '../components/LuxurySections';
 import Navbar from '../components/Navbar';
-import UserBookings from '../components/UserBookings';
 import { fallbackListings } from '../data/content';
 import type { AuthUser, Listing, SearchFilters } from '../types';
 import { request } from '../utils/request';
@@ -210,7 +209,6 @@ export default function App() {
 
         <WhyImmoove />
 
-        {currentUser && currentUser.role !== 'ADMIN' && <UserBookings />}
 
         {/* HOST */}
 

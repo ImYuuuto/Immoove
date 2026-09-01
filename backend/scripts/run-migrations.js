@@ -8,6 +8,8 @@ const baselineFile = '001-immoove-baseline.sql';
 const baselinePath = path.join(__dirname, '..', 'src', 'migrations', baselineFile);
 const baselineSql = fs.readFileSync(baselinePath, 'utf8');
 const baselineChecksum = crypto.createHash('sha256').update(baselineSql).digest('hex');
+const migrationDirectory = path.dirname(baselinePath);
+const migrationFiles = fs.readdirSync(migrationDirectory).filter((file) => /^\d{3}-.*\.sql$/.test(file)).sort();
 
 async function validateImmooveSchema(client) {
   const result = await client.query(`SELECT
@@ -55,25 +57,44 @@ async function run() {
       if (baseline.checksum !== baselineChecksum) {
         throw new Error(`Applied migration was modified: ${baselineFile}`);
       }
-      return;
+    } else {
+      const schemaState = await client.query("SELECT to_regclass('public.users') IS NOT NULL AS exists");
+      await client.query('BEGIN');
+      try {
+        if (schemaState.rows[0].exists) {
+          await validateImmooveSchema(client);
+          await recordBaseline(client);
+          console.log(`Consolidated ${applied.rowCount} legacy migration records into ${baselineFile}.`);
+        } else {
+          await client.query(baselineSql);
+          await recordBaseline(client);
+          console.log(`Applied ${baselineFile}.`);
+        }
+        await client.query('COMMIT');
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      }
     }
 
-    const schemaState = await client.query("SELECT to_regclass('public.users') IS NOT NULL AS exists");
-    await client.query('BEGIN');
-    try {
-      if (schemaState.rows[0].exists) {
-        await validateImmooveSchema(client);
-        await recordBaseline(client);
-        console.log(`Consolidated ${applied.rowCount} legacy migration records into ${baselineFile}.`);
-      } else {
-        await client.query(baselineSql);
-        await recordBaseline(client);
-        console.log(`Applied ${baselineFile}.`);
+    for (const file of migrationFiles.slice(1)) {
+      const sql = fs.readFileSync(path.join(migrationDirectory, file), 'utf8');
+      const digest = crypto.createHash('sha256').update(sql).digest('hex');
+      const existing = await client.query('SELECT checksum FROM schema_migrations WHERE filename = $1', [file]);
+      if (existing.rows[0]) {
+        if (existing.rows[0].checksum !== digest) throw new Error(`Applied migration was modified: ${file}`);
+        continue;
       }
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
+      await client.query('BEGIN');
+      try {
+        await client.query(sql);
+        await client.query('INSERT INTO schema_migrations(filename, checksum) VALUES($1,$2)', [file, digest]);
+        await client.query('COMMIT');
+        console.log(`Applied ${file}.`);
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      }
     }
   } finally {
     await client.query("SELECT pg_advisory_unlock(hashtext('immoove-schema-migrations'))").catch(() => undefined);

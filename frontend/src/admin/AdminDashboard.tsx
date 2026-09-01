@@ -1,13 +1,11 @@
-import { useMemo, useState } from 'react';
-import { Menu, ShieldAlert, X } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Menu, ShieldAlert, X } from 'lucide-react';
 import './admin.css';
 import './admin-polish.css';
 import { api } from './api';
 import { AdminSidebar } from './components/AdminSidebar';
 import {
   AdminAnalyticsView,
-  ApprovalsView,
-  AnnouncementsView,
   AuditView,
   BookingsView,
   ListingsView,
@@ -28,9 +26,7 @@ export default function AdminDashboard() {
   const titles: Record<View, string> = {
     overview: copy.overview,
     analytics: extra.analytics,
-    approvals: copy.approvals,
     listings: copy.listings,
-    announcements: copy.publicationRequests,
     bookings: copy.bookings,
     users: copy.users,
     audit: extra.audit,
@@ -42,11 +38,9 @@ export default function AdminDashboard() {
     users,
     userPagination,
     listings,
-    announcements,
     bookings,
     overview,
     audit,
-    approvals,
     days,
     setDays,
     error,
@@ -56,48 +50,10 @@ export default function AdminDashboard() {
     searchUsers,
     clearError,
   } = useAdminData();
-  const pendingListings = useMemo(
-    () => listings.filter((item) => item.status === 'pending').length,
-    [listings],
-  );
-  const pendingAnnouncements = useMemo(
-    () => announcements.filter((item) => item.status === 'ESCALATED').length,
-    [announcements],
-  );
-  const decideApproval = (id: number, decision: 'approved' | 'rejected' | 'changes_requested') =>
-    runAction(() =>
-      api(`/admin/approvals/${id}/decision`, {
-        method: 'POST',
-        body: JSON.stringify({
-          decision,
-          reasonCode: decision === 'approved' ? 'admin_approved' : 'admin_review',
-          note: decision === 'approved' ? undefined : 'Reviewed by an administrator',
-        }),
-      }),
-    );
-  const decideBooking = (id: number, status: 'processing' | 'confirmed' | 'rejected') =>
-    runAction(() =>
-      api(`/admin/bookings/${id}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          status,
-          ...(status === 'rejected' ? { reason: 'Rejected by an administrator' } : {}),
-        }),
-      }),
-    );
   const editListing = (id: number, data: { title: string; basePrice: number }) =>
     runAction(() => api(`/listings/${id}`, { method: 'PATCH', body: JSON.stringify(data) }));
   const deleteListing = (id: number) =>
     runAction(() => api(`/listings/${id}`, { method: 'DELETE' }));
-  const approveAnnouncement = (id: number) =>
-    runAction(() =>
-      api(`/announcements/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'APPROVED', reason: 'Approved for publication' }),
-      }),
-    );
-  const updateRole = (id: number, role: 'CLIENT' | 'OWNER') =>
-    runAction(() => api(`/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }));
   const updateUserStatus = (id: number, status: 'active' | 'suspended') =>
     runAction(() =>
       api(`/users/${id}/status`, {
@@ -132,9 +88,6 @@ export default function AdminDashboard() {
       <AdminSidebar
         view={view}
         setView={setView}
-        pendingListings={pendingListings}
-        pendingAnnouncements={pendingAnnouncements}
-        pendingApprovals={approvals.length}
         open={mobileNav}
         onNavigate={() => setMobileNav(false)}
         onLogout={logout}
@@ -152,11 +105,17 @@ export default function AdminDashboard() {
             <small>IMMOOVE / ADMIN</small>
             <h1>{titles[view]}</h1>
           </div>
-          <div className="admin-user">
-            <span>{roleLabel(user?.role, language)}</span>
-            <b>
-              {copy.admin} #{user?.userId}
-            </b>
+          <div className="admin-header-account">
+            <a className="admin-header-profile" href="/profile">
+              <ArrowLeft size={16} />
+              {copy.backProfile}
+            </a>
+            <div className="admin-user">
+              <span>{roleLabel(user?.role, language)}</span>
+              <b>
+                {copy.admin} #{user?.userId}
+              </b>
+            </div>
           </div>
         </header>
         {error && (
@@ -170,7 +129,6 @@ export default function AdminDashboard() {
         {view === 'overview' && (
           <OverviewView
             listings={listings}
-            announcements={announcements}
             bookings={bookings}
             overview={overview}
             onView={setView}
@@ -179,14 +137,6 @@ export default function AdminDashboard() {
         {view === 'analytics' && (
           <AdminAnalyticsView overview={overview} days={days} onDays={setDays} />
         )}
-        {view === 'approvals' && (
-          <ApprovalsView
-            items={approvals}
-            onDecision={decideApproval}
-            onBookingDecision={decideBooking}
-            onFinalPublication={approveAnnouncement}
-          />
-        )}
         {view === 'listings' && (
           <ListingsView
             listings={listings}
@@ -194,9 +144,6 @@ export default function AdminDashboard() {
             onDelete={deleteListing}
             onRefresh={() => void load()}
           />
-        )}
-        {view === 'announcements' && (
-          <AnnouncementsView items={announcements} onApprove={approveAnnouncement} />
         )}
         {view === 'bookings' && (
           <BookingsView
@@ -213,7 +160,6 @@ export default function AdminDashboard() {
             pagination={userPagination}
             currentUserId={user?.userId}
             onSearch={searchUsers}
-            onRole={updateRole}
             onStatus={updateUserStatus}
           />
         )}

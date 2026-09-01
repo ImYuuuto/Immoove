@@ -46,12 +46,11 @@ export const get: RequestHandler = async (req, res, next) => {
     const admin =
       req.user &&
       req.user.role === 'ADMIN';
-    const owner =
-      req.user?.role === 'OWNER' && req.user.userId === listing.providerId;
+    const provider = req.user?.userId === listing.providerId;
     if (
       (!listing.isActive || listing.status !== 'approved') &&
       !admin &&
-      !owner
+      !provider
     )
       throw new AppError(404, 'Listing not found');
     res.json({ item: listing });

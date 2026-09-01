@@ -14,13 +14,18 @@ const mockedTransaction = transaction as jest.MockedFunction<
 describe('profile listing ownership', () => {
   afterEach(() => jest.restoreAllMocks());
 
-  test('rejects owner property edits because the dashboard is read-only', async () => {
+  test('allows a user to edit their own property and returns it to pending review', async () => {
     const current = { listingId: 10, providerId: 1 } as never;
-    jest.spyOn(ListingService, 'findById').mockResolvedValueOnce(current);
-    await expect(
-      ListingService.update(10, 1, 'OWNER', { title: 'Updated' }),
-    ).rejects.toMatchObject({ statusCode: 403 });
-    expect(mockedTransaction).not.toHaveBeenCalled();
+    jest.spyOn(ListingService, 'findById').mockResolvedValueOnce(current).mockResolvedValueOnce(current);
+    const client = { query: jest.fn().mockResolvedValue({ rows: [] }) };
+    mockedTransaction.mockImplementation(async (callback) => callback(client as unknown as PoolClient));
+
+    await ListingService.update(10, 1, 'CLIENT', { title: 'Updated' });
+
+    expect(client.query).toHaveBeenCalledWith(
+      expect.stringContaining("status = 'pending'"),
+      [10],
+    );
   });
 
   test('does not reset status when an administrator edits a listing', async () => {
@@ -40,9 +45,9 @@ describe('profile listing ownership', () => {
     expect(client.query.mock.calls[0][0]).not.toContain('is_active =');
   });
 
-  test('rejects a client even when a legacy listing references that client', async () => {
+  test('rejects a user attempting to edit another user property', async () => {
     const callsBefore = mockedTransaction.mock.calls.length;
-    jest.spyOn(ListingService, 'findById').mockResolvedValueOnce({ listingId: 10, providerId: 1 } as never);
+    jest.spyOn(ListingService, 'findById').mockResolvedValueOnce({ listingId: 10, providerId: 2 } as never);
     await expect(ListingService.update(10, 1, 'CLIENT', { title: 'Bypass' })).rejects.toMatchObject({ statusCode: 403 });
     expect(mockedTransaction.mock.calls).toHaveLength(callsBefore);
   });

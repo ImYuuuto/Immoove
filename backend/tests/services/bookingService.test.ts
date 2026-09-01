@@ -1,5 +1,5 @@
 import { PoolClient } from 'pg';
-import { transaction } from '../../src/config/db';
+import { query as dbQuery, transaction } from '../../src/config/db';
 import {
   billableUnits,
   BookingService,
@@ -17,6 +17,7 @@ jest.mock('../../src/config/db', () => ({
 const mockedTransaction = transaction as jest.MockedFunction<
   typeof transaction
 >;
+const mockedQuery = dbQuery as jest.MockedFunction<typeof dbQuery>;
 
 function useClient(query: jest.Mock) {
   mockedTransaction.mockImplementation(async (callback) =>
@@ -25,7 +26,31 @@ function useClient(query: jest.Mock) {
 }
 
 describe('BookingService server-side pricing', () => {
-  beforeEach(() => mockedTransaction.mockReset());
+  beforeEach(() => {
+    mockedTransaction.mockReset();
+    mockedQuery.mockReset();
+  });
+
+  test('filters a user booking list by trip state and city with pagination', async () => {
+    mockedQuery
+      .mockResolvedValueOnce({ rows: [{ total: 1 }] } as never)
+      .mockResolvedValueOnce({ rows: [{
+        booking_id: 10, listing_id: 4, user_id: 7,
+        start_date: '2026-09-01', end_date: '2026-09-03', total: '170',
+        status: 'confirmed', currency: 'MAD', listing_title: 'Casa Studio',
+        city_id: 1, city_name: 'Casablanca', area_id: 1, area_name: 'Centre', has_review: false,
+      }] } as never);
+
+    const result = await BookingService.findAll(7, {
+      state: 'upcoming', cityId: 1, page: 1, pageSize: 12,
+    });
+
+    expect(mockedQuery.mock.calls[0][0]).toContain('b.user_id = $1');
+    expect(mockedQuery.mock.calls[0][0]).toContain('b.start_date > now()');
+    expect(mockedQuery.mock.calls[1][1]).toEqual([7, 1, 12, 0]);
+    expect(result.items[0].listing?.city?.name).toBe('Casablanca');
+    expect(result.total).toBe(1);
+  });
 
   test('strips client totals from create and update payloads', () => {
     const dates = {

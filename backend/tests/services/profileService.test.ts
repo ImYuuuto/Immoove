@@ -1,6 +1,7 @@
 import { PoolClient } from 'pg';
 import { query, transaction } from '../../src/config/db';
 import { ProfileService } from '../../src/services/profileService';
+import { AuthService } from '../../src/services/authService';
 
 jest.mock('../../src/config/db', () => ({
   query: jest.fn(),
@@ -16,6 +17,7 @@ describe('ProfileService', () => {
   beforeEach(() => {
     mockedQuery.mockReset();
     mockedTransaction.mockReset();
+    jest.restoreAllMocks();
   });
 
   test('returns the authenticated profile with plain text and nullable avatar', async () => {
@@ -69,28 +71,66 @@ describe('ProfileService', () => {
     expect(user.firstName).toBe('New & safe');
   });
 
-  test('deletes the user inside a transaction', async () => {
+  test('requires password verification and normalizes email for contact changes', async () => {
+    jest.spyOn(AuthService, 'verifyCurrentPassword').mockResolvedValue();
+    mockedQuery.mockResolvedValueOnce({
+      rows: [{
+        user_id: 1, first_name: 'Yassine', last_name: 'Example',
+        email: 'new@example.com', phone: '+212612345678', role: 'CLIENT', avatar_url: null,
+      }],
+    } as never);
+
+    const result = await ProfileService.updateContact(1, {
+      email: 'NEW@EXAMPLE.COM', phone: '+212612345678', currentPassword: 'CorrectPassword2026!',
+    });
+
+    expect(AuthService.verifyCurrentPassword).toHaveBeenCalledWith(1, 'CorrectPassword2026!');
+    expect(mockedQuery.mock.calls[0][1]).toEqual(['new@example.com', '+212612345678', 1]);
+    expect(result.email).toBe('new@example.com');
+  });
+
+  test('password-verifies and safely deactivates the user inside a transaction', async () => {
+    jest.spyOn(AuthService, 'verifyCurrentPassword').mockResolvedValue();
     const client = {
       query: jest
         .fn()
-        .mockResolvedValueOnce({ rowCount: 1 })
+        .mockResolvedValueOnce({ rowCount: 1, rows: [{ user_id: 1, role: 'CLIENT' }] })
+        .mockResolvedValueOnce({ rows: [{ blocked: false }] })
         .mockResolvedValueOnce({ rowCount: 1 }),
     };
     mockedTransaction.mockImplementation(async (callback) =>
       callback(client as unknown as PoolClient),
     );
 
-    await ProfileService.delete(1);
+    await ProfileService.deactivate(1, 'CorrectPassword2026!');
+
+    expect(AuthService.verifyCurrentPassword).toHaveBeenCalledWith(
+      1,
+      'CorrectPassword2026!',
+    );
 
     expect(client.query).toHaveBeenNthCalledWith(
       1,
-      'SELECT user_id FROM users WHERE user_id = $1 FOR UPDATE',
+      'SELECT user_id, role FROM users WHERE user_id = $1 FOR UPDATE',
       [1],
     );
     expect(client.query).toHaveBeenNthCalledWith(
-      2,
-      'DELETE FROM users WHERE user_id = $1',
+      3,
+      expect.stringContaining("account_status = 'suspended'"),
       [1],
     );
+  });
+
+  test('does not deactivate an account with active booking obligations', async () => {
+    jest.spyOn(AuthService, 'verifyCurrentPassword').mockResolvedValue();
+    const client = {
+      query: jest.fn()
+        .mockResolvedValueOnce({ rowCount: 1, rows: [{ user_id: 1, role: 'CLIENT' }] })
+        .mockResolvedValueOnce({ rows: [{ blocked: true }] }),
+    };
+    mockedTransaction.mockImplementation(async (callback) => callback(client as unknown as PoolClient));
+
+    await expect(ProfileService.deactivate(1, 'CorrectPassword2026!')).rejects.toMatchObject({ statusCode: 409 });
+    expect(client.query).toHaveBeenCalledTimes(2);
   });
 });

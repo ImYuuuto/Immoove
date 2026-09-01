@@ -13,9 +13,9 @@ const serviceTypes: Record<Language, Record<string, string>> = {
 };
 
 const roles: Record<Language, Record<string, string>> = {
-  fr: { CLIENT: 'Client', OWNER: 'Propriétaire', ADMIN: 'Administrateur' },
-  en: { CLIENT: 'Client', OWNER: 'Owner', ADMIN: 'Administrator' },
-  ar: { CLIENT: 'عميل', OWNER: 'مالك', ADMIN: 'مدير' },
+  fr: { CLIENT: 'Utilisateur', ADMIN: 'Administrateur' },
+  en: { CLIENT: 'User', ADMIN: 'Administrator' },
+  ar: { CLIENT: 'مستخدم', ADMIN: 'مدير' },
 };
 
 export function serviceTypeLabel(

@@ -23,7 +23,6 @@ export default function AuthModal({
     last_name: '',
     email: '',
     phone: '',
-    password: '',
     acceptTerms: false,
   });
 
@@ -34,8 +33,11 @@ export default function AuthModal({
     });
   };
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const submittedForm = event.currentTarget;
+    const password = String(new FormData(submittedForm).get('password') || '');
+    submittedForm.reset();
 
     try {
       if (renewalRequired) {
@@ -56,10 +58,18 @@ export default function AuthModal({
 
           body: JSON.stringify(
             registerMode
-              ? { ...form, language }
+              ? {
+                  first_name: form.first_name,
+                  last_name: form.last_name,
+                  email: form.email,
+                  phone: form.phone,
+                  password,
+                  acceptTerms: form.acceptTerms,
+                  language,
+                }
               : {
                   email: form.email,
-                  password: form.password,
+                  password,
                 },
           ),
         },
@@ -170,13 +180,13 @@ export default function AuthModal({
 
         {!renewalRequired && (
           <PasswordField
+            key={registerMode ? 'register-password' : 'login-password'}
+            name="password"
             required
             aria-label={text.password}
             minLength={12}
             autoComplete={registerMode ? 'new-password' : 'current-password'}
             placeholder={text.password}
-            value={form.password}
-            onChange={(event) => update('password', event.target.value)}
           />
         )}
 

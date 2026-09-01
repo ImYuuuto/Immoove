@@ -14,7 +14,7 @@ export const Status = memo(function Status({ value }: { value: string }) {
         ? copy.rejected
         : normalized === 'pending'
           ? copy.pendingStatus
-          : ['CLIENT', 'OWNER', 'ADMIN'].includes(value)
+          : ['CLIENT', 'ADMIN'].includes(value)
             ? roleLabel(value, language)
             : value;
   return <span className={`status status-${normalized}`}>{label}</span>;

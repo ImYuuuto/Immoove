@@ -36,6 +36,19 @@ async function verifyPassword(
 }
 
 export class AuthService {
+  static async verifyCurrentPassword(userId: number, password: string): Promise<void> {
+    const result = await query<{ password_hash: string }>(
+      'SELECT password_hash FROM users WHERE user_id = $1',
+      [userId],
+    );
+    if (
+      !result.rows[0]?.password_hash ||
+      !(await verifyPassword(password, result.rows[0].password_hash))
+    ) {
+      throw new AppError(401, 'Current password is incorrect');
+    }
+  }
+
   static async register(data: {
     first_name: string;
     last_name: string;
@@ -133,17 +146,7 @@ export class AuthService {
     currentPassword: string,
     newPassword: string,
   ): Promise<void> {
-    const result = await query<{ password_hash: string }>(
-      'SELECT password_hash FROM users WHERE user_id = $1',
-      [userId],
-    );
-    const user = result.rows[0];
-    if (
-      !user?.password_hash ||
-      !(await verifyPassword(currentPassword, user.password_hash))
-    ) {
-      throw new AppError(401, 'Current password is incorrect');
-    }
+    await this.verifyCurrentPassword(userId, currentPassword);
 
     const passwordHash = await hashPassword(newPassword);
     const updated = await query(

@@ -85,11 +85,6 @@ export default function Navbar({
 
         {user && <button onClick={onAnnouncement}>{text.services}</button>}
 
-        {user?.role === 'OWNER' && (
-          <a className="admin-link" href="/owner" onClick={() => setOpen(false)}>
-            Owner dashboard
-          </a>
-        )}
 
         {user?.role === 'ADMIN' && (
           <a className="admin-link" href="/admin" onClick={() => setOpen(false)}>

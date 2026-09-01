@@ -10,10 +10,6 @@ export const userQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
-export const userRoleSchema = z.object({
-  role: z.enum(['CLIENT', 'OWNER', 'ADMIN']),
-});
-
 export const userStatusSchema = z.object({
   status: z.enum(['active', 'suspended']),
   reason: z.string().trim().min(2).max(1000).optional(),

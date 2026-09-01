@@ -18,6 +18,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-sidibouzid}
       POSTGRES_USER: ${POSTGRES_USER:-sidibouzid}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sidibouzid_dev_password}
+    ports:
+      - '127.0.0.1:55432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

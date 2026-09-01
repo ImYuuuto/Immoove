@@ -2,8 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import type {
   AdminOverview,
-  ApprovalCase,
-  Announcement,
   ApiList,
   AuditEntry,
   Booking,
@@ -17,13 +15,11 @@ export function useAdminData() {
   const copy = useAdminCopy();
   const [user, setUser] = useState<User | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [userPagination, setUserPagination] = useState<Pagination | null>(null);
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
-  const [approvals, setApprovals] = useState<ApprovalCase[]>([]);
   const [days, setDays] = useState(30);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -36,29 +32,23 @@ export function useAdminData() {
       setUser(session.user);
       const [
         listingData,
-        announcementData,
         bookingData,
         userData,
         overviewData,
         auditData,
-        approvalData,
       ] = await Promise.all([
         api<ApiList<Listing>>('/listings?limit=100'),
-        api<ApiList<Announcement>>('/announcements'),
         api<ApiList<Booking>>('/bookings'),
-        api<ApiList<User> & { pagination: Pagination }>('/users?limit=100'),
+        api<ApiList<User> & { pagination: Pagination }>('/users?page=1&limit=20'),
         api<AdminOverview>(`/admin/overview?days=${days}`),
         api<ApiList<AuditEntry>>('/admin/audit?limit=50'),
-        api<ApiList<ApprovalCase>>('/admin/approvals?scope=all&limit=100'),
       ]);
       setListings(listingData.items);
-      setAnnouncements(announcementData.items);
       setBookings(bookingData.items);
       setUsers(userData.items);
       setUserPagination(userData.pagination);
       setOverview(overviewData);
       setAudit(auditData.items);
-      setApprovals(approvalData.items);
       setError('');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : copy.dashboardFailed);
@@ -84,9 +74,9 @@ export function useAdminData() {
   );
 
   const searchUsers = useCallback(
-    async (search: string) => {
+    async (search: string, page = 1) => {
       try {
-        const query = new URLSearchParams({ page: '1', limit: '100' });
+        const query = new URLSearchParams({ page: String(page), limit: '20' });
         if (search.trim()) query.set('search', search.trim());
         const data = await api<ApiList<User> & { pagination: Pagination }>(`/users?${query}`);
         setUsers(data.items);
@@ -103,11 +93,9 @@ export function useAdminData() {
     users,
     userPagination,
     listings,
-    announcements,
     bookings,
     overview,
     audit,
-    approvals,
     days,
     setDays,
     error,
