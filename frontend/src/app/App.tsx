@@ -80,7 +80,6 @@ export default function App() {
       <Navbar
         open={open}
         setOpen={setOpen}
-        onAnnouncement={() => setModal(true)}
         onUserChange={setCurrentUser}
       />
       {pendingBooking && <aside className="pending-booking-reminder" role="status"><span><Clock3 /></span><div><small>{reminderCopy.title}</small><b>{reminderCopy.body.replace('{listing}', pendingBooking.listing?.title || `#${pendingBooking.listingId}`)}</b><a href="/profile?section=trips">{reminderCopy.view}</a></div><button aria-label={reminderCopy.close} onClick={() => setPendingBooking(null)}><X /></button></aside>}
@@ -105,7 +104,7 @@ export default function App() {
 
           <div className="hero-shade" />
           <div className="location-badge">
-            <MapPin size={14} /> MARRAKECH <i /> AGADIR <i /> MOROCCO
+            <MapPin size={14} /> MOROCCO
           </div>
 
           <div className="hero-copy">

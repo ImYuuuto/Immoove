@@ -9,12 +9,10 @@ import ResponsiveImage from './ResponsiveImage';
 export default function Navbar({
   open,
   setOpen,
-  onAnnouncement,
   onUserChange,
 }: {
   open: boolean;
   setOpen: (value: boolean) => void;
-  onAnnouncement: () => void;
   onUserChange?: (user: AuthUser | null) => void;
 }) {
   const { language, text, setLanguage } = useLanguage();
@@ -82,9 +80,6 @@ export default function Navbar({
         <a href="/" onClick={() => setOpen(false)}>
           {text.about}
         </a>
-
-        {user && <button onClick={onAnnouncement}>{text.services}</button>}
-
 
         {user?.role === 'ADMIN' && (
           <a className="admin-link" href="/admin" onClick={() => setOpen(false)}>
