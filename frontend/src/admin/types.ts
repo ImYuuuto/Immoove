@@ -6,6 +6,7 @@ export type View =
   | 'listings'
   | 'bookings'
   | 'users'
+  | 'owners'
   | 'audit';
 export type User = {
   userId: number;
@@ -38,6 +39,8 @@ export type UserDetail = User & {
   reviewCount: number;
   averageRating: number | null;
 };
+export type Owner = { ownerId: number; firstName: string; lastName: string; nationalIdCode: string; phone: string; email?: string | null; photoUrl?: string | null; createdAt: string; propertyCount: number };
+export type OwnerDetail = Owner & { properties: Array<{ listingId: number; title: string; basePrice: number; contractNumber: string; contractDocumentUrl?: string | null; locationText?: string | null; mapUrl?: string | null; latitude?: number | null; longitude?: number | null; status: string; isActive: boolean; coverImageUrl?: string | null; propertyType?: string | null; createdAt: string }> };
 export type Listing = {
   listingId: number;
   title: string;

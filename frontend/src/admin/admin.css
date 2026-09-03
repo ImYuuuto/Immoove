@@ -454,6 +454,52 @@ a {
   .admin-user-trips article { grid-template-columns: 72px 1fr; }
 }
 
+.admin-create-toolbar { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+.admin-create-toolbar button { display: inline-flex; align-items: center; gap: 7px; padding: 11px 15px; border: 0; border-radius: 6px; background: var(--admin-coral); color: white; font-weight: 800; }
+.admin-form-backdrop { position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: 24px; background: rgba(5,39,51,.62); }
+.owner-property-form { width: min(900px,100%); max-height: 92vh; overflow-y: auto; padding: 28px; border-radius: 12px; background: white; box-shadow: var(--admin-shadow-lg); }
+.owner-property-form > header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 18px; }
+.owner-property-form > header small { color: var(--admin-coral); font-weight: 800; }
+.owner-property-form > header h2 { margin: 5px 0; font: 600 30px 'Playfair Display',serif; }
+.owner-property-form > header button { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--admin-line); border-radius: 50%; background: white; }
+.owner-property-form fieldset { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin: 0 0 20px; padding: 18px; border: 1px solid var(--admin-line); border-radius: 9px; }
+.owner-property-form legend { padding: 0 8px; color: var(--admin-teal); font-weight: 800; }
+.owner-property-form label { display: grid; gap: 6px; color: var(--admin-muted); font-size: 11px; font-weight: 700; }
+.owner-property-form input,.owner-property-form select { width: 100%; padding: 11px; border: 1px solid var(--admin-line-dark); border-radius: 6px; background: white; color: var(--admin-ink); }
+.owner-property-form .wide { grid-column: 1/-1; }
+.owner-property-form .file-field { padding: 11px; border-radius: 7px; background: var(--admin-soft); }
+.owner-property-form .upload-card { grid-column: 1/-1; gap: 12px; padding: 15px; border: 1px dashed rgba(12,91,98,.42); border-radius: 9px; background: linear-gradient(135deg,var(--admin-teal-light),#fff); cursor: pointer; }
+.upload-card-heading { display: flex; align-items: center; gap: 11px; }
+.upload-card-heading > span:last-child { display: grid; gap: 3px; }
+.upload-card-heading b { color: var(--admin-ink); font-size: 12px; }
+.upload-card-heading small { color: var(--admin-muted); font-weight: 500; }
+.upload-card-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; border-radius: 50%; background: var(--admin-teal); color: white; }
+.upload-card-icon svg { width: 18px; height: 18px; }
+.owner-property-form .upload-card input[type=file] { padding: 6px; background: rgba(255,255,255,.9); cursor: pointer; }
+.owner-property-form input[type=file]::file-selector-button { margin-inline-end: 10px; padding: 8px 12px; border: 0; border-radius: 5px; background: var(--admin-teal); color: white; font: inherit; font-weight: 800; cursor: pointer; }
+.owner-property-form > footer { display: flex; justify-content: flex-end; gap: 9px; }
+.owner-property-form > footer button { padding: 11px 17px; border: 1px solid var(--admin-line); border-radius: 6px; background: white; font-weight: 800; }
+.owner-property-form > footer button:last-child { border-color: var(--admin-coral); background: var(--admin-coral); color: white; }
+.owner-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 18px; }
+.owner-grid > button { display: grid; grid-template-columns: 54px 1fr auto; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--admin-line); border-radius: 8px; background: white; color: var(--admin-ink); text-align: start; }
+.owner-grid > button:hover { border-color: var(--admin-teal); box-shadow: var(--admin-shadow-sm); }
+.owner-grid > button > span:nth-child(2) { min-width: 0; display: grid; gap: 3px; }
+.owner-grid small { color: var(--admin-muted); }
+.owner-list-avatar { width: 52px; height: 52px; display: grid; place-items: center; overflow: hidden; border-radius: 50%; background: var(--admin-teal-light); color: var(--admin-teal); font-weight: 800; }
+.owner-list-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.owner-grid > button > svg { color: var(--admin-coral); }
+.owner-properties { margin-top: 24px; }
+.owner-properties > h3 { font: 600 22px 'Playfair Display',serif; }
+.owner-properties article { display: grid; grid-template-columns: 120px 1fr; gap: 15px; padding: 14px 0; border-top: 1px solid var(--admin-line); }
+.owner-property-image { height: 95px; display: grid; place-items: center; overflow: hidden; border-radius: 7px; background: var(--admin-soft); }
+.owner-property-image img { width: 100%; height: 100%; object-fit: cover; }
+.owner-properties h4 { margin: 4px 0; font-size: 16px; }
+.owner-properties p { margin: 4px 0; color: var(--admin-muted); font-size: 12px; }
+.owner-properties article > div:last-child > div { display: flex; gap: 8px; margin: 9px 0; }
+.owner-properties a { display: inline-flex; align-items: center; gap: 5px; padding: 7px 9px; border-radius: 5px; background: var(--admin-teal-light); color: var(--admin-teal); font-size: 10px; font-weight: 800; }
+.owner-properties a svg { width: 14px; }
+@media(max-width:700px){.owner-property-form{padding:20px 15px;border-radius:0}.admin-form-backdrop{padding:0}.owner-property-form fieldset,.owner-grid{grid-template-columns:1fr}.owner-property-form .wide{grid-column:auto}.owner-properties article{grid-template-columns:80px 1fr}.owner-property-image{height:72px}}
+
 .admin-header {
   position: relative;
 

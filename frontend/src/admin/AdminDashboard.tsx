@@ -10,6 +10,7 @@ import {
   BookingsView,
   ListingsView,
   OverviewView,
+  OwnersView,
   UsersView,
 } from './components/AdminViews';
 import { useAdminData } from './hooks/useAdminData';
@@ -29,6 +30,7 @@ export default function AdminDashboard() {
     listings: copy.listings,
     bookings: copy.bookings,
     users: copy.users,
+    owners: extra.owners,
     audit: extra.audit,
   };
   const [view, setView] = useState<View>('overview');
@@ -37,6 +39,8 @@ export default function AdminDashboard() {
     user,
     users,
     userPagination,
+    owners,
+    ownerPagination,
     listings,
     bookings,
     overview,
@@ -48,12 +52,14 @@ export default function AdminDashboard() {
     load,
     runAction,
     searchUsers,
+    searchOwners,
     clearError,
   } = useAdminData();
   const editListing = (id: number, data: { title: string; basePrice: number }) =>
     runAction(() => api(`/listings/${id}`, { method: 'PATCH', body: JSON.stringify(data) }));
   const deleteListing = (id: number) =>
     runAction(() => api(`/listings/${id}`, { method: 'DELETE' }));
+  const createOwnerProperty = (data: FormData) => runAction(() => api('/owners/property', { method: 'POST', body: data }));
   const updateUserStatus = (id: number, status: 'active' | 'suspended') =>
     runAction(() =>
       api(`/users/${id}/status`, {
@@ -140,6 +146,7 @@ export default function AdminDashboard() {
         {view === 'listings' && (
           <ListingsView
             listings={listings}
+            onCreate={createOwnerProperty}
             onUpdate={editListing}
             onDelete={deleteListing}
             onRefresh={() => void load()}
@@ -163,6 +170,7 @@ export default function AdminDashboard() {
             onStatus={updateUserStatus}
           />
         )}
+        {view === 'owners' && <OwnersView owners={owners} pagination={ownerPagination} onSearch={searchOwners} />}
         {view === 'audit' && <AuditView items={audit} />}
       </main>
     </div>

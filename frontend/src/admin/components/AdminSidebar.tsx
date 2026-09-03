@@ -1,6 +1,7 @@
 import {
   Activity,
   CalendarDays,
+  BriefcaseBusiness,
   FileClock,
   LayoutDashboard,
   LogOut,
@@ -60,6 +61,10 @@ export function AdminSidebar({
         <button className={view === 'users' ? 'active' : ''} onClick={() => go('users')}>
           <Users size={17} />
           {copy.users}
+        </button>
+        <button className={view === 'owners' ? 'active' : ''} onClick={() => go('owners')}>
+          <BriefcaseBusiness size={17} />
+          {extra.owners}
         </button>
         <button className={view === 'audit' ? 'active' : ''} onClick={() => go('audit')}>
           <FileClock size={17} />

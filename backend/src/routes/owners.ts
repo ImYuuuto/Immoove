@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import * as controller from '../controllers/ownerController';
+import { auth, requireAdmin } from '../middleware/auth';
+import { ownerDocumentsUpload } from '../middleware/ownerUpload';
+const router = Router();
+router.use(auth, requireAdmin);
+router.get('/', controller.list);
+router.get('/:id', controller.get);
+router.post('/property', ownerDocumentsUpload, controller.createProperty);
+export default router;

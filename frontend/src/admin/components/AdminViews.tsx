@@ -1,5 +1,5 @@
-import { type FormEvent, useState } from 'react';
-import { CalendarDays, Check, Mail, Phone, Search, Star, Trash2, UserRound, X } from 'lucide-react';
+import { type FormEvent, useEffect, useState } from 'react';
+import { Building2, CalendarDays, Camera, Check, FileText, Images, Mail, MapPin, Phone, Plus, Search, Star, Trash2, UserRound, X } from 'lucide-react';
 import type {
   AdminOverview,
   Announcement,
@@ -10,8 +10,12 @@ import type {
   Pagination,
   User,
   UserDetail,
+  Owner,
+  OwnerDetail,
 } from '../types';
 import { api } from '../api';
+import { getPropertyDiscoveryOptions } from '../../properties/api';
+import type { PropertyDiscoveryOptions } from '../../properties/types';
 import { formatDate } from '../utils';
 import { decodeText } from '../../utils/decodeText';
 import { roleLabel, serviceTypeLabel } from '../../i18n/labels';
@@ -206,20 +210,26 @@ export function AuditView({ items }: { items: AuditEntry[] }) {
 
 export function ListingsView({
   listings,
+  onCreate,
   onUpdate,
   onDelete,
   onRefresh,
 }: {
   listings: Listing[];
+  onCreate: (data: FormData) => void;
   onUpdate: (id: number, data: { title: string; basePrice: number }) => void;
   onDelete: (id: number) => void;
   onRefresh: () => void;
 }) {
   const copy = useAdminCopy();
+  const extra = useAdminExtraCopy();
   const { language } = useLanguage();
   const [editing, setEditing] = useState<Listing | null>(null);
   const [title, setTitle] = useState('');
   const [basePrice, setBasePrice] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [options, setOptions] = useState<PropertyDiscoveryOptions | null>(null);
+  useEffect(() => { if (creating && !options) void getPropertyDiscoveryOptions().then(setOptions); }, [creating, options]);
   const edit = (item: Listing) => {
     setEditing(item);
     setTitle(decodeText(item.title));
@@ -231,8 +241,39 @@ export function ListingsView({
     onUpdate(editing.listingId, { title, basePrice: Number(basePrice) });
     setEditing(null);
   };
+  const create = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onCreate(new FormData(event.currentTarget));
+    setCreating(false);
+  };
   return (
     <section className="admin-content">
+      <div className="admin-create-toolbar"><button onClick={() => setCreating(true)}><Plus size={16} />{extra.addProperty}</button></div>
+      {creating && <div className="admin-form-backdrop" onMouseDown={() => setCreating(false)}>
+        <form className="owner-property-form" onSubmit={create} onMouseDown={(event) => event.stopPropagation()}>
+          <header><div><small>IMMOOVE</small><h2>{extra.ownerPropertyIntake}</h2></div><button type="button" onClick={() => setCreating(false)}><X /></button></header>
+          <fieldset><legend>{extra.owners}</legend>
+            <label className="upload-card wide"><span className="upload-card-heading"><span className="upload-card-icon"><Camera /></span><span><b>{extra.ownerPhoto}</b><small>{extra.ownerPhotoHelp}</small></span></span><input name="ownerPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/avif" /></label>
+            <label>{extra.firstName}<input required name="firstName" /></label><label>{extra.lastName}<input required name="lastName" /></label>
+            <label>{extra.nationalId}<input required name="nationalIdCode" /></label><label>{extra.ownerPhone}<input required name="phone" type="tel" /></label>
+            <label>{extra.ownerEmail}<input name="email" type="email" /></label>
+          </fieldset>
+          <fieldset><legend>{copy.listing}</legend>
+            <label>{extra.propertyName}<input required name="title" /></label>
+            <label>{extra.propertyType}<select required name="propertyTypeId"><option value="">—</option>{options?.propertyTypes.map(item => <option key={item.propertyTypeId} value={item.propertyTypeId}>{item.name}</option>)}</select></label>
+            <label>{extra.cityArea}<select required name="areaId"><option value="">—</option>{options?.areas.map(area => { const city = options.cities.find(item => item.cityId === area.cityId); return <option key={area.areaId} value={area.areaId}>{city?.name} · {area.name}</option>; })}</select></label>
+            <label>{extra.nightlyPrice}<input required name="nightlyPrice" type="number" min="1" step="0.01" /></label>
+            <label className="upload-card wide"><span className="upload-card-heading"><span className="upload-card-icon"><Images /></span><span><b>{extra.listingPhotos}</b><small>{extra.listingPhotosHelp}</small></span></span><input required multiple name="listingPhotos" type="file" accept="image/jpeg,image/png,image/webp,image/avif" /></label>
+            <label>{extra.contractNumber}<input required name="contractNumber" /></label>
+            <label className="file-field">{extra.contractDocument}<input required name="contractDocument" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" /></label>
+            <label className="wide">{extra.locationText}<input required name="locationText" /></label>
+            <label className="wide">{extra.mapUrl}<input name="mapUrl" type="url" /></label>
+            <label>{extra.latitude}<input name="latitude" type="number" min="-90" max="90" step="any" /></label>
+            <label>{extra.longitude}<input name="longitude" type="number" min="-180" max="180" step="any" /></label>
+          </fieldset>
+          <footer><button type="button" onClick={() => setCreating(false)}>{copy.cancel}</button><button>{extra.createProperty}</button></footer>
+        </form>
+      </div>}
       {editing && (
         <form className="admin-inline-form" onSubmit={submit}>
           <input
@@ -700,5 +741,36 @@ function UserBookingSection({ title, items, empty }: { title: string; items: Use
         {item.review && <blockquote><span>{'★'.repeat(item.review.rating)}{'☆'.repeat(5 - item.review.rating)}</span><p>{decodeText(item.review.comment) || extra.noComment}</p></blockquote>}
       </div>
     </article>) : <p className="admin-user-empty">{empty}</p>}
+  </section>;
+}
+
+export function OwnersView({ owners, pagination, onSearch }: { owners: Owner[]; pagination: Pagination | null; onSearch: (search: string, page?: number) => void }) {
+  const extra = useAdminExtraCopy();
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<OwnerDetail | null>(null);
+  const [loading, setLoading] = useState(false);
+  const open = async (id: number) => {
+    setLoading(true);
+    try { const response = await api<{ item: OwnerDetail }>(`/owners/${id}`); setSelected(response.item); }
+    finally { setLoading(false); }
+  };
+  return <section className="admin-content">
+    <div className="table-card"><div className="panel-heading"><div><h2>{extra.owners}</h2><p>{pagination?.total || owners.length} {extra.propertiesOwned}</p></div>
+      <form className="admin-search" onSubmit={(event) => { event.preventDefault(); onSearch(search); }}><input value={search} onChange={event => setSearch(event.target.value)} placeholder={extra.searchOwners} /><button><Search size={15} /></button></form>
+    </div>
+    <div className="owner-grid">{owners.map(owner => <button key={owner.ownerId} onClick={() => void open(owner.ownerId)}>
+      <span className="owner-list-avatar">{owner.photoUrl ? <img src={owner.photoUrl} alt="" /> : `${owner.firstName[0]}${owner.lastName[0]}`}</span>
+      <span><b>{decodeText(owner.firstName)} {decodeText(owner.lastName)}</b><small>{owner.nationalIdCode}</small><small>{owner.propertyCount} {extra.propertiesOwned}</small></span><Building2 />
+    </button>)}</div>
+    {!owners.length && <p className="admin-user-empty">{extra.noOwners}</p>}
+    {pagination && pagination.totalPages > 1 && <nav className="admin-pagination"><button disabled={pagination.page <= 1} onClick={() => onSearch(search, pagination.page - 1)}>{extra.previous}</button><span>{extra.page} {pagination.page} / {pagination.totalPages}</span><button disabled={pagination.page >= pagination.totalPages} onClick={() => onSearch(search, pagination.page + 1)}>{extra.next}</button></nav>}
+    </div>
+    {(selected || loading) && <div className="admin-user-modal-backdrop" onMouseDown={() => setSelected(null)}><section className="admin-user-modal owner-detail-modal" onMouseDown={event => event.stopPropagation()}>
+      <button className="admin-user-modal-close" onClick={() => setSelected(null)}><X /></button>
+      {loading ? <p className="admin-user-modal-state">{extra.loadingUser}</p> : selected && <><header className="admin-user-profile-head"><div className="admin-user-avatar">{selected.photoUrl ? <img src={selected.photoUrl} alt="" /> : <span>{selected.firstName[0]}{selected.lastName[0]}</span>}</div><div><small>{selected.nationalIdCode}</small><h2>{decodeText(selected.firstName)} {decodeText(selected.lastName)}</h2><span>{selected.propertyCount} {extra.propertiesOwned}</span></div></header>
+      <div className="admin-user-contact-grid"><p><Phone /><span><small>{extra.phone}</small><b>{selected.phone}</b></span></p><p><Mail /><span><small>Email</small><b>{selected.email || '—'}</b></span></p><p><CalendarDays /><span><small>{extra.ownerSince}</small><b>{formatDate(selected.createdAt)}</b></span></p></div>
+      <section className="owner-properties"><h3>{extra.propertiesOwned}</h3>{selected.properties.map(property => <article key={property.listingId}><div className="owner-property-image">{property.coverImageUrl ? <img src={property.coverImageUrl} alt="" /> : <Building2 />}</div><div><small>#{property.listingId} · {property.propertyType}</small><h4>{property.title}</h4><p>{property.locationText}</p><b>{property.basePrice} MAD</b><div>{property.contractDocumentUrl && <a href={property.contractDocumentUrl} target="_blank" rel="noreferrer"><FileText />{extra.viewContract}</a>}{property.mapUrl && <a href={property.mapUrl} target="_blank" rel="noreferrer"><MapPin />{extra.openMap}</a>}</div>{property.latitude != null && property.longitude != null && <small>{extra.exactCoordinates}: {property.latitude}, {property.longitude}</small>}</div></article>)}</section>
+      </>}
+    </section></div>}
   </section>;
 }
