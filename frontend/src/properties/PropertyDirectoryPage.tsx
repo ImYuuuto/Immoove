@@ -1,5 +1,5 @@
 import { type CSSProperties, FormEvent, useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Search, SlidersHorizontal } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
 import { useLanguage } from '../i18n/language';
 import { request } from '../utils/request';
@@ -47,6 +47,8 @@ const copy = {
     next: 'Suivant',
     any: 'Tous',
     home: 'Accueil',
+    moreFilters: 'Plus de filtres',
+    fewerFilters: 'Moins de filtres',
   },
   en: {
     title: 'Find your next property',
@@ -79,6 +81,8 @@ const copy = {
     next: 'Next',
     any: 'Any',
     home: 'Home',
+    moreFilters: 'More filters',
+    fewerFilters: 'Fewer filters',
   },
   ar: {
     title: 'اعثروا على إقامتكم القادمة',
@@ -111,6 +115,8 @@ const copy = {
     next: 'التالي',
     any: 'الكل',
     home: 'الرئيسية',
+    moreFilters: 'المزيد من الفلاتر',
+    fewerFilters: 'فلاتر أقل',
   },
 };
 
@@ -131,6 +137,9 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
   const [data, setData] = useState<PropertySearchResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showMoreFilters, setShowMoreFilters] = useState(() =>
+    ['min_price', 'max_price', 'bedrooms', 'bathrooms', 'min_rating', 'amenities', 'instant_available'].some((key) => initialFilters(propertyPath).has(key)),
+  );
   const cities = options?.cities || [];
   const selectedCity = cities.find((item) => item.cityId === Number(filters.get('city_id')));
   const availableMinimum = Math.floor(options?.priceRange.minimum || 0);
@@ -262,6 +271,7 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
           value={filters.get('guests') || ''}
           onChange={(value) => set('guests', value)}
         />
+        {showMoreFilters && <div className="advanced-filters">
         {options && availableMaximum >= availableMinimum && <PriceRangeFilter
           label={text.price}
           minLabel={text.min}
@@ -321,10 +331,13 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
           />
           {text.instant}
         </label>
-        <button type="submit">
-          <Search size={17} />
-          {text.search}
-        </button>
+        </div>}
+        <div className="filter-actions">
+          <button className="more-filters-button" type="button" aria-expanded={showMoreFilters} onClick={() => setShowMoreFilters((current) => !current)}>
+            <SlidersHorizontal size={17} />{showMoreFilters ? text.fewerFilters : text.moreFilters}{showMoreFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+          <button className="filter-search-button" type="submit"><Search size={17} />{text.search}</button>
+        </div>
       </form>
       {loading ? (
         <div className="category-state">{text.loading}</div>
