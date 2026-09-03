@@ -54,6 +54,7 @@ const fr = {
   required: 'Tous les champs sont obligatoires.',
   profileFailed: 'Impossible de charger vos coordonnées.',
   bookingFailed: 'Impossible de créer la réservation.',
+  share: 'Partager', favorite: 'Ajouter aux favoris', favorited: 'Dans vos favoris', shared: 'Lien copié', description: 'À propos de ce logement', readMore: 'Afficher plus', readLess: 'Afficher moins', location: 'Où vous séjournerez', mapHint: 'L’emplacement exact de cette propriété.', footerText: 'Des séjours choisis avec soin partout au Maroc.', exploreFooter: 'Explorer', stays: 'Logements', terms: 'Conditions d’utilisation', privacy: 'Confidentialité', madeWithCare: 'Créé avec soin au Maroc',
 };
 type Copy = { [K in keyof typeof fr]: string };
 const en: Copy = {
@@ -110,6 +111,7 @@ const en: Copy = {
   required: 'All fields are required.',
   profileFailed: 'Unable to load your details.',
   bookingFailed: 'Unable to create the booking.',
+  share: 'Share', favorite: 'Save', favorited: 'Saved', shared: 'Link copied', description: 'About this place', readMore: 'Show more', readLess: 'Show less', location: 'Where you’ll be', mapHint: 'The exact location of this property.', footerText: 'Thoughtfully selected stays across Morocco.', exploreFooter: 'Explore', stays: 'Properties', terms: 'Terms of Use', privacy: 'Privacy Policy', madeWithCare: 'Made with care in Morocco',
 };
 const ar: Copy = {
   ...fr,
@@ -164,6 +166,7 @@ const ar: Copy = {
   required: 'كل الحقول مطلوبة.',
   profileFailed: 'تعذر تحميل بياناتكم.',
   bookingFailed: 'تعذر إنشاء الحجز.',
+  share: 'مشاركة', favorite: 'إضافة للمفضلة', favorited: 'تم الحفظ', shared: 'تم نسخ الرابط', description: 'نبذة عن هذا المكان', readMore: 'عرض المزيد', readLess: 'عرض أقل', location: 'مكان إقامتك', mapHint: 'الموقع الدقيق لهذا العقار.', footerText: 'إقامات مختارة بعناية في أنحاء المغرب.', exploreFooter: 'استكشف', stays: 'العقارات', terms: 'شروط الاستخدام', privacy: 'سياسة الخصوصية', madeWithCare: 'صُنع بعناية في المغرب',
 };
 
 export function useListingCopy() {

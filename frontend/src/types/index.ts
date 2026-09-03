@@ -18,7 +18,11 @@ export type Listing = {
   propertyType?: { propertyTypeId: number; name: string; slug: string };
   coverImageUrl?: string | null;
   images?: { url: string }[];
-  location?: { name: string };
+  location?: { name: string; lat?: number; lng?: number };
+  locationText?: string | null;
+  mapUrl?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   rating?: { average: number | null; count: number };
   createdAt?: string;
   status?: string;

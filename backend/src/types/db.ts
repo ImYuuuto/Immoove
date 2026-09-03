@@ -48,6 +48,10 @@ export interface Listing {
   city?: { cityId: number; name: string; regionId: number };
   region?: { regionId: number; name: string };
   isFeatured?: boolean;
+  locationText?: string | null;
+  mapUrl?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 export interface AnnouncementRequest {
   requestId: number;

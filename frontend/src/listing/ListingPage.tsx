@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, CalendarX, Check, MapPin, Star, UserRound } from 'lucide-react';
+import { ArrowLeft, CalendarX, Check, Heart, MapPin, Share2, Star, UserRound } from 'lucide-react';
 import { request } from '../utils/request';
 import { useLanguage } from '../i18n/language';
 import { pricingUnitLabel } from './availability';
@@ -20,6 +20,9 @@ export default function ListingPage({
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const [favorite, setFavorite] = useState(false);
+  const [shareLabel, setShareLabel] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -68,6 +71,23 @@ export default function ListingPage({
     [listing.owner?.firstName, listing.owner?.lastName].filter(Boolean).join(' ') ||
     copy.ownerFallback;
   const unit = pricingUnitLabel(listing.pricingUnit, copy, listing.serviceType);
+  const latitude = listing.latitude ?? listing.location?.lat;
+  const longitude = listing.longitude ?? listing.location?.lng;
+  const hasMap = Number.isFinite(latitude) && Number.isFinite(longitude) && !(latitude === 0 && longitude === 0);
+  const mapSrc = hasMap ? `https://www.google.com/maps?q=${latitude},${longitude}&z=15&output=embed` : '';
+  const toggleFavorite = async () => {
+    try {
+      const result = await request<{ favorited?: boolean }>(`/favorites/${listing.listingId}/toggle`, { method: 'POST' });
+      setFavorite(result.favorited ?? !favorite);
+    } catch { window.location.assign(`/?login=1&next=${encodeURIComponent(window.location.pathname)}`); }
+  };
+  const share = async () => {
+    const details = { title: listing.title, url: window.location.href };
+    try {
+      if (navigator.share) await navigator.share(details);
+      else { await navigator.clipboard.writeText(window.location.href); setShareLabel(copy.shared); setTimeout(() => setShareLabel(''), 1800); }
+    } catch { /* The user can dismiss the native share sheet. */ }
+  };
   const goToCheckout = async () => {
     try {
       await request('/auth/session');
@@ -90,6 +110,10 @@ export default function ListingPage({
           {copy.back}
         </a>
       </header>
+      <section className="listing-titlebar">
+        <div><h1>{listing.title}</h1><p><Star fill="currentColor" size={15} /><b>{listing.rating.average?.toFixed(1) || '—'}</b><span>·</span><a href="#reviews">{listing.rating.count} {copy.review}</a><span>·</span><span>{listing.locationText || listing.location?.name}</span></p></div>
+        <div className="listing-actions"><button type="button" onClick={() => void share()}><Share2 />{shareLabel || copy.share}</button><button type="button" className={favorite ? 'active' : ''} onClick={() => void toggleFavorite()}><Heart fill={favorite ? 'currentColor' : 'none'} />{favorite ? copy.favorited : copy.favorite}</button></div>
+      </section>
       <section
         className={`listing-gallery gallery-${Math.min(images.length, 5)}`}
         aria-label={copy.gallery}
@@ -127,8 +151,8 @@ export default function ListingPage({
                   {listing.location.name}
                 </small>
               )}
-              <h1>{listing.title}</h1>
-              <p>{listing.description}</p>
+              <h2>{listing.propertyType?.name || listing.title}</h2>
+              <p>{[listing.guestCapacity && `${listing.guestCapacity} ${language === 'fr' ? 'voyageurs' : language === 'ar' ? 'ضيوف' : 'guests'}`, listing.bedrooms && `${listing.bedrooms} ${language === 'fr' ? 'chambres' : language === 'ar' ? 'غرف' : 'bedrooms'}`, listing.beds && `${listing.beds} ${language === 'fr' ? 'lits' : language === 'ar' ? 'أسرّة' : 'beds'}`, listing.bathrooms && `${listing.bathrooms} ${language === 'fr' ? 'salles de bain' : language === 'ar' ? 'حمامات' : 'bathrooms'}`].filter(Boolean).join(' · ')}</p>
             </div>
             <div className="detail-rating">
               <Star fill="currentColor" size={18} />
@@ -145,7 +169,8 @@ export default function ListingPage({
               <b>{ownerName}</b>
             </div>
           </article>
-          <section className="detail-section">
+          {listing.description && <section className={`detail-section listing-description ${descriptionOpen ? 'open' : ''}`}><h2>{copy.description}</h2><div><p>{listing.description}</p></div><button type="button" onClick={() => setDescriptionOpen(value => !value)}>{descriptionOpen ? copy.readLess : copy.readMore}</button></section>}
+          <section className="detail-section" id="reviews">
             <h2>{copy.amenities}</h2>
             {listing.amenities.length ? (
               <div className="amenity-grid">
@@ -160,6 +185,7 @@ export default function ListingPage({
               <p>{copy.noAmenities}</p>
             )}
           </section>
+          {hasMap && <section className="detail-section listing-map"><h2>{copy.location}</h2><p>{listing.locationText || listing.location?.name}</p><div><iframe title={copy.location} src={mapSrc} loading="lazy" referrerPolicy="no-referrer-when-downgrade" /></div><small><MapPin size={14} />{copy.mapHint}</small></section>}
           <section className="detail-section">
             <h2>{copy.availability}</h2>
             {listing.availability.length ? (
@@ -211,6 +237,7 @@ export default function ListingPage({
           <p>{copy.loginToBook}</p>
         </aside>
       </section>
+      <footer className="listing-footer"><div><a className="brand" href="/"><b>I</b> immoove<span>.</span></a><p>{copy.footerText}</p></div><nav><small>{copy.exploreFooter}</small><a href="/properties">{copy.stays}</a></nav><div><a href={`/terms?language=${language}`}>{copy.terms}</a><a href={`/privacy?language=${language}`}>{copy.privacy}</a></div><p>© 2026 Immoove · {copy.madeWithCare}</p></footer>
     </main>
   );
 }
