@@ -3303,3 +3303,13 @@ textarea:focus-visible {
   background: #fff3cd;
   color: #664d03;
 }
+.pending-booking-reminder { position: fixed; z-index: 900; top: 92px; right: clamp(16px,3vw,42px); width: min(410px,calc(100vw - 32px)); display: grid; grid-template-columns: 45px 1fr 30px; gap: 13px; padding: 18px; border: 1px solid rgba(196,134,28,.3); border-radius: 17px; background: rgba(255,252,244,.98); color: var(--navy); box-shadow: 0 20px 55px rgba(6,43,59,.2); backdrop-filter: blur(14px); animation: pending-enter .35s ease-out; }
+.pending-booking-reminder > span { display: grid; place-items: center; width: 45px; height: 45px; border-radius: 50%; background: #fff0c9; color: #9a6810; }
+.pending-booking-reminder > div { display: grid; gap: 5px; }
+.pending-booking-reminder small { color: #9a6810; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+.pending-booking-reminder b { font-size: 13px; line-height: 1.45; }
+.pending-booking-reminder a { margin-top: 3px; color: var(--coral-dark); font-size: 12px; font-weight: 800; text-decoration: underline; }
+.pending-booking-reminder > button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--navy); cursor: pointer; }
+.pending-booking-reminder > button:hover { background: #f1eadc; }
+.pending-booking-reminder > button svg { width: 17px; }
+@keyframes pending-enter { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }

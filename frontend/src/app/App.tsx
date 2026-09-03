@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowUpRight, MapPin } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Clock3, MapPin, X } from 'lucide-react';
 import AnnouncementModal from '../components/AnnouncementModal';
 import CategoryGrid from '../components/CategoryGrid';
 import Heading from '../components/Heading';
@@ -24,6 +24,8 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
 
   const [listings, setListings] = useState(fallbackListings);
+  const [pendingBooking, setPendingBooking] = useState<{ bookingId: number; listingId: number; listing?: { title?: string } } | null>(null);
+  const reminderCopy = language === 'fr' ? { title: 'Demande en attente', body: 'Votre demande pour {listing} a bien été reçue. Nous vous contacterons bientôt pour la confirmation.', view: 'Voir mes réservations', close: 'Fermer' } : language === 'ar' ? { title: 'طلب قيد الانتظار', body: 'تم استلام طلبك لـ {listing}. سنتواصل معك قريباً للتأكيد.', view: 'عرض حجوزاتي', close: 'إغلاق' } : { title: 'Booking request pending', body: 'We received your request for {listing}. We’ll contact you soon to confirm it.', view: 'View my bookings', close: 'Close' };
 
   useEffect(() => {
     request<{
@@ -37,6 +39,11 @@ export default function App() {
       })
       .catch(() => {});
   }, []);
+  useEffect(() => {
+    if (!currentUser) { setPendingBooking(null); return; }
+    request<{ items: Array<{ bookingId: number; listingId: number; listing?: { title?: string } }> }>('/bookings?status=pending&page=1&pageSize=1')
+      .then(result => setPendingBooking(result.items[0] || null)).catch(() => setPendingBooking(null));
+  }, [currentUser]);
 
   const notify = (text: string) => {
     setMessage(text);
@@ -80,6 +87,7 @@ export default function App() {
         onAnnouncement={() => setModal(true)}
         onUserChange={setCurrentUser}
       />
+      {pendingBooking && <aside className="pending-booking-reminder" role="status"><span><Clock3 /></span><div><small>{reminderCopy.title}</small><b>{reminderCopy.body.replace('{listing}', pendingBooking.listing?.title || `#${pendingBooking.listingId}`)}</b><a href="/profile?section=trips">{reminderCopy.view}</a></div><button aria-label={reminderCopy.close} onClick={() => setPendingBooking(null)}><X /></button></aside>}
 
       <main>
         {/* HERO */}

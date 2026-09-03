@@ -94,6 +94,7 @@ export default function ProfileTrips({ language, notify }: Props) {
               <div className="trip-copy">
                 <small>{copy.booking} #{booking.bookingId}</small>
                 <h3>{booking.listing?.title || `${copy.booking} #${booking.bookingId}`}</h3>
+                {['pending', 'processing'].includes(booking.status) && <div className="trip-pending-message"><CalendarDays size={16} />{copy.pendingConfirmation}</div>}
                 <p><MapPin size={15} /> {[booking.listing?.area?.name, booking.listing?.city?.name].filter(Boolean).join(', ')}</p>
                 <p><CalendarDays size={15} /> {new Date(booking.startDate).toLocaleDateString(locale)} – {new Date(booking.endDate).toLocaleDateString(locale)}</p>
                 {booking.listing?.guestCapacity && <p><UsersRound size={15} /> {booking.listing.guestCapacity} {copy.guests}</p>}

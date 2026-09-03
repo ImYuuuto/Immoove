@@ -80,9 +80,9 @@ function formatDateLabel(value: string, language: 'fr' | 'en' | 'ar') {
   return new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : language === 'ar' ? 'ar-MA' : 'fr-MA', { day: 'numeric', month: 'short' }).format(new Date(`${value}T00:00:00`));
 }
 
-function DateRangeCalendar({ language, labels, checkIn, checkOut, onChange }: {
+export function DateRangeCalendar({ language, labels, checkIn, checkOut, onChange }: {
   language: 'fr' | 'en' | 'ar';
-  labels: typeof copy.en;
+  labels: { checkOut: string; chooseDates: string };
   checkIn?: string;
   checkOut?: string;
   onChange: (checkIn: string, checkOut: string) => void;

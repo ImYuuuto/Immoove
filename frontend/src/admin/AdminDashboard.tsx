@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Menu, ShieldAlert, X } from 'lucide-react';
+import { Menu, ShieldAlert, X } from 'lucide-react';
 import './admin.css';
 import './admin-polish.css';
 import { api } from './api';
@@ -112,10 +112,6 @@ export default function AdminDashboard() {
             <h1>{titles[view]}</h1>
           </div>
           <div className="admin-header-account">
-            <a className="admin-header-profile" href="/profile">
-              <ArrowLeft size={16} />
-              {copy.backProfile}
-            </a>
             <div className="admin-user">
               <span>{roleLabel(user?.role, language)}</span>
               <b>

@@ -256,6 +256,20 @@
     serif;
   margin: 0 0 22px;
 }
+.checkout-calendar-wrap { position: relative; }
+.checkout-date-trigger { width: 100%; display: grid; grid-template-columns: 24px 1fr auto 1fr; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid #d7d1c7; border-radius: 14px; background: #fbfaf7; color: #18342f; text-align: start; cursor: pointer; }
+.checkout-date-trigger > svg { color: #c75f4a; }
+.checkout-date-trigger span { display: grid; gap: 4px; }
+.checkout-date-trigger small { color: #7a8783; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.checkout-date-trigger b { font-size: 14px; }
+.checkout-date-trigger i { color: #c75f4a; font-style: normal; }
+.checkout-calendar-wrap .date-range-calendar { top: calc(100% + 10px); left: 0; width: min(390px,100%); transform: none; }
+.checkout-calendar-wrap .date-range-calendar header button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid #d7d1c7; border-radius: 50%; background: white; color: #18342f; }
+.checkout-calendar-wrap .calendar-days button { width: 100%; height: 42px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #18342f; font-weight: 700; }
+.checkout-calendar-wrap .calendar-days button:hover:not(:disabled) { background: #f5f1e9; box-shadow: inset 0 0 0 1px #c75f4a; }
+.checkout-calendar-wrap .calendar-days button:disabled { color: #c7cdcd; }
+.checkout-calendar-wrap .calendar-days button.in-range { border-radius: 0; background: #fbe8e2; }
+.checkout-calendar-wrap .calendar-days button.range-start,.checkout-calendar-wrap .calendar-days button.range-end { background: #c75f4a; color: white; }
 .checkout-fields {
   display: grid;
   gap: 16px;

@@ -50,10 +50,10 @@ export function OverviewView({
           </strong>
           <span>{copy.visibleAddresses}</span>
         </article>
-        <article>
-          <small>{copy.listings.toUpperCase()}</small>
-          <strong>{listings.length}</strong>
-          <span>{copy.totalRecorded}</span>
+        <article className="stat-attention">
+          <small>{copy.pending} {copy.bookings.toUpperCase()}</small>
+          <strong>{kpis?.pendingBookings ?? bookings.filter(item => item.status === 'pending' || item.status === 'processing').length}</strong>
+          <span>{copy.toProcess}</span>
         </article>
         <article>
           <small>{extra.grossBookingValue}</small>
@@ -63,11 +63,9 @@ export function OverviewView({
           </span>
         </article>
         <article>
-          <small>{copy.bookings.toUpperCase()}</small>
-          <strong>{kpis?.bookings ?? bookings.length}</strong>
-          <span>
-            {((kpis?.cancellationRate || 0) * 100).toFixed(1)}% {extra.cancelled}
-          </span>
+          <small>{copy.users.toUpperCase()}</small>
+          <strong>{kpis?.totalUsers ?? 0}</strong>
+          <span>{copy.accounts}</span>
         </article>
       </div>
       <div className="admin-panels admin-panels-single">
@@ -571,9 +569,11 @@ export function BookingsView({
               </span>
               <span className="actions">
                 <select
-                  value={item.status || 'confirmed'}
+                  value={item.status || 'pending'}
                   onChange={(event) => onUpdate(item.bookingId, { status: event.target.value })}
                 >
+                  <option value="pending">{copy.pendingStatus}</option>
+                  <option value="processing">{extra.processing}</option>
                   <option value="confirmed">{extra.confirmed}</option>
                   <option value="completed">{extra.completed}</option>
                   <option value="cancelled">{extra.cancelledStatus}</option>

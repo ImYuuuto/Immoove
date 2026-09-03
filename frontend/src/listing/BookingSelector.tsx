@@ -9,6 +9,8 @@ import {
 import { useListingCopy } from './listingI18n';
 import { useLanguage } from '../i18n/language';
 import type { BookingMode, ListingDetail } from './types';
+import { CalendarDays } from 'lucide-react';
+import { DateRangeCalendar } from '../components/HeroSearch';
 
 export type BookingSelection = { startDate: string; endDate: string; valid: boolean };
 
@@ -30,6 +32,7 @@ export default function BookingSelector({
   const [sessionDate, setSessionDate] = useState('');
   const [sessionTime, setSessionTime] = useState('');
   const [blockedAttempt, setBlockedAttempt] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const selection = useMemo(() => {
     if (mode === 'range') return { startDate: dateAtNoonUtc(start), endDate: dateAtNoonUtc(end) };
@@ -99,27 +102,9 @@ export default function BookingSelector({
             : copy.serviceSession}
       </h2>
       {mode === 'range' && (
-        <div className="checkout-fields two">
-          <label>
-            {copy.startDate}
-            <input
-              required
-              type="date"
-              min={today}
-              value={start}
-              onChange={(event) => selectStart(event.target.value)}
-            />
-          </label>
-          <label>
-            {copy.endDate}
-            <input
-              required
-              type="date"
-              min={start || today}
-              value={end}
-              onChange={(event) => selectEnd(event.target.value)}
-            />
-          </label>
+        <div className="checkout-calendar-wrap">
+          <button className="checkout-date-trigger" type="button" onClick={() => setCalendarOpen(value => !value)}><CalendarDays /><span><small>{copy.startDate}</small><b>{start ? new Date(`${start}T00:00:00`).toLocaleDateString(locale, { day: 'numeric', month: 'short' }) : copy.chooseDates}</b></span><i>→</i><span><small>{copy.endDate}</small><b>{end ? new Date(`${end}T00:00:00`).toLocaleDateString(locale, { day: 'numeric', month: 'short' }) : copy.chooseDates}</b></span></button>
+          {calendarOpen && <DateRangeCalendar language={language} labels={{ checkOut: copy.endDate, chooseDates: copy.chooseDates }} checkIn={start} checkOut={end} onChange={(nextStart, nextEnd) => { selectStart(nextStart); if (nextEnd) { selectEnd(nextEnd); setCalendarOpen(false); } else setEnd(''); }} />}
         </div>
       )}
       {mode === 'hourly' && (

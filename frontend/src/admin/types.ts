@@ -66,7 +66,7 @@ export type Booking = {
   startDate?: string;
   endDate?: string;
   total?: number;
-  status?: 'confirmed' | 'cancelled' | 'completed' | 'refunded';
+  status?: 'pending' | 'processing' | 'confirmed' | 'cancelled' | 'completed' | 'rejected' | 'refunded';
   paymentStatus?: string;
   currency?: string;
 };
@@ -81,6 +81,7 @@ export type AdminOverview = {
     pendingListings: number;
     pendingRequests: number;
     bookings: number;
+    pendingBookings: number;
     grossBookingValue: number;
     cancellationRate: number;
   };

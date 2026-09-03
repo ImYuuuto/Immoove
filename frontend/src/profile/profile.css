@@ -454,15 +454,19 @@
 .trip-tabs button.active { border-color: var(--navy); background: var(--navy); color: white; }
 .trip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
 .trip-card { overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: white; }
+.trip-card:has(.status-pending), .trip-card:has(.status-processing) { border: 2px solid #e2ad43; box-shadow: 0 10px 30px rgba(202,142,29,.18); }
 .trip-image { position: relative; height: 175px; display: grid; place-items: center; overflow: hidden; background: var(--cream-2); color: var(--coral); font: 600 25px 'Playfair Display', serif; }
 .trip-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .25s ease; }
 .trip-image:hover img { transform: scale(1.025); }
 .trip-status { position: absolute; top: 12px; inset-inline-end: 12px; padding: 6px 9px; border-radius: 999px; background: white; color: var(--ink); font-size: 9px; text-transform: uppercase; }
 .trip-status.status-confirmed, .trip-status.status-completed { background: #dcecdf; color: #28704e; }
+.trip-status.status-pending, .trip-status.status-processing { background: #fff0c9; color: #875b08; box-shadow: 0 3px 12px rgba(109,72,2,.16); }
 .trip-status.status-cancelled, .trip-status.status-rejected, .trip-status.status-refunded { background: #f8dcd7; color: #a54636; }
 .trip-copy { padding: 19px; }
 .trip-copy > small { color: var(--coral); font-weight: 800; }
 .trip-copy h3 { margin: 6px 0 13px; font: 600 23px 'Playfair Display', serif; }
+.trip-pending-message { display: flex; align-items: center; gap: 7px; margin: 0 0 13px; padding: 10px; border-radius: 9px; background: #fff6dc; color: #875b08; font-size: 11px; font-weight: 800; line-height: 1.35; }
+.trip-pending-message svg { flex: 0 0 auto; }
 .trip-copy p { display: flex; align-items: center; gap: 7px; margin: 7px 0; color: var(--muted); font-size: 12px; }
 .trip-total { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 13px; border-top: 1px solid var(--line); }
 .trip-total span { color: var(--muted); }
