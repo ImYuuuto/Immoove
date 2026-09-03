@@ -77,8 +77,8 @@ export default function ListingPage({
   const mapSrc = hasMap ? `https://www.google.com/maps?q=${latitude},${longitude}&z=15&output=embed` : '';
   const toggleFavorite = async () => {
     try {
-      const result = await request<{ favorited?: boolean }>(`/favorites/${listing.listingId}/toggle`, { method: 'POST' });
-      setFavorite(result.favorited ?? !favorite);
+      const result = await request<{ saved: boolean }>(`/favorites/${listing.listingId}/toggle`, { method: 'POST' });
+      setFavorite(result.saved);
     } catch { window.location.assign(`/?login=1&next=${encodeURIComponent(window.location.pathname)}`); }
   };
   const share = async () => {

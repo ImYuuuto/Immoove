@@ -4,13 +4,7 @@ import { useLanguage } from '../i18n/language';
 import '../properties/property.css';
 import ResponsiveImage from './ResponsiveImage';
 
-export default function CategoryGrid({
-  onAnnouncement,
-  showAnnouncement = true,
-}: {
-  onAnnouncement: () => void;
-  showAnnouncement?: boolean;
-}) {
+export default function CategoryGrid() {
   const { language, text } = useLanguage();
   const labels = {
     fr: ['Appartements', 'Studios', 'Villas'],
@@ -79,11 +73,6 @@ export default function CategoryGrid({
           </a>
         ))}
       </div>
-      {showAnnouncement && (
-        <button className="discover-host-link" onClick={onAnnouncement}>
-          {text.shareAddress}
-        </button>
-      )}
     </section>
   );
 }

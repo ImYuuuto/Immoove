@@ -3,6 +3,27 @@
   background: #f7f4ee;
   color: var(--navy);
 }
+
+.property-favorite-toast {
+  position: fixed;
+  top: 88px;
+  left: 50%;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 17px;
+  border-radius: 999px;
+  background: #083849;
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 14px 38px rgba(6, 43, 59, .25);
+  transform: translateX(-50%);
+}
+
+.property-favorite-toast svg { color: #e78168; }
 .category-directory-page .categories {
   padding-top: 90px;
 }

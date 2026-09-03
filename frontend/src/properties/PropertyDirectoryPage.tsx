@@ -1,5 +1,5 @@
 import { type CSSProperties, FormEvent, useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Heart, Search, SlidersHorizontal } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
 import { useLanguage } from '../i18n/language';
 import { request } from '../utils/request';
@@ -49,6 +49,8 @@ const copy = {
     home: 'Accueil',
     moreFilters: 'Plus de filtres',
     fewerFilters: 'Moins de filtres',
+    saved: 'Logement ajouté aux favoris.',
+    removed: 'Logement retiré des favoris.',
   },
   en: {
     title: 'Find your next property',
@@ -83,6 +85,8 @@ const copy = {
     home: 'Home',
     moreFilters: 'More filters',
     fewerFilters: 'Fewer filters',
+    saved: 'Property saved to your favorites.',
+    removed: 'Property removed from your favorites.',
   },
   ar: {
     title: 'اعثروا على إقامتكم القادمة',
@@ -117,6 +121,8 @@ const copy = {
     home: 'الرئيسية',
     moreFilters: 'المزيد من الفلاتر',
     fewerFilters: 'فلاتر أقل',
+    saved: 'تمت إضافة العقار إلى المفضلة.',
+    removed: 'تمت إزالة العقار من المفضلة.',
   },
 };
 
@@ -137,6 +143,9 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
   const [data, setData] = useState<PropertySearchResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [savingFavorites, setSavingFavorites] = useState<Set<number>>(new Set());
+  const [favoriteMessage, setFavoriteMessage] = useState('');
   const [showMoreFilters, setShowMoreFilters] = useState(() =>
     ['min_price', 'max_price', 'bedrooms', 'bathrooms', 'min_rating', 'amenities', 'instant_available'].some((key) => initialFilters(propertyPath).has(key)),
   );
@@ -166,6 +175,9 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
   };
   useEffect(() => {
     void load();
+    request<{ items: Array<{ listingId?: number }> }>('/favorites')
+      .then((result) => setFavoriteIds(new Set(result.items.flatMap((item) => item.listingId ? [item.listingId] : []))))
+      .catch(() => undefined);
   }, []);
 
   const set = (name: string, value: string) => {
@@ -199,12 +211,27 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
   };
   const favorite = async (listingId?: number) => {
     if (!listingId) return;
+    if (savingFavorites.has(listingId)) return;
+    setSavingFavorites((current) => new Set(current).add(listingId));
     try {
-      await request(`/favorites/${listingId}/toggle`, { method: 'POST' });
+      const result = await request<{ saved: boolean }>(`/favorites/${listingId}/toggle`, { method: 'POST' });
+      setFavoriteIds((current) => {
+        const next = new Set(current);
+        result.saved ? next.add(listingId) : next.delete(listingId);
+        return next;
+      });
+      setFavoriteMessage(result.saved ? text.saved : text.removed);
+      window.setTimeout(() => setFavoriteMessage(''), 2500);
     } catch {
       window.location.assign(
         `/?login=1&next=${encodeURIComponent(window.location.pathname + window.location.search)}`,
       );
+    } finally {
+      setSavingFavorites((current) => {
+        const next = new Set(current);
+        next.delete(listingId);
+        return next;
+      });
     }
   };
   const amenityValues = (filters.get('amenities') || '').split(',').filter(Boolean);
@@ -212,6 +239,7 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
 
   return (
     <main className="category-page property-discovery">
+      {favoriteMessage && <div className="property-favorite-toast" role="status"><Heart size={17} fill="currentColor" />{favoriteMessage}</div>}
       <header className="category-topbar">
         <a className="brand" href="/">
           <b>I</b>immoove<span>.</span>
@@ -356,6 +384,8 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
               {data.items.map((listing, index) => (
                 <ListingCard
                   listing={listing}
+                  saved={Boolean(listing.listingId && favoriteIds.has(listing.listingId))}
+                  saving={Boolean(listing.listingId && savingFavorites.has(listing.listingId))}
                   imagePriority={index === 0}
                   onFavorite={favorite}
                   onBook={(item) =>

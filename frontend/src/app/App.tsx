@@ -153,10 +153,7 @@ export default function App() {
 
         {/* CATEGORIES */}
 
-        <CategoryGrid
-          onAnnouncement={() => setModal(true)}
-          showAnnouncement={Boolean(currentUser)}
-        />
+        <CategoryGrid />
 
         {/* ESCAPES */}
 

@@ -25,12 +25,16 @@ export default function ListingCard({
   onFavorite,
   onBook,
   imagePriority = false,
+  saved = false,
+  saving = false,
 }: {
   listing: Listing;
   onFavorite: (id?: number) => void;
   onBook: (listing: Listing) => void;
   categorySlug?: string;
   imagePriority?: boolean;
+  saved?: boolean;
+  saving?: boolean;
 }) {
   const { language, text } = useLanguage();
   const detailUrl = listing.listingId ? `/listings/${listing.listingId}` : '';
@@ -94,8 +98,14 @@ export default function ListingCard({
 
         <span>{text.selection}</span>
 
-        <button onClick={() => onFavorite(listing.listingId)} aria-label={text.addFavorite}>
-          <Heart size={18} />
+        <button
+          className={saved ? 'favorite-active' : ''}
+          disabled={saving}
+          aria-pressed={saved}
+          onClick={() => onFavorite(listing.listingId)}
+          aria-label={text.addFavorite}
+        >
+          <Heart size={18} fill={saved ? 'currentColor' : 'none'} />
         </button>
       </div>
 
