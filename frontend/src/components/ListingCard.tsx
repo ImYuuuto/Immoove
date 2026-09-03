@@ -1,9 +1,24 @@
-import { Heart, Star } from 'lucide-react';
+import { Car, CheckCircle2, CookingPot, Heart, ShieldCheck, Snowflake, Sparkles, Star, Trees, Tv, Waves, Wifi } from 'lucide-react';
 import { fallbackListings } from '../data/content';
 import type { Listing } from '../types';
 import { decodeText } from '../utils/decodeText';
 import { useLanguage } from '../i18n/language';
 import ResponsiveImage from './ResponsiveImage';
+
+function AmenityIcon({ name }: { name: string }) {
+  const value = name.toLowerCase();
+  if (value.includes('wi-fi') || value.includes('wifi')) return <Wifi />;
+  if (value.includes('parking') || value.includes('garage')) return <Car />;
+  if (value.includes('pool') || value.includes('piscine')) return <Waves />;
+  if (value.includes('sea') || value.includes('ocean') || value.includes('plage')) return <Waves />;
+  if (value.includes('kitchen') || value.includes('cuisine')) return <CookingPot />;
+  if (value.includes('air condition') || value.includes('climatisation')) return <Snowflake />;
+  if (value.includes('tv') || value.includes('television')) return <Tv />;
+  if (value.includes('security') || value.includes('sécurité')) return <ShieldCheck />;
+  if (value.includes('garden') || value.includes('terrace') || value.includes('jardin')) return <Trees />;
+  if (value.includes('clean')) return <Sparkles />;
+  return <CheckCircle2 />;
+}
 
 export default function ListingCard({
   listing,
@@ -108,7 +123,16 @@ export default function ListingCard({
           )}
         </h3>
 
-        <p>{decodeText(listing.description) || text.listingFallback}</p>
+        {listing.amenities?.length ? (
+          <div className="listing-amenities" aria-label="Amenities">
+            {listing.amenities.slice(0, 6).map((amenity) => (
+              <span key={amenity.featureId}>
+                <AmenityIcon name={amenity.name} />
+                {decodeText(amenity.name)}
+              </span>
+            ))}
+          </div>
+        ) : null}
 
         <b>
           {text.from}{' '}

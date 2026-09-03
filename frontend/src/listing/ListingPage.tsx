@@ -163,7 +163,9 @@ export default function ListingPage({
             </div>
           </div>
           <article className="owner-card">
-            <UserRound />
+            {listing.owner?.photoUrl
+              ? <ResponsiveImage src={listing.owner.photoUrl} alt={ownerName} width={52} height={52} sizes="52px" />
+              : <UserRound />}
             <div>
               <small>{copy.owner}</small>
               <b>{ownerName}</b>

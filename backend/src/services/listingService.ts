@@ -83,7 +83,9 @@ async function hydrate(
     query<any>(
       `SELECT c.category_id, c.name, c.slug, l.location_id, l.name AS location_name,
               COALESCE(x.latitude,l.lat) AS lat, COALESCE(x.longitude,l.lng) AS lng,
-              u.user_id, u.first_name, u.last_name,
+              u.user_id, u.first_name AS provider_first_name, u.last_name AS provider_last_name,
+              po.owner_id, po.first_name AS owner_first_name, po.last_name AS owner_last_name,
+              po.photo_url AS owner_photo_url,
               pt.property_type_id, pt.name AS property_type_name, pt.slug AS property_type_slug,
               a.area_id, a.name AS area_name, ci.city_id, ci.name AS city_name,
               r.region_id, r.name AS region_name
@@ -91,6 +93,7 @@ async function hydrate(
        LEFT JOIN categories c ON c.category_id = x.category_id
        LEFT JOIN locations l ON l.location_id = x.location_id
        LEFT JOIN users u ON u.user_id = x.provider_id
+       LEFT JOIN property_owners po ON po.owner_id = x.owner_id
        LEFT JOIN property_types pt ON pt.property_type_id = x.property_type_id
        LEFT JOIN areas a ON a.area_id = x.area_id
        LEFT JOIN cities ci ON ci.city_id = a.city_id
@@ -165,17 +168,24 @@ async function hydrate(
     provider: meta?.user_id
       ? {
           userId: meta.user_id,
-          firstName: decodeStoredText(meta.first_name || ''),
-          lastName: decodeStoredText(meta.last_name || ''),
+          firstName: decodeStoredText(meta.provider_first_name || ''),
+          lastName: decodeStoredText(meta.provider_last_name || ''),
         }
       : undefined,
-    owner: meta?.user_id
+    owner: meta?.owner_id
       ? {
-          userId: meta.user_id,
-          firstName: decodeStoredText(meta.first_name || ''),
-          lastName: decodeStoredText(meta.last_name || ''),
+          ownerId: meta.owner_id,
+          firstName: decodeStoredText(meta.owner_first_name || ''),
+          lastName: decodeStoredText(meta.owner_last_name || ''),
+          photoUrl: meta.owner_photo_url,
         }
-      : undefined,
+      : meta?.user_id
+        ? {
+            userId: meta.user_id,
+            firstName: decodeStoredText(meta.provider_first_name || ''),
+            lastName: decodeStoredText(meta.provider_last_name || ''),
+          }
+        : undefined,
   };
 }
 
@@ -382,12 +392,12 @@ export class ListingService {
   }
 
   static async featured() {
-    return cached('listings', 'featured', () => this.featuredUncached());
+    return cached('listings', 'featured-v2', () => this.featuredUncached());
   }
 
   private static async featuredUncached() {
     const rows = await query<{ listing_id: number }>(
-      "SELECT listing_id FROM listings WHERE status='approved' AND is_active=true AND is_featured=true AND archived_at IS NULL AND service_type='VACATION_RENTAL' ORDER BY created_at DESC",
+      "SELECT listing_id FROM listings WHERE status='approved' AND is_active=true AND archived_at IS NULL AND service_type='VACATION_RENTAL' ORDER BY is_featured DESC, created_at DESC LIMIT 6",
     );
     const items = await Promise.all(
       rows.rows.map((row) =>

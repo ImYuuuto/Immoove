@@ -129,6 +129,14 @@
   display: grid;
   gap: 4px;
 }
+.owner-card > picture,
+.owner-card > picture img {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  border-radius: 50%;
+  object-fit: cover;
+}
 .detail-section {
   padding: 32px 0;
   border-top: 1px solid #d9d2c7;

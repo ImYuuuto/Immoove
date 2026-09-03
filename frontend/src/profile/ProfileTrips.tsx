@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, MapPin, UsersRound, X } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Star, UsersRound, X } from 'lucide-react';
 import ResponsiveImage from '../components/ResponsiveImage';
 import type { Language } from '../types';
 import { request } from '../utils/request';
@@ -17,6 +17,9 @@ export default function ProfileTrips({ language, notify }: Props) {
   const [cities, setCities] = useState<PropertyDiscoveryOptions['cities']>([]);
   const [items, setItems] = useState<ProfileBooking[]>([]);
   const [selected, setSelected] = useState<ProfileBooking | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -60,6 +63,33 @@ export default function ProfileTrips({ language, notify }: Props) {
     }
   };
 
+  const openDetails = (booking: ProfileBooking) => {
+    setSelected(booking);
+    setReviewRating(5);
+    setReviewComment('');
+  };
+
+  const submitReview = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!selected || !reviewComment.trim()) return;
+    setReviewSubmitting(true);
+    try {
+      await request('/reviews', {
+        method: 'POST',
+        body: JSON.stringify({ bookingId: selected.bookingId, rating: reviewRating, comment: reviewComment.trim() }),
+      });
+      const reviewed = { ...selected, hasReview: true, canReview: false };
+      setItems((current) => current.map((item) => item.bookingId === selected.bookingId ? reviewed : item));
+      setSelected(reviewed);
+      setReviewComment('');
+      notify(copy.reviewSaved);
+    } catch (error) {
+      notify(error instanceof Error ? error.message : copy.reviewFailed);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
   const tabs: Array<[TripState, string]> = [
     ['all', copy.all], ['upcoming', copy.upcoming], ['current', copy.current],
     ['past', copy.past], ['cancelled', copy.cancelled],
@@ -100,7 +130,7 @@ export default function ProfileTrips({ language, notify }: Props) {
                 {booking.listing?.guestCapacity && <p><UsersRound size={15} /> {booking.listing.guestCapacity} {copy.guests}</p>}
                 <div className="trip-total"><span>{copy.total}</span><b>{booking.total.toLocaleString(locale)} {booking.currency}</b></div>
                 <div className="trip-actions">
-                  <button onClick={() => setSelected(booking)}>{copy.details}</button>
+                  <button onClick={() => openDetails(booking)}>{copy.details}</button>
                   <a href={`/listings/${booking.listingId}`}>{copy.viewProperty}</a>
                 </div>
               </div>
@@ -129,7 +159,39 @@ export default function ProfileTrips({ language, notify }: Props) {
               <div><dt>{copy.phone}</dt><dd>{selected.phone}</dd></div>
             </dl>
             <a className="drawer-primary" href={`/listings/${selected.listingId}`}>{copy.viewProperty}</a>
-            {selected.canReview && <a className="drawer-secondary" href={`/listings/${selected.listingId}#reviews`}>{copy.reviewStay}</a>}
+            {selected.canReview && (
+              <form className="trip-review-form" onSubmit={submitReview}>
+                <h3>{copy.reviewStay}</h3>
+                <label>{copy.ratingLabel}</label>
+                <div className="review-rating-picker" role="radiogroup" aria-label={copy.ratingLabel}>
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      type="button"
+                      role="radio"
+                      aria-checked={reviewRating === rating}
+                      aria-label={`${rating} / 5`}
+                      onClick={() => setReviewRating(rating)}
+                    >
+                      <Star size={25} fill={rating <= reviewRating ? 'currentColor' : 'none'} />
+                    </button>
+                  ))}
+                </div>
+                <label htmlFor="trip-review-comment">{copy.commentLabel}</label>
+                <textarea
+                  id="trip-review-comment"
+                  required
+                  maxLength={2000}
+                  rows={5}
+                  placeholder={copy.commentPlaceholder}
+                  value={reviewComment}
+                  onChange={(event) => setReviewComment(event.target.value)}
+                />
+                <button className="drawer-secondary" type="submit" disabled={reviewSubmitting || !reviewComment.trim()}>
+                  {reviewSubmitting ? copy.submittingReview : copy.submitReview}
+                </button>
+              </form>
+            )}
             {canCancel(selected) && <button className="drawer-danger" onClick={() => void cancelBooking(selected)}>{copy.cancelBooking}</button>}
           </aside>
         </div>

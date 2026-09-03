@@ -1342,6 +1342,37 @@ img {
   line-height: 1.55;
 }
 
+.listing-amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-height: 33px;
+  margin: 1px 0 18px;
+}
+
+.listing-amenities span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 6px 9px;
+  border: 1px solid rgba(6, 43, 59, 0.1);
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--navy);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.listing-amenities svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  color: var(--coral-dark);
+}
+
 .listing-info b {
   font-size: 14px;
 }

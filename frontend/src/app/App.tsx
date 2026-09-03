@@ -7,7 +7,6 @@ import HeroSearch from '../components/HeroSearch';
 import ListingCard from '../components/ListingCard';
 import { EditorialSection, Newsletter, WhyImmoove } from '../components/LuxurySections';
 import Navbar from '../components/Navbar';
-import { fallbackListings } from '../data/content';
 import type { AuthUser, Listing, SearchFilters } from '../types';
 import { request } from '../utils/request';
 import { useLanguage } from '../i18n/language';
@@ -23,7 +22,7 @@ export default function App() {
 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
 
-  const [listings, setListings] = useState(fallbackListings);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [pendingBooking, setPendingBooking] = useState<{ bookingId: number; listingId: number; listing?: { title?: string } } | null>(null);
   const reminderCopy = language === 'fr' ? { title: 'Demande en attente', body: 'Votre demande pour {listing} a bien été reçue. Nous vous contacterons bientôt pour la confirmation.', view: 'Voir mes réservations', close: 'Fermer' } : language === 'ar' ? { title: 'طلب قيد الانتظار', body: 'تم استلام طلبك لـ {listing}. سنتواصل معك قريباً للتأكيد.', view: 'عرض حجوزاتي', close: 'إغلاق' } : { title: 'Booking request pending', body: 'We received your request for {listing}. We’ll contact you soon to confirm it.', view: 'View my bookings', close: 'Close' };
 
@@ -32,10 +31,7 @@ export default function App() {
         rentals: Listing[];
       }>('/listings/featured')
       .then((featured) => {
-        if (featured.rentals?.length) {
-          setListings(featured.rentals);
-        }
-
+        setListings(featured.rentals || []);
       })
       .catch(() => {});
   }, []);

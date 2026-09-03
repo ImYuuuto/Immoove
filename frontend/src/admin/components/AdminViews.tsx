@@ -465,24 +465,31 @@ export function AnnouncementsView({
   );
 }
 
-const emptyBooking = { listingId: '', userId: '', startDate: '', endDate: '' };
+const emptyBooking = {
+  listingId: '', userId: '', startDate: '', endDate: '',
+  firstName: '', lastName: '', email: '', phone: '',
+};
 export function BookingsView({
   bookings,
   onCreate,
   onUpdate,
   onDelete,
   onRefresh,
+  onSearch,
 }: {
   bookings: Booking[];
   onCreate: (data: Record<string, number | string>) => void;
   onUpdate: (id: number, data: Record<string, number | string>) => void;
   onDelete: (id: number) => void;
   onRefresh: () => void;
+  onSearch: (search: string, status?: string) => void;
 }) {
   const copy = useAdminCopy();
   const extra = useAdminExtraCopy();
   const [form, setForm] = useState(emptyBooking);
   const [editing, setEditing] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const data = {
@@ -490,6 +497,10 @@ export function BookingsView({
       userId: Number(form.userId),
       startDate: form.startDate,
       endDate: form.endDate,
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      phone: form.phone,
     };
     editing ? onUpdate(editing, data) : onCreate(data);
     setForm(emptyBooking);
@@ -502,11 +513,15 @@ export function BookingsView({
       userId: String(item.userId),
       startDate: item.startDate?.slice(0, 10) || '',
       endDate: item.endDate?.slice(0, 10) || '',
+      firstName: item.firstName || '',
+      lastName: item.lastName || '',
+      email: item.email || '',
+      phone: item.phone || '',
     });
   };
   return (
     <section className="admin-content">
-      <form className="admin-inline-form" onSubmit={submit}>
+      <form className="admin-inline-form booking-create-form" onSubmit={submit}>
         <input
           required
           type="number"
@@ -535,12 +550,41 @@ export function BookingsView({
           value={form.endDate}
           onChange={(event) => setForm({ ...form, endDate: event.target.value })}
         />
+        <input required placeholder={extra.firstName} value={form.firstName} onChange={(event) => setForm({ ...form, firstName: event.target.value })} />
+        <input required placeholder={extra.lastName} value={form.lastName} onChange={(event) => setForm({ ...form, lastName: event.target.value })} />
+        <input required type="email" placeholder={copy.email} value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
+        <input required type="tel" placeholder={extra.ownerPhone} value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
         <button>{editing ? copy.save : copy.create}</button>
       </form>
       <div className="table-card">
         <div className="panel-heading">
-          <h2>{copy.bookings}</h2>
-          <button onClick={onRefresh}>{copy.refresh}</button>
+          <div><h2>{copy.bookings}</h2></div>
+          <div className="booking-table-tools">
+            <select
+              className="booking-status-filter"
+              value={statusFilter}
+              aria-label={extra.filterBookingStatus}
+              onChange={(event) => {
+                const status = event.target.value;
+                setStatusFilter(status);
+                onSearch(search, status);
+              }}
+            >
+              <option value="">{extra.allBookingStatuses}</option>
+              <option value="pending">{copy.pendingStatus}</option>
+              <option value="processing">{extra.processing}</option>
+              <option value="confirmed">{extra.confirmed}</option>
+              <option value="completed">{extra.completed}</option>
+              <option value="cancelled">{extra.cancelledStatus}</option>
+              <option value="rejected">{copy.rejected}</option>
+              <option value="refunded">{extra.refunded}</option>
+            </select>
+            <form className="admin-search" onSubmit={(event) => { event.preventDefault(); onSearch(search, statusFilter); }}>
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={extra.searchBookings} aria-label={extra.searchBookings} />
+              <button aria-label={extra.searchBookings}><Search size={15} /></button>
+            </form>
+            <button onClick={() => { setSearch(''); setStatusFilter(''); onRefresh(); }}>{copy.refresh}</button>
+          </div>
         </div>
         <div className="admin-table">
           <div className="table-row table-head">
@@ -559,10 +603,10 @@ export function BookingsView({
                 </small>
               </span>
               <span>
-                {copy.listing} #{item.listingId}
+                {item.listing?.title ? decodeText(item.listing.title) : `${copy.listing} #${item.listingId}`}
               </span>
               <span>
-                {copy.user} #{item.userId}
+                {[item.firstName, item.lastName].filter(Boolean).map((value) => decodeText(value)).join(' ') || `${copy.user} #${item.userId}`}
               </span>
               <span>
                 {formatDate(item.startDate)} → {formatDate(item.endDate)}
@@ -577,6 +621,7 @@ export function BookingsView({
                   <option value="confirmed">{extra.confirmed}</option>
                   <option value="completed">{extra.completed}</option>
                   <option value="cancelled">{extra.cancelledStatus}</option>
+                  <option value="rejected">{copy.rejected}</option>
                   <option value="refunded">{extra.refunded}</option>
                 </select>
                 <button onClick={() => edit(item)}>{copy.edit}</button>

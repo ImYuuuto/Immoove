@@ -53,6 +53,7 @@ export default function AdminDashboard() {
     runAction,
     searchUsers,
     searchOwners,
+    searchBookings,
     clearError,
   } = useAdminData();
   const editListing = (id: number, data: { title: string; basePrice: number }) =>
@@ -155,6 +156,7 @@ export default function AdminDashboard() {
             onUpdate={updateBooking}
             onDelete={deleteBooking}
             onRefresh={() => void load()}
+            onSearch={searchBookings}
           />
         )}
         {view === 'users' && (

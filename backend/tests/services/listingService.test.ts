@@ -163,8 +163,12 @@ describe('ListingService', () => {
             name: 'Activities',
             slug: 'activities',
             user_id: 1,
-            first_name: 'Owner',
-            last_name: 'Name',
+            provider_first_name: 'Admin',
+            provider_last_name: 'Account',
+            owner_id: 9,
+            owner_first_name: 'Owner',
+            owner_last_name: 'Name',
+            owner_photo_url: '/uploads/owners/owner.webp',
           },
         ],
       } as never);
@@ -179,9 +183,10 @@ describe('ListingService', () => {
     expect(item?.reviews[0].comment).toBe('Great & clean');
     expect(item?.rating).toEqual({ average: 5, count: 1 });
     expect(item?.owner).toEqual({
-      userId: 1,
+      ownerId: 9,
       firstName: 'Owner',
       lastName: 'Name',
+      photoUrl: '/uploads/owners/owner.webp',
     });
   });
 });

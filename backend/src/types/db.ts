@@ -111,5 +111,11 @@ export interface ListingWithRelations extends Listing {
   }>;
   rating: { average: number | null; count: number };
   provider?: Pick<User, 'userId' | 'firstName' | 'lastName'>;
-  owner?: Pick<User, 'userId' | 'firstName' | 'lastName'>;
+  owner?: {
+    ownerId?: number;
+    userId?: number;
+    firstName: string;
+    lastName: string;
+    photoUrl?: string | null;
+  };
 }

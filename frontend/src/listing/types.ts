@@ -1,7 +1,7 @@
 import type { BookingContact, Listing } from '../types';
 
 export type AvailabilityInterval = { startDate: string; endDate: string };
-export type ListingOwner = { userId: number; firstName?: string; lastName?: string };
+export type ListingOwner = { ownerId?: number; userId?: number; firstName?: string; lastName?: string; photoUrl?: string | null };
 export type ListingReview = {
   reviewId: number;
   rating: number;

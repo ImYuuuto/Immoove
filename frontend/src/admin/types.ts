@@ -69,6 +69,11 @@ export type Booking = {
   status?: 'pending' | 'processing' | 'confirmed' | 'cancelled' | 'completed' | 'rejected' | 'refunded';
   paymentStatus?: string;
   currency?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  listing?: { title?: string | null } | null;
 };
 export type ApiList<T> = { items: T[] };
 export type Pagination = { total: number; page: number; limit: number; totalPages: number };

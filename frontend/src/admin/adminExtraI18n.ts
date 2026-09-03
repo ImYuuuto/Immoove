@@ -41,6 +41,8 @@ const fr = {
   currentBookings: 'Réservations actuelles et à venir', previousTrips: 'Voyages précédents',
   noCurrentBookings: 'Aucune réservation actuelle ou à venir.', noPreviousTrips: 'Aucun voyage précédent.',
   noComment: 'Aucun commentaire.', userPages: 'Pages des utilisateurs', previous: 'Précédent', next: 'Suivant', page: 'Page',
+  searchBookings: 'Rechercher par logement ou voyageur',
+  allBookingStatuses: 'Tous les statuts', filterBookingStatus: 'Filtrer les réservations par statut',
 };
 type Copy = { [K in keyof typeof fr]: string };
 const en: Copy = {
@@ -83,6 +85,8 @@ const en: Copy = {
   currentBookings: 'Current and upcoming bookings', previousTrips: 'Previous trips',
   noCurrentBookings: 'No current or upcoming bookings.', noPreviousTrips: 'No previous trips.',
   noComment: 'No comment provided.', userPages: 'User pages', previous: 'Previous', next: 'Next', page: 'Page',
+  searchBookings: 'Search by listing or traveler',
+  allBookingStatuses: 'All statuses', filterBookingStatus: 'Filter bookings by status',
 };
 const ar: Copy = {
   analytics: 'التحليلات',
@@ -124,6 +128,8 @@ const ar: Copy = {
   currentBookings: 'الحجوزات الحالية والقادمة', previousTrips: 'الرحلات السابقة',
   noCurrentBookings: 'لا توجد حجوزات حالية أو قادمة.', noPreviousTrips: 'لا توجد رحلات سابقة.',
   noComment: 'لا يوجد تعليق.', userPages: 'صفحات المستخدمين', previous: 'السابق', next: 'التالي', page: 'الصفحة',
+  searchBookings: 'البحث باسم العقار أو المسافر',
+  allBookingStatuses: 'كل الحالات', filterBookingStatus: 'تصفية الحجوزات حسب الحالة',
 };
 
 export function useAdminExtraCopy() {

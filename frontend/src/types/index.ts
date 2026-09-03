@@ -18,6 +18,7 @@ export type Listing = {
   propertyType?: { propertyTypeId: number; name: string; slug: string };
   coverImageUrl?: string | null;
   images?: { url: string }[];
+  amenities?: Array<{ featureId: number; name: string }>;
   location?: { name: string; lat?: number; lng?: number };
   locationText?: string | null;
   mapUrl?: string | null;

@@ -15,10 +15,17 @@ import './profile.css';
 
 type View = 'overview' | 'trips' | 'saved' | 'personal' | 'security';
 
+const initialView = (): View => {
+  const section = new URLSearchParams(window.location.search).get('section');
+  return ['overview', 'trips', 'saved', 'personal', 'security'].includes(section || '')
+    ? section as View
+    : 'overview';
+};
+
 export default function ProfilePage() {
   const { language, text } = useLanguage();
   const copy = profileCopy(language);
-  const [view, setView] = useState<View>('overview');
+  const [view, setView] = useState<View>(initialView);
   const [user, setUser] = useState<ProfileUser | null>(null);
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [favorites, setFavorites] = useState<ProfileListing[]>([]);

@@ -73,6 +73,10 @@ describe('BookingService server-side pricing', () => {
     ).not.toHaveProperty('total');
   });
 
+  test.each(['pending', 'processing'] as const)('accepts the admin %s booking status', (status) => {
+    expect(updateBookingSchema.parse({ status })).toEqual({ status });
+  });
+
   test('calculates nightly and monthly billing units', () => {
     const start = '2026-09-01T12:00:00.000Z';
     const end = '2026-09-01T14:30:00.000Z';

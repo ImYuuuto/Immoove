@@ -486,6 +486,15 @@
 .profile-drawer dt { color: var(--muted); }
 .profile-drawer dd { margin: 0; font-weight: 700; text-align: end; }
 .drawer-primary, .drawer-secondary, .drawer-danger { display: block; width: 100%; margin-top: 12px; padding: 12px; border: 1px solid var(--navy); border-radius: 8px; background: var(--navy); color: white; font-weight: 800; text-align: center; }
+.trip-review-form { display: grid; gap: 10px; margin-top: 20px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--cream); }
+.trip-review-form h3 { margin: 0 0 3px; font: 600 23px 'Playfair Display', serif; }
+.trip-review-form label { color: var(--muted); font-size: 11px; font-weight: 800; }
+.review-rating-picker { display: flex; gap: 3px; }
+.review-rating-picker button { display: grid; place-items: center; padding: 3px; border: 0; background: transparent; color: #e08a55; }
+.review-rating-picker button:hover, .review-rating-picker button:focus-visible { transform: scale(1.1); outline: none; }
+.trip-review-form textarea { width: 100%; resize: vertical; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--ink); line-height: 1.5; }
+.trip-review-form .drawer-secondary { margin-top: 2px; }
+.trip-review-form .drawer-secondary:disabled { cursor: not-allowed; opacity: .55; }
 .drawer-secondary { background: white; color: var(--navy); }
 .drawer-danger { border-color: #f8dcd7; background: #f8dcd7; color: #a54636; }
 

@@ -1727,12 +1727,34 @@ a {
   font-weight: 700;
 }
 
+.booking-create-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+}
+.booking-create-form button { min-height: 42px; }
+
+@media (max-width: 1050px) {
+  .booking-create-form { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+}
+
+@media (max-width: 620px) {
+  .booking-create-form { grid-template-columns: 1fr; }
+}
+
 .analytics-toolbar {
   display: flex;
   align-items: end;
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 20px;
+}
+.booking-table-tools { display: flex; align-items: center; gap: 10px; }
+.booking-status-filter { min-height: 39px; padding: 8px 34px 8px 12px; border: 1px solid #dce3e5; border-radius: 8px; background: white; color: #173640; font-weight: 700; }
+.booking-table-tools .admin-search { min-width: min(360px, 45vw); }
+.booking-table-tools .admin-search input { width: 100%; }
+@media (max-width: 700px) {
+  .booking-table-tools { width: 100%; align-items: stretch; flex-direction: column; }
+  .booking-table-tools .admin-search { min-width: 0; width: 100%; }
 }
 .analytics-toolbar h2 {
   margin: 0 0 6px;

@@ -102,6 +102,17 @@ export function useAdminData() {
       setOwners(data.items); setOwnerPagination(data.pagination);
     } catch (cause) { setError(cause instanceof Error ? cause.message : copy.searchFailed); }
   }, [copy]);
+  const searchBookings = useCallback(async (search: string, status = '') => {
+    try {
+      const query = new URLSearchParams({ pageSize: '50' });
+      if (search.trim()) query.set('search', search.trim());
+      if (status) query.set('status', status);
+      const data = await api<ApiList<Booking>>(`/bookings?${query}`);
+      setBookings(data.items);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : copy.searchFailed);
+    }
+  }, [copy]);
 
   return {
     user,
@@ -121,6 +132,7 @@ export function useAdminData() {
     runAction,
     searchUsers,
     searchOwners,
+    searchBookings,
     clearError: (_value?: string) => setError(''),
   };
 }

@@ -10,6 +10,7 @@ export type BookingFilters = {
   state: 'all' | 'upcoming' | 'current' | 'past' | 'cancelled';
   cityId?: number;
   status?: string;
+  search?: string;
   page: number;
   pageSize: number;
 };
@@ -23,6 +24,7 @@ const bookingSelect = `SELECT b.booking_id, b.listing_id, b.user_id, b.start_dat
   EXISTS (SELECT 1 FROM reviews r WHERE r.booking_id = b.booking_id) AS has_review
  FROM bookings b
  JOIN listings l ON l.listing_id = b.listing_id
+ LEFT JOIN users u ON u.user_id = b.user_id
  LEFT JOIN property_types pt ON pt.property_type_id = l.property_type_id
  LEFT JOIN areas a ON a.area_id = l.area_id
  LEFT JOIN cities c ON c.city_id = a.city_id`;
@@ -93,6 +95,18 @@ export class BookingService {
       values.push(filters.status);
       clauses.push(`b.status = $${values.length}`);
     }
+    if (filters.search) {
+      values.push(`%${filters.search}%`);
+      clauses.push(`(
+        l.title ILIKE $${values.length}
+        OR b.contact_first_name ILIKE $${values.length}
+        OR b.contact_last_name ILIKE $${values.length}
+        OR CONCAT_WS(' ', b.contact_first_name, b.contact_last_name) ILIKE $${values.length}
+        OR u.first_name ILIKE $${values.length}
+        OR u.last_name ILIKE $${values.length}
+        OR CONCAT_WS(' ', u.first_name, u.last_name) ILIKE $${values.length}
+      )`);
+    }
     if (filters.state === 'cancelled') {
       clauses.push(`b.status IN (${TERMINAL_STATUSES.map((status) => `'${status}'`).join(',')})`);
     } else if (filters.state === 'upcoming') {
@@ -106,6 +120,7 @@ export class BookingService {
     const count = await query<{ total: number }>(
       `SELECT COUNT(*)::int AS total FROM bookings b
        JOIN listings l ON l.listing_id = b.listing_id
+       LEFT JOIN users u ON u.user_id = b.user_id
        LEFT JOIN areas a ON a.area_id = l.area_id
        LEFT JOIN cities c ON c.city_id = a.city_id ${where}`,
       values,
@@ -200,7 +215,7 @@ export class BookingService {
       userId: number;
       startDate: Date;
       endDate: Date;
-      status: 'confirmed' | 'cancelled' | 'completed' | 'refunded';
+      status: 'pending' | 'processing' | 'confirmed' | 'cancelled' | 'completed' | 'rejected' | 'refunded';
       paymentStatus: 'unpaid' | 'pending' | 'paid' | 'refunded';
     }>,
   ) {

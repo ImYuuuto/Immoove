@@ -23,6 +23,8 @@ const en = {
   confirmContactTitle: 'Confirm it’s you', confirmContactText: 'Enter your password in this secure step to authorize the email or phone change.', confirmContact: 'Confirm change',
   changePhoto: 'Change photo', uploadingPhoto: 'Uploading…', avatarSaved: 'Profile photo updated.', avatarTooLarge: 'Profile photo must not exceed 2 MB.', avatarFailed: 'Unable to update profile photo.',
   pendingConfirmation: 'Pending confirmation — we’ll contact you soon.',
+  ratingLabel: 'Your rating', commentLabel: 'Your review', commentPlaceholder: 'Share what you liked and what future guests should know…',
+  submitReview: 'Publish review', submittingReview: 'Publishing…', reviewSaved: 'Your review was published.', reviewFailed: 'Unable to publish your review.',
 };
 
 const fr: typeof en = {
@@ -48,6 +50,8 @@ const fr: typeof en = {
   confirmContactTitle: 'Confirmez votre identité', confirmContactText: 'Saisissez votre mot de passe dans cette étape sécurisée pour autoriser la modification.', confirmContact: 'Confirmer la modification',
   changePhoto: 'Changer la photo', uploadingPhoto: 'Envoi…', avatarSaved: 'Photo de profil mise à jour.', avatarTooLarge: 'La photo ne doit pas dépasser 2 Mo.', avatarFailed: 'Impossible de mettre à jour la photo.',
   pendingConfirmation: 'Confirmation en attente — nous vous contacterons bientôt.',
+  ratingLabel: 'Votre note', commentLabel: 'Votre avis', commentPlaceholder: 'Partagez ce que vous avez aimé et ce que les futurs voyageurs devraient savoir…',
+  submitReview: 'Publier l’avis', submittingReview: 'Publication…', reviewSaved: 'Votre avis a été publié.', reviewFailed: 'Impossible de publier votre avis.',
 };
 
 const ar: typeof en = {
@@ -73,6 +77,8 @@ const ar: typeof en = {
   confirmContactTitle: 'أكد هويتك', confirmContactText: 'أدخل كلمة المرور في هذه الخطوة الآمنة للسماح بتغيير البريد أو الهاتف.', confirmContact: 'تأكيد التغيير',
   changePhoto: 'تغيير الصورة', uploadingPhoto: 'جارٍ الرفع…', avatarSaved: 'تم تحديث صورة الملف الشخصي.', avatarTooLarge: 'يجب ألا تتجاوز الصورة 2 ميغابايت.', avatarFailed: 'تعذر تحديث صورة الملف الشخصي.',
   pendingConfirmation: 'في انتظار التأكيد — سنتواصل معك قريباً.',
+  ratingLabel: 'تقييمك', commentLabel: 'رأيك', commentPlaceholder: 'شارك ما أعجبك وما ينبغي أن يعرفه الضيوف القادمون…',
+  submitReview: 'نشر التقييم', submittingReview: 'جارٍ النشر…', reviewSaved: 'تم نشر تقييمك.', reviewFailed: 'تعذر نشر تقييمك.',
 };
 
 export const profileCopy = (language: Language) => ({ en, fr, ar })[language];
