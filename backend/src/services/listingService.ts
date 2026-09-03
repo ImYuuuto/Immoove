@@ -345,7 +345,7 @@ export class ListingService {
   }
 
   static async propertyDiscoveryOptions() {
-    const [propertyTypes, regions, cities, areas, amenities] = await Promise.all([
+    const [propertyTypes, regions, cities, areas, amenities, prices] = await Promise.all([
       query<any>(`SELECT property_type_id, name, slug FROM property_types
                   WHERE is_active = true ORDER BY name`),
       query<any>('SELECT region_id, name FROM regions WHERE name <> \'Unassigned\' AND is_active=true ORDER BY name'),
@@ -358,6 +358,10 @@ export class ListingService {
                   WHERE a.requires_review = false AND a.is_active=true AND ci.is_active=true AND r.is_active=true AND ci.name <> 'Unassigned' AND r.name <> 'Unassigned'
                   ORDER BY a.name`),
       query<any>('SELECT feature_id, name FROM features ORDER BY name'),
+      query<any>(`SELECT COALESCE(MIN(base_price), 0)::numeric AS minimum,
+                         COALESCE(MAX(base_price), 0)::numeric AS maximum
+                  FROM listings
+                  WHERE status='approved' AND is_active=true AND archived_at IS NULL`),
     ]);
     return {
       propertyTypes: propertyTypes.rows.map(row => ({ propertyTypeId: row.property_type_id, name: decodeStoredText(row.name), slug: row.slug })),
@@ -365,6 +369,10 @@ export class ListingService {
       cities: cities.rows.map(row => ({ cityId: row.city_id, regionId: row.region_id, name: decodeStoredText(row.name) })),
       areas: areas.rows.map(row => ({ areaId: row.area_id, cityId: row.city_id, name: decodeStoredText(row.name) })),
       amenities: amenities.rows.map(row => ({ featureId: row.feature_id, name: decodeStoredText(row.name) })),
+      priceRange: {
+        minimum: Number(prices.rows[0]?.minimum || 0),
+        maximum: Number(prices.rows[0]?.maximum || 0),
+      },
     };
   }
 

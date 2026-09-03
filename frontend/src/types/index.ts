@@ -28,6 +28,7 @@ export type Listing = {
   category?: { slug?: string; name?: string };
 };
 export type SearchFilters = {
+  city_id?: string;
   check_in?: string;
   check_out?: string;
   guests?: string;

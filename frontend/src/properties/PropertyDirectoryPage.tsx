@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { type CSSProperties, FormEvent, useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
 import { useLanguage } from '../i18n/language';
@@ -25,13 +25,14 @@ const copy = {
     studios: 'Studios',
     region: 'Région',
     city: 'Ville',
-    area: 'Quartier / zone',
+    citySearch: 'Rechercher une ville',
     checkIn: 'Arrivée',
     checkOut: 'Départ',
     guests: 'Voyageurs',
     type: 'Type de logement',
     min: 'Prix minimum',
     max: 'Prix maximum',
+    price: 'Fourchette de prix',
     bedrooms: 'Chambres minimum',
     bathrooms: 'Salles de bain minimum',
     amenities: 'Équipements',
@@ -56,13 +57,14 @@ const copy = {
     studios: 'Studios',
     region: 'Region',
     city: 'City',
-    area: 'Area',
+    citySearch: 'Search for a city',
     checkIn: 'Check-in',
     checkOut: 'Check-out',
     guests: 'Guests',
     type: 'Property type',
     min: 'Minimum price',
     max: 'Maximum price',
+    price: 'Price range',
     bedrooms: 'Minimum bedrooms',
     bathrooms: 'Minimum bathrooms',
     amenities: 'Amenities',
@@ -87,13 +89,14 @@ const copy = {
     studios: 'استوديوهات',
     region: 'الجهة',
     city: 'المدينة',
-    area: 'المنطقة',
+    citySearch: 'ابحث عن مدينة',
     checkIn: 'الوصول',
     checkOut: 'المغادرة',
     guests: 'الضيوف',
     type: 'نوع العقار',
     min: 'أدنى سعر',
     max: 'أعلى سعر',
+    price: 'نطاق السعر',
     bedrooms: 'الحد الأدنى للغرف',
     bathrooms: 'الحد الأدنى للحمامات',
     amenities: 'التجهيزات',
@@ -113,6 +116,8 @@ const copy = {
 
 function initialFilters(propertyPath?: string) {
   const query = new URLSearchParams(window.location.search);
+  query.delete('region_id');
+  query.delete('area_id');
   if (propertyPath && propertyPaths[propertyPath])
     query.set('property_type', propertyPaths[propertyPath]);
   return query;
@@ -126,20 +131,10 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
   const [data, setData] = useState<PropertySearchResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const cities = useMemo(
-    () =>
-      options?.cities.filter(
-        (item) => !filters.get('region_id') || item.regionId === Number(filters.get('region_id')),
-      ) || [],
-    [options, filters],
-  );
-  const areas = useMemo(
-    () =>
-      options?.areas.filter(
-        (item) => !filters.get('city_id') || item.cityId === Number(filters.get('city_id')),
-      ) || [],
-    [options, filters],
-  );
+  const cities = options?.cities || [];
+  const selectedCity = cities.find((item) => item.cityId === Number(filters.get('city_id')));
+  const availableMinimum = Math.floor(options?.priceRange.minimum || 0);
+  const availableMaximum = Math.ceil(options?.priceRange.maximum || availableMinimum);
 
   const load = async (next = filters) => {
     setLoading(true);
@@ -167,11 +162,13 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
   const set = (name: string, value: string) => {
     const next = new URLSearchParams(filters);
     value ? next.set(name, value) : next.delete(name);
-    if (name === 'region_id') {
-      next.delete('city_id');
-      next.delete('area_id');
-    }
-    if (name === 'city_id') next.delete('area_id');
+    next.delete('page');
+    setFilters(next);
+  };
+  const setPriceRange = (minimum: number, maximum: number) => {
+    const next = new URLSearchParams(filters);
+    minimum > availableMinimum ? next.set('min_price', String(minimum)) : next.delete('min_price');
+    maximum < availableMaximum ? next.set('max_price', String(maximum)) : next.delete('max_price');
     next.delete('page');
     setFilters(next);
   };
@@ -237,26 +234,13 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
         <p>{text.subtitle}</p>
       </section>
       <form className="property-filters" onSubmit={submit}>
-        <SelectFilter
-          label={text.region}
-          value={filters.get('region_id') || ''}
-          onChange={(value) => set('region_id', value)}
-          any={text.any}
-          items={options?.regions.map((item) => ({ value: item.regionId, label: item.name })) || []}
-        />
-        <SelectFilter
+        <CitySearchFilter
           label={text.city}
           value={filters.get('city_id') || ''}
           onChange={(value) => set('city_id', value)}
-          any={text.any}
+          placeholder={text.citySearch}
           items={cities.map((item) => ({ value: item.cityId, label: item.name }))}
-        />
-        <SelectFilter
-          label={text.area}
-          value={filters.get('area_id') || ''}
-          onChange={(value) => set('area_id', value)}
-          any={text.any}
-          items={areas.map((item) => ({ value: item.areaId, label: item.name }))}
+          selectedLabel={selectedCity?.name || ''}
         />
         <InputFilter
           label={text.checkIn}
@@ -278,29 +262,16 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
           value={filters.get('guests') || ''}
           onChange={(value) => set('guests', value)}
         />
-        <SelectFilter
-          label={text.type}
-          value={filters.get('property_type') || ''}
-          onChange={(value) => set('property_type', value)}
-          any={text.any}
-          items={
-            options?.propertyTypes.map((item) => ({ value: item.slug, label: item.name })) || []
-          }
-        />
-        <InputFilter
-          label={text.min}
-          type="number"
-          min="0"
-          value={filters.get('min_price') || ''}
-          onChange={(value) => set('min_price', value)}
-        />
-        <InputFilter
-          label={text.max}
-          type="number"
-          min="0"
-          value={filters.get('max_price') || ''}
-          onChange={(value) => set('max_price', value)}
-        />
+        {options && availableMaximum >= availableMinimum && <PriceRangeFilter
+          label={text.price}
+          minLabel={text.min}
+          maxLabel={text.max}
+          availableMinimum={availableMinimum}
+          availableMaximum={availableMaximum}
+          minValue={Number(filters.get('min_price') || availableMinimum)}
+          maxValue={Number(filters.get('max_price') || availableMaximum)}
+          onChange={setPriceRange}
+        />}
         <InputFilter
           label={text.bedrooms}
           type="number"
@@ -452,4 +423,64 @@ function SelectFilter({
       </select>
     </label>
   );
+}
+
+function CitySearchFilter({ label, value, selectedLabel, placeholder, onChange, items }: {
+  label: string;
+  value: string;
+  selectedLabel: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+  items: Array<{ value: string | number; label: string }>;
+}) {
+  const [query, setQuery] = useState(selectedLabel);
+  const [focused, setFocused] = useState(false);
+  useEffect(() => { setQuery(selectedLabel); }, [selectedLabel]);
+  const matches = query.trim()
+    ? items.filter((item) => item.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).slice(0, 8)
+    : [];
+  return <label className="city-search-filter">
+    {label}
+    <input
+      type="search"
+      placeholder={placeholder}
+      value={query}
+      onChange={(event) => {
+        const next = event.target.value;
+        setQuery(next);
+        const match = items.find((item) => item.label.toLocaleLowerCase() === next.trim().toLocaleLowerCase());
+        onChange(match ? String(match.value) : '');
+      }}
+      onFocus={() => setFocused(true)}
+      onBlur={() => { setFocused(false); if (value && selectedLabel) setQuery(selectedLabel); }}
+    />
+    {focused && query.trim() && <div className="city-search-results">
+      {matches.map((item) => <button type="button" key={item.value} onMouseDown={(event) => event.preventDefault()} onClick={() => { setQuery(item.label); onChange(String(item.value)); setFocused(false); }}>{item.label}</button>)}
+    </div>}
+  </label>;
+}
+
+function PriceRangeFilter({ label, minLabel, maxLabel, availableMinimum, availableMaximum, minValue, maxValue, onChange }: {
+  label: string;
+  minLabel: string;
+  maxLabel: string;
+  availableMinimum: number;
+  availableMaximum: number;
+  minValue: number;
+  maxValue: number;
+  onChange: (minimum: number, maximum: number) => void;
+}) {
+  const minimum = Math.max(availableMinimum, Math.min(minValue, availableMaximum));
+  const maximum = Math.max(minimum, Math.min(maxValue, availableMaximum));
+  const span = Math.max(1, availableMaximum - availableMinimum);
+  const left = ((minimum - availableMinimum) / span) * 100;
+  const right = 100 - ((maximum - availableMinimum) / span) * 100;
+  return <fieldset className="price-range-filter">
+    <legend>{label}</legend>
+    <div><span>{minimum.toLocaleString()} MAD</span><span>{maximum.toLocaleString()} MAD</span></div>
+    <div className="price-range-track" style={{ '--price-left': `${left}%`, '--price-right': `${right}%` } as CSSProperties}>
+      <input aria-label={minLabel} type="range" min={availableMinimum} max={availableMaximum} step="1" value={minimum} onChange={(event) => onChange(Math.min(Number(event.target.value), maximum), maximum)} />
+      <input aria-label={maxLabel} type="range" min={availableMinimum} max={availableMaximum} step="1" value={maximum} onChange={(event) => onChange(minimum, Math.max(Number(event.target.value), minimum))} />
+    </div>
+  </fieldset>;
 }

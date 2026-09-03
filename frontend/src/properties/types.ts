@@ -6,6 +6,7 @@ export type PropertyDiscoveryOptions = {
   cities: Array<{ cityId: number; regionId: number; name: string }>;
   areas: Array<{ areaId: number; cityId: number; name: string }>;
   amenities: Array<{ featureId: number; name: string }>;
+  priceRange: { minimum: number; maximum: number };
 };
 
 export type PropertySearchResponse = {

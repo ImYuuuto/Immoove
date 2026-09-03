@@ -10,7 +10,7 @@ import Navbar from '../components/Navbar';
 import { fallbackListings } from '../data/content';
 import type { AuthUser, Listing, SearchFilters } from '../types';
 import { request } from '../utils/request';
-import { formatTranslation, useLanguage } from '../i18n/language';
+import { useLanguage } from '../i18n/language';
 import ResponsiveImage from '../components/ResponsiveImage';
 
 export default function App() {
@@ -44,26 +44,12 @@ export default function App() {
     window.setTimeout(() => setMessage(''), 3500);
   };
 
-  const search = async (filters: SearchFilters) => {
+  const search = (filters: SearchFilters) => {
     const query = new URLSearchParams(
       Object.entries(filters).filter(([, value]) => value) as [string, string][],
     );
 
-    try {
-      const result = await request<{
-        items: Listing[];
-      }>(`/listings/search?${query}`);
-
-      setListings(result.items);
-
-      notify(formatTranslation(text.searchFound, { count: result.items.length }));
-    } catch (error) {
-      notify(error instanceof Error ? error.message : text.searchUnavailable);
-    }
-
-    document.getElementById('escapes')?.scrollIntoView({
-      behavior: 'smooth',
-    });
+    window.location.assign(`/properties${query.toString() ? `?${query}` : ''}`);
   };
 
   const favorite = async (id?: number) => {
