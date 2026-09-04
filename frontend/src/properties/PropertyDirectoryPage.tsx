@@ -1,10 +1,14 @@
 import { type CSSProperties, FormEvent, useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Heart, Search, SlidersHorizontal } from 'lucide-react';
 import ListingCard from '../components/ListingCard';
+import PropertyDetailsModal from '../components/PropertyDetailsModal';
+import PhotoGalleryModal from '../components/PhotoGalleryModal';
+import VideoModal from '../components/VideoModal';
 import { useLanguage } from '../i18n/language';
 import { request } from '../utils/request';
 import { getPropertyDiscoveryOptions, searchProperties } from './api';
 import type { PropertyDiscoveryOptions, PropertySearchResponse } from './types';
+import type { Listing } from '../types';
 import './property.css';
 
 const propertyPaths: Record<string, string> = {
@@ -146,6 +150,9 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [savingFavorites, setSavingFavorites] = useState<Set<number>>(new Set());
   const [favoriteMessage, setFavoriteMessage] = useState('');
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [galleryListing, setGalleryListing] = useState<Listing | null>(null);
+  const [videoListing, setVideoListing] = useState<Listing | null>(null);
   const [showMoreFilters, setShowMoreFilters] = useState(() =>
     ['min_price', 'max_price', 'bedrooms', 'bathrooms', 'min_rating', 'amenities', 'instant_available'].some((key) => initialFilters(propertyPath).has(key)),
   );
@@ -388,6 +395,7 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
                   saving={Boolean(listing.listingId && savingFavorites.has(listing.listingId))}
                   imagePriority={index === 0}
                   onFavorite={favorite}
+                  onSelect={(item) => setSelectedListing(item)}
                   onBook={(item) =>
                     item.listingId && window.location.assign(`/listings/${item.listingId}`)
                   }
@@ -417,6 +425,39 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
             </nav>
           )}
         </section>
+      )}
+
+      {/* PROPERTY DETAILS MODAL */}
+      {selectedListing && (
+        <PropertyDetailsModal
+          listing={selectedListing}
+          saved={Boolean(selectedListing.listingId && favoriteIds.has(selectedListing.listingId))}
+          saving={Boolean(selectedListing.listingId && savingFavorites.has(selectedListing.listingId))}
+          onClose={() => setSelectedListing(null)}
+          onViewPhotos={() => setGalleryListing(selectedListing)}
+          onViewVideo={() => setVideoListing(selectedListing)}
+          onBook={(item) => {
+            setSelectedListing(null);
+            if (item.listingId) window.location.assign(`/listings/${item.listingId}`);
+          }}
+          onFavorite={favorite}
+        />
+      )}
+
+      {/* PHOTO GALLERY MODAL */}
+      {galleryListing && (
+        <PhotoGalleryModal
+          listing={galleryListing}
+          onClose={() => setGalleryListing(null)}
+        />
+      )}
+
+      {/* VIDEO MODAL */}
+      {videoListing && (
+        <VideoModal
+          listing={videoListing}
+          onClose={() => setVideoListing(null)}
+        />
       )}
     </main>
   );

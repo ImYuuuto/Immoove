@@ -3,6 +3,7 @@ import { fallbackListings } from '../data/content';
 import type { Listing } from '../types';
 import { decodeText } from '../utils/decodeText';
 import { useLanguage } from '../i18n/language';
+import { formatPublicationDate, isRecentListing, newBadgeLabel } from '../utils/dateFormatter';
 import ResponsiveImage from './ResponsiveImage';
 
 function AmenityIcon({ name }: { name: string }) {
@@ -24,6 +25,7 @@ export default function ListingCard({
   listing,
   onFavorite,
   onBook,
+  onSelect,
   imagePriority = false,
   saved = false,
   saving = false,
@@ -31,6 +33,7 @@ export default function ListingCard({
   listing: Listing;
   onFavorite: (id?: number) => void;
   onBook: (listing: Listing) => void;
+  onSelect?: (listing: Listing) => void;
   categorySlug?: string;
   imagePriority?: boolean;
   saved?: boolean;
@@ -73,10 +76,15 @@ export default function ListingCard({
 
   return (
     <article
-      className={`listing-card ${detailUrl ? 'is-clickable' : ''}`}
+      className={`listing-card ${onSelect || detailUrl ? 'is-clickable' : ''}`}
       onClick={(event) => {
-        if (detailUrl && !(event.target as HTMLElement).closest('a, button'))
+        if ((event.target as HTMLElement).closest('button, .favorite-active, .booking-button')) return;
+        if (onSelect) {
+          event.preventDefault();
+          onSelect(listing);
+        } else if (detailUrl && !(event.target as HTMLElement).closest('a')) {
           window.location.assign(detailUrl);
+        }
       }}
     >
       <div className="listing-image">
@@ -88,7 +96,18 @@ export default function ListingCard({
           sizes="(max-width: 720px) calc(100vw - 44px), (max-width: 1100px) 45vw, 360px"
           priority={imagePriority}
         />
-        {listing.listingId ? (
+        {onSelect ? (
+          <button
+            type="button"
+            className="listing-view"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(listing);
+            }}
+          >
+            {text.viewStay}
+          </button>
+        ) : listing.listingId ? (
           <a className="listing-view" href={detailUrl}>
             {text.viewStay}
           </a>
@@ -102,7 +121,10 @@ export default function ListingCard({
           className={saved ? 'favorite-active' : ''}
           disabled={saving}
           aria-pressed={saved}
-          onClick={() => onFavorite(listing.listingId)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onFavorite(listing.listingId);
+          }}
           aria-label={text.addFavorite}
         >
           <Heart size={18} fill={saved ? 'currentColor' : 'none'} />
@@ -126,7 +148,18 @@ export default function ListingCard({
         </div>
 
         <h3>
-          {listing.listingId ? (
+          {onSelect ? (
+            <button
+              type="button"
+              className="listing-title-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(listing);
+              }}
+            >
+              {decodeText(listing.title)}
+            </button>
+          ) : listing.listingId ? (
             <a href={detailUrl}>{decodeText(listing.title)}</a>
           ) : (
             decodeText(listing.title)
