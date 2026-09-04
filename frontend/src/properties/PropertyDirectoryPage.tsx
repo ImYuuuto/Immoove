@@ -9,6 +9,7 @@ import { request } from '../utils/request';
 import { getPropertyDiscoveryOptions, searchProperties } from './api';
 import type { PropertyDiscoveryOptions, PropertySearchResponse } from './types';
 import type { Listing } from '../types';
+import ListingMap from './ListingMap';
 import './property.css';
 
 const propertyPaths: Record<string, string> = {
@@ -55,6 +56,8 @@ const copy = {
     fewerFilters: 'Moins de filtres',
     saved: 'Logement ajouté aux favoris.',
     removed: 'Logement retiré des favoris.',
+    map: 'Carte des logements',
+    mapEmpty: 'Aucun logement géolocalisé dans cette zone.',
   },
   en: {
     title: 'Find your next property',
@@ -91,6 +94,8 @@ const copy = {
     fewerFilters: 'Fewer filters',
     saved: 'Property saved to your favorites.',
     removed: 'Property removed from your favorites.',
+    map: 'Property map',
+    mapEmpty: 'No mapped properties in this area.',
   },
   ar: {
     title: 'اعثروا على إقامتكم القادمة',
@@ -127,6 +132,8 @@ const copy = {
     fewerFilters: 'فلاتر أقل',
     saved: 'تمت إضافة العقار إلى المفضلة.',
     removed: 'تمت إزالة العقار من المفضلة.',
+    map: 'خريطة العقارات',
+    mapEmpty: 'لا توجد عقارات محددة على الخريطة في هذه المنطقة.',
   },
 };
 
@@ -145,6 +152,8 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
   const [filters, setFilters] = useState(() => initialFilters(propertyPath));
   const [options, setOptions] = useState<PropertyDiscoveryOptions | null>(null);
   const [data, setData] = useState<PropertySearchResponse | null>(null);
+  const [mapListings, setMapListings] = useState<Listing[]>([]);
+  const [activeListingId, setActiveListingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
@@ -167,12 +176,17 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
     try {
       const query = new URLSearchParams(next);
       query.set('limit', '18');
-      const [metadata, results] = await Promise.all([
+      const mapQuery = new URLSearchParams(next);
+      mapQuery.set('limit', '100');
+      mapQuery.set('page', '1');
+      const [metadata, results, mapResults] = await Promise.all([
         options ? Promise.resolve(options) : getPropertyDiscoveryOptions(),
         searchProperties(query),
+        searchProperties(mapQuery),
       ]);
       setOptions(metadata);
       setData(results);
+      setMapListings(mapResults.items);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : text.empty);
       setData(null);
@@ -382,32 +396,30 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
           <button onClick={() => void load()}>{text.retry}</button>
         </div>
       ) : (
-        <section className="category-results property-results">
-          <h2>
-            {data.pagination.total.toLocaleString()} {text.results}
-          </h2>
-          {data.items.length ? (
-            <div className="listing-grid">
+        <section className="property-explorer">
+          <div className="category-results property-results">
+            <h2>
+              {data.pagination.total.toLocaleString()} {text.results}
+              {selectedCity && <span>{selectedCity.name}</span>}
+            </h2>
+            {data.items.length ? (
+              <div className="listing-grid">
               {data.items.map((listing, index) => (
-                <ListingCard
-                  listing={listing}
-                  saved={Boolean(listing.listingId && favoriteIds.has(listing.listingId))}
-                  saving={Boolean(listing.listingId && savingFavorites.has(listing.listingId))}
-                  imagePriority={index === 0}
-                  onFavorite={favorite}
-                  onSelect={(item) => setSelectedListing(item)}
-                  onBook={(item) =>
-                    item.listingId && window.location.assign(`/listings/${item.listingId}`)
-                  }
-                  key={listing.listingId}
-                />
+                <div className={listing.listingId === activeListingId ? 'property-card-wrap is-active' : 'property-card-wrap'} onMouseEnter={() => setActiveListingId(listing.listingId ?? null)} onMouseLeave={() => setActiveListingId(null)} key={listing.listingId}>
+                  <ListingCard
+                    listing={listing}
+                    saved={Boolean(listing.listingId && favoriteIds.has(listing.listingId))}
+                    saving={Boolean(listing.listingId && savingFavorites.has(listing.listingId))}
+                    imagePriority={index === 0}
+                    onFavorite={favorite}
+                    onSelect={(item) => setSelectedListing(item)}
+                    onBook={(item) => item.listingId && window.location.assign(`/listings/${item.listingId}`)}
+                  />
+                </div>
               ))}
-            </div>
-          ) : (
-            <div className="category-empty">{text.empty}</div>
-          )}
-          {data.pagination.totalPages > 1 && (
-            <nav className="category-pagination">
+              </div>
+            ) : <div className="category-empty">{text.empty}</div>}
+            {data.pagination.totalPages > 1 && <nav className="category-pagination">
               <button disabled={page <= 1} onClick={() => changePage(page - 1)}>
                 <ArrowLeft size={16} />
                 {text.previous}
@@ -422,8 +434,11 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
                 {text.next}
                 <ArrowRight size={16} />
               </button>
-            </nav>
-          )}
+            </nav>}
+          </div>
+          <aside className="property-map-panel">
+            <ListingMap listings={mapListings} activeId={activeListingId} onActive={setActiveListingId} onSelect={setSelectedListing} emptyLabel={text.mapEmpty} ariaLabel={text.map} />
+          </aside>
         </section>
       )}
 
