@@ -1,4 +1,5 @@
-import { Car, CheckCircle2, CookingPot, Heart, ShieldCheck, Snowflake, Sparkles, Star, Trees, Tv, Waves, Wifi } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { Car, CheckCircle2, CookingPot, Heart, Images, ShieldCheck, Snowflake, Sparkles, Star, Trees, Tv, Waves, Wifi } from 'lucide-react';
 import { fallbackListings } from '../data/content';
 import type { Listing } from '../types';
 import { decodeText } from '../utils/decodeText';
@@ -26,6 +27,8 @@ export default function ListingCard({
   onFavorite,
   onBook,
   onSelect,
+  onViewPhotos,
+  premiumInteractions = false,
   imagePriority = false,
   saved = false,
   saving = false,
@@ -34,6 +37,8 @@ export default function ListingCard({
   onFavorite: (id?: number) => void;
   onBook: (listing: Listing) => void;
   onSelect?: (listing: Listing) => void;
+  onViewPhotos?: (listing: Listing) => void;
+  premiumInteractions?: boolean;
   categorySlug?: string;
   imagePriority?: boolean;
   saved?: boolean;
@@ -73,6 +78,42 @@ export default function ListingCard({
     text.night;
   const image =
     listing.coverImageUrl || listing.images?.[0]?.url || fallbackListings[0].coverImageUrl || '';
+  const previewImages = useMemo(
+    () => [
+      ...(listing.coverImageUrl ? [listing.coverImageUrl] : []),
+      ...(listing.images || []).map((item) => item.url),
+    ].filter((url, index, all): url is string => Boolean(url) && all.indexOf(url) === index),
+    [listing.coverImageUrl, listing.images],
+  );
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const previewTimer = useRef<number | null>(null);
+  const publicationDate = formatPublicationDate(listing.publishedAt || listing.createdAt, language);
+  const isNew = isRecentListing(listing.publishedAt || listing.createdAt);
+
+  useEffect(() => () => {
+    if (previewTimer.current) window.clearInterval(previewTimer.current);
+  }, []);
+
+  const startPreview = () => {
+    if (!premiumInteractions || previewImages.length < 2 || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    previewTimer.current = window.setInterval(
+      () => setPreviewIndex((current) => (current + 1) % previewImages.length),
+      1100,
+    );
+  };
+  const stopPreview = () => {
+    if (previewTimer.current) window.clearInterval(previewTimer.current);
+    previewTimer.current = null;
+    setPreviewIndex(0);
+  };
+  const moveImage = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!premiumInteractions || event.pointerType !== 'mouse') return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty('--image-x', `${((event.clientX - rect.left) / rect.width - .5) * 10}px`);
+    event.currentTarget.style.setProperty('--image-y', `${((event.clientY - rect.top) / rect.height - .5) * 10}px`);
+    event.currentTarget.style.setProperty('--cursor-x', `${event.clientX - rect.left}px`);
+    event.currentTarget.style.setProperty('--cursor-y', `${event.clientY - rect.top}px`);
+  };
 
   return (
     <article
@@ -87,16 +128,30 @@ export default function ListingCard({
         }
       }}
     >
-      <div className="listing-image">
+      <div className="listing-image" onPointerMove={moveImage} onPointerEnter={startPreview} onPointerLeave={stopPreview}>
         <ResponsiveImage
-          src={image}
+          key={previewImages[previewIndex] || image}
+          src={previewImages[previewIndex] || image}
           alt={decodeText(listing.title)}
           width={1200}
           height={900}
           sizes="(max-width: 720px) calc(100vw - 44px), (max-width: 1100px) 45vw, 360px"
           priority={imagePriority}
         />
-        <span>{text.selection}</span>
+        <span>{premiumInteractions && isNew ? newBadgeLabel(language) : text.selection}</span>
+
+        {premiumInteractions && <button
+          type="button"
+          className="listing-view-photos"
+          onClick={(event) => {
+            event.stopPropagation();
+            (onViewPhotos || onSelect)?.(listing);
+          }}
+        >
+          <Images size={15} />
+          {text.viewPhotos}
+        </button>}
+        {premiumInteractions && <span className="listing-image-cursor" aria-hidden="true">{text.viewPhotos}</span>}
 
         <button
           className={saved ? 'favorite-active' : ''}
@@ -166,6 +221,8 @@ export default function ListingCard({
           MAD
           <i> / {unit}</i>
         </b>
+
+        {premiumInteractions && publicationDate && <time className="listing-publication" dateTime={listing.publishedAt || listing.createdAt}>{publicationDate}</time>}
 
         <button
           className="booking-button"

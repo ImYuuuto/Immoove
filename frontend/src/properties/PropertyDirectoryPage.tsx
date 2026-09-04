@@ -413,6 +413,8 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
                     imagePriority={index === 0}
                     onFavorite={favorite}
                     onSelect={(item) => setSelectedListing(item)}
+                    onViewPhotos={(item) => setGalleryListing(item)}
+                    premiumInteractions
                     onBook={(item) => item.listingId && window.location.assign(`/listings/${item.listingId}`)}
                   />
                 </div>
@@ -437,7 +439,7 @@ export default function PropertyDirectoryPage({ propertyPath }: { propertyPath?:
             </nav>}
           </div>
           <aside className="property-map-panel">
-            <ListingMap listings={mapListings} activeId={activeListingId} onActive={setActiveListingId} onSelect={setSelectedListing} emptyLabel={text.mapEmpty} ariaLabel={text.map} />
+            <ListingMap listings={mapListings} activeId={activeListingId ?? selectedListing?.listingId} focusId={selectedListing?.listingId} onActive={setActiveListingId} onSelect={setSelectedListing} emptyLabel={text.mapEmpty} ariaLabel={text.map} />
           </aside>
         </section>
       )}
