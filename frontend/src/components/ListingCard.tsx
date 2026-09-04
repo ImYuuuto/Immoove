@@ -96,25 +96,6 @@ export default function ListingCard({
           sizes="(max-width: 720px) calc(100vw - 44px), (max-width: 1100px) 45vw, 360px"
           priority={imagePriority}
         />
-        {onSelect ? (
-          <button
-            type="button"
-            className="listing-view"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect(listing);
-            }}
-          >
-            {text.viewStay}
-          </button>
-        ) : listing.listingId ? (
-          <a className="listing-view" href={detailUrl}>
-            {text.viewStay}
-          </a>
-        ) : (
-          <span className="listing-view">{text.viewStay}</span>
-        )}
-
         <span>{text.selection}</span>
 
         <button
@@ -198,3 +179,4 @@ export default function ListingCard({
     </article>
   );
 }
+

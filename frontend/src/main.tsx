@@ -78,3 +78,4 @@ createRoot(document.getElementById('root')!).render(
 if (!isAdminRoute && !isProfileRoute) {
   window.setTimeout(() => applyLanguage(activeLanguage), 0);
 }
+

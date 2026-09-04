@@ -238,7 +238,6 @@ export default function ListingPage({
           <strong>{Number(listing.basePrice || 0).toLocaleString(locale)} MAD</strong>
           <span>/ {unit}</span>
           <div className="listing-action-buttons">
-            <button className="listing-secondary-action" onClick={() => { if (images.length > 0) { window.scrollTo({ top: 0, behavior: 'smooth' }); } }}>{copy.viewPhotos}</button>
             {listing.video && listing.video.trim() !== '' && (
               <button className="listing-secondary-action listing-video-action" onClick={() => setVideoListing(listing)}>
                 <Film size={16} />
@@ -262,3 +261,4 @@ export default function ListingPage({
     </main>
   );
 }
+
