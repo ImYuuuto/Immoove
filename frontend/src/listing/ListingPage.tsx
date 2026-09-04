@@ -23,6 +23,7 @@ export default function ListingPage({
   const [error, setError] = useState('');
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [favorite, setFavorite] = useState(false);
+  const [savingFavorite, setSavingFavorite] = useState(false);
   const [shareLabel, setShareLabel] = useState('');
   const [videoListing, setVideoListing] = useState<ListingDetail | null>(null);
 
@@ -43,6 +44,9 @@ export default function ListingPage({
   };
   useEffect(() => {
     void load();
+    request<{ items: Array<{ listingId?: number }> }>('/favorites')
+      .then((result) => setFavorite(result.items.some((item) => item.listingId === listingId)))
+      .catch(() => setFavorite(false));
   }, [listingId]);
 
   const images = useMemo(
@@ -78,10 +82,13 @@ export default function ListingPage({
   const hasMap = Number.isFinite(latitude) && Number.isFinite(longitude) && !(latitude === 0 && longitude === 0);
   const mapSrc = hasMap ? `https://www.google.com/maps?q=${latitude},${longitude}&z=15&output=embed` : '';
   const toggleFavorite = async () => {
+    if (savingFavorite) return;
+    setSavingFavorite(true);
     try {
       const result = await request<{ saved: boolean }>(`/favorites/${listing.listingId}/toggle`, { method: 'POST' });
       setFavorite(result.saved);
     } catch { window.location.assign(`/?login=1&next=${encodeURIComponent(window.location.pathname)}`); }
+    finally { setSavingFavorite(false); }
   };
   const share = async () => {
     const details = { title: listing.title, url: window.location.href };
@@ -114,7 +121,7 @@ export default function ListingPage({
       </header>
       <section className="listing-titlebar">
         <div><h1>{listing.title}</h1><p><Star fill="currentColor" size={15} /><b>{listing.rating.average?.toFixed(1) || '—'}</b><span>·</span><a href="#reviews">{listing.rating.count} {copy.review}</a><span>·</span><span>{listing.locationText || listing.location?.name}</span></p></div>
-        <div className="listing-actions"><button type="button" onClick={() => void share()}><Share2 />{shareLabel || copy.share}</button><button type="button" className={favorite ? 'active' : ''} onClick={() => void toggleFavorite()}><Heart fill={favorite ? 'currentColor' : 'none'} />{favorite ? copy.favorited : copy.favorite}</button></div>
+        <div className="listing-actions"><button type="button" onClick={() => void share()}><Share2 />{shareLabel || copy.share}</button><button type="button" className={favorite ? 'active' : ''} disabled={savingFavorite} aria-pressed={favorite} onClick={() => void toggleFavorite()}><Heart fill={favorite ? 'currentColor' : 'none'} />{favorite ? copy.favorited : copy.favorite}</button></div>
       </section>
       <section
         className={`listing-gallery gallery-${Math.min(images.length, 5)}`}

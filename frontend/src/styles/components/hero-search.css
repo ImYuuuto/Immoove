@@ -1,0 +1,352 @@
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.hero {
+  height: 760px;
+
+  position: relative;
+
+  overflow: visible;
+
+  color: white;
+
+  isolation: isolate;
+}
+
+.hero > img {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transform: scale(1.04);
+
+  animation: heroZoom 12s ease-out forwards;
+}
+
+/* Video support */
+
+.hero video {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  z-index: -3;
+
+  transform: scale(1.03);
+}
+
+@keyframes heroZoom {
+  from {
+    transform: scale(1.08);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+/* =========================================================
+   HERO OVERLAY
+   ========================================================= */
+
+.hero-shade {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    90deg,
+    rgba(3, 25, 34, 0.92) 0%,
+    rgba(3, 25, 34, 0.65) 40%,
+    rgba(3, 25, 34, 0.18) 75%,
+    rgba(3, 25, 34, 0.12)
+  );
+
+  z-index: 0;
+}
+
+.hero::after {
+  content: '';
+
+  position: absolute;
+  inset: 0;
+
+  background: radial-gradient(circle at 75% 30%, rgba(232, 189, 143, 0.2), transparent 25%);
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   HERO COPY
+   ========================================================= */
+
+.hero-copy {
+  position: absolute;
+
+  left: clamp(22px, 10vw, 160px);
+  top: 170px;
+
+  max-width: 720px;
+
+  z-index: 2;
+
+  animation: heroContent 0.9s 0.2s both;
+}
+
+@keyframes heroContent {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.eyebrow {
+  display: block;
+
+  color: var(--coral);
+
+  font-size: 10px;
+  letter-spacing: 2.3px;
+
+  font-weight: 700;
+
+  margin-bottom: 18px;
+}
+
+.hero .eyebrow,
+.host .eyebrow {
+  color: var(--sand);
+}
+
+.hero h1 {
+  margin: 0 0 25px;
+
+  font:
+    600 clamp(48px, 6.5vw, 90px)/0.94 'Playfair Display',
+    serif;
+
+  letter-spacing: -3px;
+}
+
+.hero h1 em {
+  color: var(--sand);
+  font-style: normal;
+}
+
+.hero-copy p {
+  max-width: 500px;
+
+  font-size: 17px;
+  line-height: 1.7;
+
+  color: rgba(255, 255, 255, 0.86);
+
+  margin: 0 0 34px;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.light-button,
+.outline-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 25px;
+
+  padding: 16px 21px;
+
+  border: 0;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  transition: var(--transition);
+
+  position: relative;
+  overflow: hidden;
+}
+
+.light-button {
+  background: var(--cream);
+  color: var(--navy);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.light-button::before {
+  content: '';
+
+  position: absolute;
+
+  top: 0;
+  left: -100%;
+
+  width: 70%;
+  height: 100%;
+
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+
+  transform: skewX(-20deg);
+
+  transition: left 0.7s ease;
+}
+
+.light-button:hover::before {
+  left: 130%;
+}
+
+.light-button:hover {
+  background: var(--coral);
+  color: white;
+
+  transform: translateY(-4px);
+
+  box-shadow: 0 18px 40px rgba(217, 111, 88, 0.28);
+}
+
+.light-button svg,
+.outline-button svg {
+  transition: transform var(--transition);
+}
+
+.light-button:hover svg,
+.outline-button:hover svg {
+  transform: translate(4px, -4px);
+}
+
+.outline-button {
+  color: white;
+
+  border: 1px solid rgba(255, 255, 255, 0.35);
+
+  background: rgba(255, 255, 255, 0.04);
+
+  backdrop-filter: blur(8px);
+}
+
+.outline-button:hover {
+  background: white;
+  color: var(--navy);
+
+  transform: translateY(-3px);
+}
+
+/* =========================================================
+   SEARCH PANEL
+   ========================================================= */
+
+.search-panel {
+  position: absolute;
+
+  bottom: -38px;
+
+  left: clamp(22px, 10vw, 160px);
+  right: clamp(22px, 10vw, 160px);
+
+  background: rgba(255, 255, 255, 0.96);
+
+  color: var(--ink);
+
+  display: flex;
+
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  box-shadow: 0 25px 70px rgba(6, 43, 59, 0.18);
+
+  backdrop-filter: blur(18px);
+
+  z-index: 10;
+
+  animation: searchFloat 1s 0.5s both;
+}
+
+@keyframes searchFloat {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-panel label {
+  flex: 1;
+
+  padding: 23px 27px;
+
+  border-right: 1px solid var(--line);
+
+  transition: background var(--transition);
+}
+
+.search-panel label:hover {
+  background: #faf9f5;
+}
+
+.search-panel small {
+  display: block;
+
+  color: var(--muted);
+
+  font-size: 9px;
+  letter-spacing: 1.7px;
+  font-weight: 700;
+
+  margin-bottom: 9px;
+}
+
+.search-panel input,
+.search-panel select {
+  width: 100%;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+
+  color: var(--ink);
+
+  font-size: 14px;
+}
+
+.search-panel button {
+  width: 95px;
+
+  border: 0;
+
+  background: linear-gradient(135deg, var(--coral), var(--coral-dark));
+
+  color: white;
+
+  transition: var(--transition);
+}
+
+.search-panel button:hover {
+  width: 110px;
+
+  background: var(--navy);
+
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { type MouseEvent, useEffect, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Search, UsersRound } from 'lucide-react';
 import type { SearchFilters } from '../types';
 import { useLanguage } from '../i18n/language';
@@ -20,23 +20,56 @@ export default function HeroSearch({ onSearch }: { onSearch: (filters: SearchFil
   const [cityQuery, setCityQuery] = useState('');
   const [cityOpen, setCityOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarPlacement, setCalendarPlacement] = useState<'top' | 'bottom'>('bottom');
+  const cityInput = useRef<HTMLInputElement>(null);
+  const guestsInput = useRef<HTMLInputElement>(null);
+  const datesChoice = useRef<HTMLDivElement>(null);
+  const updateCalendarPlacement = () => {
+    const bounds = datesChoice.current?.getBoundingClientRect();
+    if (!bounds) return;
+    const spaceAbove = bounds.top;
+    const spaceBelow = window.innerHeight - bounds.bottom;
+    setCalendarPlacement(spaceBelow >= 430 || spaceBelow >= spaceAbove ? 'bottom' : 'top');
+  };
 
   useEffect(() => {
     getPropertyDiscoveryOptions().then((options) => setCities(options.cities)).catch(() => setCities([]));
   }, []);
+
+  useEffect(() => {
+    if (!calendarOpen) return;
+    updateCalendarPlacement();
+    window.addEventListener('resize', updateCalendarPlacement);
+    window.addEventListener('scroll', updateCalendarPlacement, true);
+    return () => {
+      window.removeEventListener('resize', updateCalendarPlacement);
+      window.removeEventListener('scroll', updateCalendarPlacement, true);
+    };
+  }, [calendarOpen]);
 
   const matchingCities = cityQuery.trim()
     ? cities.filter((city) => city.name.toLocaleLowerCase().includes(cityQuery.trim().toLocaleLowerCase())).slice(0, 8)
     : [];
   const update = (key: keyof SearchFilters, value: string) =>
     setFilters((current) => ({ ...current, [key]: value }));
+  const focusChoice = (event: MouseEvent<HTMLDivElement>, input: HTMLInputElement | null) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('button, input, .hero-city-results')) return;
+    input?.focus();
+  };
+  const openDateChoice = (event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('.date-range-calendar, .date-range-trigger')) return;
+    updateCalendarPlacement();
+    setCalendarOpen(true);
+  };
 
   return (
     <form className="search-panel" onSubmit={(event) => { event.preventDefault(); onSearch(filters); }}>
-      <div className="search-control search-location">
+      <div className="search-control search-location search-text-choice" onClick={(event) => focusChoice(event, cityInput.current)}>
         <MapPin size={18} />
         <label htmlFor="hero-city"><small>{labels.where}</small></label>
-        <input id="hero-city" type="search" autoComplete="off" placeholder={labels.city} value={cityQuery}
+        <input ref={cityInput} id="hero-city" type="search" autoComplete="off" placeholder={labels.city} value={cityQuery}
           onFocus={() => setCityOpen(true)} onBlur={() => window.setTimeout(() => setCityOpen(false), 120)}
           onChange={(event) => {
             const value = event.target.value;
@@ -49,19 +82,19 @@ export default function HeroSearch({ onSearch }: { onSearch: (filters: SearchFil
         </div>}
       </div>
 
-      <div className="search-control search-dates" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setCalendarOpen(false); }}>
+      <div ref={datesChoice} className={`search-control search-dates calendar-${calendarPlacement}`} onClick={openDateChoice} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setCalendarOpen(false); }}>
         <CalendarDays size={18} />
         <small>{labels.when}</small>
-        <button type="button" className="date-range-trigger" onClick={() => setCalendarOpen((open) => !open)}>
+        <button type="button" className="date-range-trigger" onClick={() => { if (!calendarOpen) updateCalendarPlacement(); setCalendarOpen((open) => !open); }}>
           {filters.check_in ? <><span><small>{labels.checkIn}</small>{formatDateLabel(filters.check_in, language)}</span><i>→</i><span><small>{labels.checkOut}</small>{filters.check_out ? formatDateLabel(filters.check_out, language) : labels.chooseDates}</span></> : <b>{labels.chooseDates}</b>}
         </button>
         {calendarOpen && <DateRangeCalendar language={language} labels={labels} checkIn={filters.check_in} checkOut={filters.check_out} onChange={(checkIn, checkOut) => { setFilters((current) => ({ ...current, check_in: checkIn, check_out: checkOut })); if (checkOut) setCalendarOpen(false); }} />}
       </div>
 
-      <div className="search-control search-guests">
+      <div className="search-control search-guests search-text-choice" onClick={(event) => focusChoice(event, guestsInput.current)}>
         <UsersRound size={18} />
         <label htmlFor="hero-guests"><small>{labels.who}</small></label>
-        <input id="hero-guests" type="number" inputMode="numeric" min="1" placeholder={labels.guests} value={filters.guests || ''} onChange={(event) => update('guests', event.target.value)} />
+        <input ref={guestsInput} id="hero-guests" type="number" inputMode="numeric" min="1" placeholder={labels.guests} value={filters.guests || ''} onChange={(event) => update('guests', event.target.value)} />
       </div>
 
       <button className="search-submit" aria-label={text.search}><Search size={23} /></button>

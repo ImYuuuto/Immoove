@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+
+/* =========================================================
+   IMMOOVE ADMIN — COMPLETE DESIGN SYSTEM
+   ========================================================= */
+
+:root {
+  --admin-ink: #102733;
+  --admin-navy: #062d42;
+  --admin-navy-2: #08394b;
+  --admin-teal: #0c6970;
+  --admin-teal-light: #e1f0ee;
+
+  --admin-coral: #dd745b;
+  --admin-coral-light: #f9e5df;
+
+  --admin-sand: #e7b68a;
+  --admin-gold: #c89d4b;
+
+  --admin-bg: #edf1ed;
+  --admin-card: #ffffff;
+  --admin-soft: #f6f8f5;
+
+  --admin-muted: #748087;
+  --admin-muted-2: #9aa6a5;
+
+  --admin-line: #dce3de;
+  --admin-line-dark: #cbd5cf;
+
+  --admin-success: #287653;
+  --admin-success-bg: #e2f2e9;
+
+  --admin-warning: #9b6b00;
+  --admin-warning-bg: #fff2d2;
+
+  --admin-danger: #a64438;
+  --admin-danger-bg: #fbe4e0;
+
+  --admin-shadow-sm: 0 4px 15px rgba(16, 39, 51, 0.05);
+  --admin-shadow: 0 12px 35px rgba(16, 39, 51, 0.08);
+  --admin-shadow-lg: 0 25px 70px rgba(16, 39, 51, 0.13);
+
+  --admin-radius: 12px;
+  --admin-transition: 0.22s ease;
+}
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--admin-bg);
+  color: var(--admin-ink);
+  font-family: 'DM Sans', sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+

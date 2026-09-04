@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+
+/* =========================================================
+   IMMOOVE — PREMIUM DESIGN SYSTEM
+   ========================================================= */
+
+:root {
+  --bleu-profond: #071F3D;
+  --bleu-immoove: #0B3767;
+  --jaune-dore: #EFB52F;
+
+  --ink: #071F3D;
+  --navy: #071F3D;
+  --navy-2: #0B3767;
+  --deep: #071F3D;
+
+  --cream: #ffffff;
+  --cream-2: #f8fafc;
+  --white: #ffffff;
+
+  --coral: #EFB52F;
+  --coral-dark: #dca223;
+  --sand: #EFB52F;
+  --gold: #EFB52F;
+
+  --sage: #e8eff6;
+  --green: #0B3767;
+
+  --muted: #64748b;
+  --line: #e2e8f0;
+
+  --gold-alpha-08: rgba(239, 181, 47, 0.08);
+  --gold-alpha-10: rgba(239, 181, 47, 0.10);
+  --gold-alpha-15: rgba(239, 181, 47, 0.15);
+  --gold-alpha-25: rgba(239, 181, 47, 0.25);
+
+  --shadow-sm: 0 4px 16px rgba(7, 31, 61, 0.06);
+  --shadow-md: 0 10px 30px rgba(7, 31, 61, 0.09);
+  --shadow-lg: 0 20px 50px rgba(7, 31, 61, 0.14);
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  --transition: 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-fast: 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+

@@ -1,0 +1,157 @@
+/* =========================================================
+   TABLE CARD
+   ========================================================= */
+
+.table-card {
+  margin-top: 18px;
+}
+
+.admin-table {
+  width: 100%;
+
+  overflow-x: auto;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-line-dark) transparent;
+}
+
+.admin-table::-webkit-scrollbar {
+  height: 5px;
+}
+
+.admin-table::-webkit-scrollbar-thumb {
+  background: var(--admin-line-dark);
+  border-radius: 10px;
+}
+
+/* table row */
+
+.table-row {
+  display: grid;
+
+  grid-template-columns:
+    1.5fr
+    1.1fr
+    1fr
+    0.9fr
+    0.75fr;
+
+  align-items: center;
+
+  gap: 16px;
+
+  min-width: 730px;
+
+  padding: 16px 8px;
+
+  border-top: 1px solid var(--admin-line);
+
+  color: var(--admin-ink);
+
+  font-size: 11px;
+
+  transition:
+    background var(--admin-transition),
+    transform var(--admin-transition);
+}
+
+.table-row:not(.table-head):hover {
+  background: #f3f7f4;
+
+  transform: translateX(2px);
+}
+
+/* table header */
+
+.table-head {
+  padding-top: 0;
+
+  border-top: 0;
+
+  color: var(--admin-muted);
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 1.2px;
+
+  text-transform: uppercase;
+}
+
+/* first column */
+
+.table-row span:first-child b,
+.table-row span:first-child small {
+  display: block;
+}
+
+.table-row span:first-child b {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.table-row span:first-child small {
+  margin-top: 4px;
+
+  color: var(--admin-muted);
+
+  font-size: 9px;
+}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+}
+
+.actions button,
+.request-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  border: 0;
+
+  padding: 8px 10px;
+
+  border-radius: 3px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  transition:
+    transform var(--admin-transition),
+    background var(--admin-transition);
+}
+
+.actions button:hover,
+.request-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.approve {
+  background: var(--admin-success-bg);
+  color: var(--admin-success);
+}
+
+.approve:hover {
+  background: #cce9d8;
+}
+
+.reject {
+  background: var(--admin-danger-bg);
+  color: var(--admin-danger);
+}
+
+.reject:hover {
+  background: #f3d0cb;
+}
+

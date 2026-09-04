@@ -1,0 +1,76 @@
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.admin-loading,
+.admin-denied {
+  min-height: 100vh;
+
+  display: grid;
+
+  place-content: center;
+  justify-items: center;
+
+  padding: 30px;
+
+  background: radial-gradient(circle at center, #f8faf7, var(--admin-bg));
+
+  color: var(--admin-ink);
+
+  text-align: center;
+}
+
+.admin-loading::before {
+  content: '';
+
+  width: 35px;
+  height: 35px;
+
+  margin-bottom: 17px;
+
+  border: 3px solid var(--admin-line);
+
+  border-top-color: var(--admin-coral);
+
+  border-radius: 50%;
+
+  animation: admin-spin 0.8s linear infinite;
+}
+
+@keyframes admin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   DENIED
+   ========================================================= */
+
+.admin-denied h1 {
+  margin: 0 0 10px;
+
+  font:
+    600 42px 'Playfair Display',
+    serif;
+}
+
+.admin-denied p {
+  margin: 0 0 20px;
+
+  color: var(--admin-muted);
+
+  font-size: 13px;
+}
+
+.admin-denied a {
+  color: var(--admin-teal);
+
+  font-size: 13px;
+  font-weight: 700;
+
+  border-bottom: 1px solid var(--admin-teal);
+
+  padding-bottom: 4px;
+}
+

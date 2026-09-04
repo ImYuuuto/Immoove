@@ -29,6 +29,8 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
 
   const [listings, setListings] = useState<Listing[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [savingFavorites, setSavingFavorites] = useState<Set<number>>(new Set());
   const [pendingBooking, setPendingBooking] = useState<{ bookingId: number; listingId: number; listing?: { title?: string } } | null>(null);
   const reminderCopy = language === 'fr' ? { title: 'Demande en attente', body: 'Votre demande pour {listing} a bien été reçue. Nous vous contacterons bientôt pour la confirmation.', view: 'Voir mes réservations', close: 'Fermer' } : language === 'ar' ? { title: 'طلب قيد الانتظار', body: 'تم استلام طلبك لـ {listing}. سنتواصل معك قريباً للتأكيد.', view: 'عرض حجوزاتي', close: 'إغلاق' } : { title: 'Booking request pending', body: 'We received your request for {listing}. We’ll contact you soon to confirm it.', view: 'View my bookings', close: 'Close' };
 
@@ -42,9 +44,17 @@ export default function App() {
       .catch(() => {});
   }, []);
   useEffect(() => {
-    if (!currentUser) { setPendingBooking(null); return; }
+    if (!currentUser) {
+      setPendingBooking(null);
+      setFavoriteIds(new Set());
+      return;
+    }
     request<{ items: Array<{ bookingId: number; listingId: number; listing?: { title?: string } }> }>('/bookings?status=pending&page=1&pageSize=1')
-      .then(result => setPendingBooking(result.items[0] || null)).catch(() => setPendingBooking(null));
+      .then((result) => setPendingBooking(result.items[0] || null))
+      .catch(() => setPendingBooking(null));
+    request<{ items: Array<{ listingId?: number }> }>('/favorites')
+      .then((result) => setFavoriteIds(new Set(result.items.flatMap((item) => item.listingId ? [item.listingId] : []))))
+      .catch(() => setFavoriteIds(new Set()));
   }, [currentUser]);
 
   const notify = (text: string) => {
@@ -65,19 +75,31 @@ export default function App() {
     if (!id) {
       return notify(text.demoFavorite);
     }
+    if (!currentUser) {
+      window.dispatchEvent(new CustomEvent('auth:unauthorized', { detail: { message: text.favoriteLogin } }));
+      return;
+    }
+    if (savingFavorites.has(id)) return;
+    setSavingFavorites((current) => new Set(current).add(id));
 
     try {
-      await request(`/favorites/${id}/toggle`, {
+      const result = await request<{ saved: boolean }>(`/favorites/${id}/toggle`, {
         method: 'POST',
-
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('immoove_token') || ''}`,
-        },
       });
-
+      setFavoriteIds((current) => {
+        const next = new Set(current);
+        result.saved ? next.add(id) : next.delete(id);
+        return next;
+      });
       notify(text.favoriteUpdated);
     } catch (error) {
       notify(error instanceof Error ? error.message : text.favoriteLogin);
+    } finally {
+      setSavingFavorites((current) => {
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -187,6 +209,8 @@ export default function App() {
             {listings.slice(0, 3).map((listing) => (
               <ListingCard
                 listing={listing}
+                saved={Boolean(listing.listingId && favoriteIds.has(listing.listingId))}
+                saving={Boolean(listing.listingId && savingFavorites.has(listing.listingId))}
                 onFavorite={favorite}
                 onSelect={(item) => setSelectedListing(item)}
                 onBook={(item) =>
@@ -273,6 +297,7 @@ export default function App() {
       {selectedListing && (
         <PropertyDetailsModal
           listing={selectedListing}
+          saved={Boolean(selectedListing.listingId && favoriteIds.has(selectedListing.listingId))}
           onClose={() => setSelectedListing(null)}
           onViewPhotos={() => setGalleryListing(selectedListing)}
           onViewVideo={() => setVideoListing(selectedListing)}
