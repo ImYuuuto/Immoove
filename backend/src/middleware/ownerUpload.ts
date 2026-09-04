@@ -13,14 +13,14 @@ fs.mkdirSync(directory, { recursive: true });
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { files: 10, fileSize: CONTRACT_LIMIT, fields: 30, fieldSize: 64 * 1024 },
+  limits: { files: 17, fileSize: CONTRACT_LIMIT, fields: 30, fieldSize: 64 * 1024 },
   fileFilter: (_req, file, done) => {
     const isPhoto = file.fieldname === 'ownerPhoto' || file.fieldname === 'listingPhotos';
     const allowed = isPhoto ? ['image/jpeg', 'image/png', 'image/webp', 'image/avif'] : ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
     if (!allowed.includes(file.mimetype)) return done(new AppError(415, isPhoto ? 'Photos must be JPEG, PNG, WebP, or AVIF' : 'Contract must be a PDF, JPEG, PNG, or WebP'));
     done(null, true);
   },
-}).fields([{ name: 'ownerPhoto', maxCount: 1 }, { name: 'contractDocument', maxCount: 1 }, { name: 'listingPhotos', maxCount: 8 }]);
+}).fields([{ name: 'ownerPhoto', maxCount: 1 }, { name: 'contractDocument', maxCount: 1 }, { name: 'listingPhotos', maxCount: 15 }]);
 
 export const ownerDocumentsUpload: RequestHandler = (req, res, next) => upload(req, res, (error) => {
   if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') return next(new AppError(413, 'Uploaded files must not exceed 5 MB'));

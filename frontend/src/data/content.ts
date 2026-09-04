@@ -1,8 +1,8 @@
 import type { Listing } from '../types';
 
 export const images = {
-  hero: '/uploads/site/hero/coastal-hero.jpg',
-  stay: '/uploads/site/categories/stays.jpg',
+  hero: '/img/site/hero/coastal-hero.jpg',
+  stay: '/img/site/categories/stays.jpg',
 };
 
 export const fallbackListings: Listing[] = [

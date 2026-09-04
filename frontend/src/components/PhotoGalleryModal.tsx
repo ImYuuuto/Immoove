@@ -8,9 +8,11 @@ import ResponsiveImage from './ResponsiveImage';
 
 export default function PhotoGalleryModal({
   listing,
+  initialIndex = 0,
   onClose,
 }: {
   listing: Listing;
+  initialIndex?: number;
   onClose: () => void;
 }) {
   const { text } = useLanguage();
@@ -23,7 +25,9 @@ export default function PhotoGalleryModal({
     ? rawImages.filter((img, idx, arr) => arr.findIndex((o) => o.url === img.url) === idx)
     : [{ url: fallbackListings[0].coverImageUrl || '' }];
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(() =>
+    Math.max(0, Math.min(initialIndex, images.length - 1)),
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

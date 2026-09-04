@@ -35,32 +35,8 @@ export function EditorialSection() {
 
 export function WhyImmoove() {
   const { text } = useLanguage();
-  const reasons = [
-    [text.reason1Title, text.reason1Text],
-    [text.reason2Title, text.reason2Text],
-    [text.reason3Title, text.reason3Text],
-  ];
   return (
     <>
-      <section className="why-immoove section" id="experiences">
-        <small className="eyebrow reveal">{text.whyEyebrow}</small>
-        <h2 className="luxury-title reveal">
-          {text.whyLine1}
-          <br />
-          {text.whyLine2}
-          <span>.</span>
-        </h2>
-        <div className="why-grid">
-          {reasons.map(([title, description], i) => (
-            <article className="reveal" key={title}>
-              <b>0{i + 1}</b>
-              <h3>{title}</h3>
-              <i />
-              <p>{description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
       <section className="map-luxury section">
         <div className="map-copy reveal">
           <small className="eyebrow">{text.mapEyebrow}</small>

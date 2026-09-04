@@ -7,6 +7,7 @@ import { useListingCopy } from './listingI18n';
 import type { ListingDetail } from './types';
 import './listing.css';
 import ResponsiveImage from '../components/ResponsiveImage';
+import PhotoGalleryModal from '../components/PhotoGalleryModal';
 import VideoModal from '../components/VideoModal';
 
 export default function ListingPage({
@@ -26,6 +27,7 @@ export default function ListingPage({
   const [savingFavorite, setSavingFavorite] = useState(false);
   const [shareLabel, setShareLabel] = useState('');
   const [videoListing, setVideoListing] = useState<ListingDetail | null>(null);
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -131,20 +133,29 @@ export default function ListingPage({
           images
             .slice(0, 5)
             .map((image, index) => (
-              <ResponsiveImage
+              <button
+                className={`listing-gallery-item ${index === 0 ? 'gallery-main' : ''}`}
+                type="button"
                 key={image.url}
-                pictureClassName={index === 0 ? 'gallery-main' : ''}
-                src={image.url}
-                alt={`${listing.title} ${index + 1}`}
-                width={1200}
-                height={900}
-                sizes={
-                  index === 0
-                    ? '(max-width: 850px) calc(100vw - 36px), 62vw'
-                    : '(max-width: 850px) 50vw, 19vw'
-                }
-                priority={index === 0}
-              />
+                onClick={() => setGalleryIndex(index)}
+                aria-label={`${copy.gallery} ${index + 1}`}
+              >
+                <ResponsiveImage
+                  src={image.url}
+                  alt={`${listing.title} ${index + 1}`}
+                  width={1200}
+                  height={900}
+                  sizes={
+                    index === 0
+                      ? '(max-width: 850px) calc(100vw - 36px), 62vw'
+                      : '(max-width: 850px) 50vw, 19vw'
+                  }
+                  priority={index === 0}
+                />
+                {index === 4 && images.length > 5 && (
+                  <span className="listing-gallery-more">+{images.length - 5}</span>
+                )}
+              </button>
             ))
         ) : (
           <div className="gallery-empty">{listing.title.slice(0, 1)}</div>
@@ -259,6 +270,14 @@ export default function ListingPage({
       <footer className="listing-footer"><div><a className="brand" href="/"><b>I</b> immoove<span>.</span></a><p>{copy.footerText}</p></div><nav><small>{copy.exploreFooter}</small><a href="/properties">{copy.stays}</a></nav><div><a href={`/terms?language=${language}`}>{copy.terms}</a><a href={`/privacy?language=${language}`}>{copy.privacy}</a></div><p>© 2026 Immoove · {copy.madeWithCare}</p></footer>
 
       {/* VIDEO MODAL */}
+      {galleryIndex !== null && (
+        <PhotoGalleryModal
+          listing={listing}
+          initialIndex={galleryIndex}
+          onClose={() => setGalleryIndex(null)}
+        />
+      )}
+
       {videoListing && (
         <VideoModal
           listing={videoListing}

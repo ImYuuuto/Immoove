@@ -278,7 +278,7 @@ rgba(239, 181, 47, 0.08); color: var(--ink); box-shadow: none; font-size: 12px; 
   inset: -45px 42% -45px 0;
   background:
     linear-gradient(90deg, transparent 62%, var(--deep)),
-    url('/uploads/site/hero/coastal-hero.jpg') center calc(50% + var(--shift, 0px)) / cover;
+    url('/img/site/hero/coastal-hero.jpg') center calc(50% + var(--shift, 0px)) / cover;
 }
 .editorial-content {
   position: relative;
@@ -325,43 +325,6 @@ rgba(239, 181, 47, 0.08); color: var(--ink); box-shadow: none; font-size: 12px; 
     transform: none;
   }
 }
-.why-immoove {
-  background: #fbf9f4;
-}
-.why-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  margin-top: 58px;
-  border-top: 1px solid var(--line);
-}
-.why-grid article {
-  min-height: 265px;
-  padding: 26px 28px 15px 0;
-  border-right: 1px solid var(--line);
-}
-.why-grid article + article {
-  padding-left: 28px;
-}
-.why-grid article:last-child {
-  border: 0;
-}
-.why-grid b {
-  color: var(--coral);
-  font-size: 11px;
-  letter-spacing: 0.13em;
-}
-.why-grid h3 {
-  margin: 48px 0 12px;
-  font:
-    600 29px 'Playfair Display',
-    serif;
-}
-.why-grid i {
-  display: block;
-  width: 70px;
-  border-top: 1px solid var(--coral);
-}
-.why-grid p,
 .map-copy p {
   color: var(--muted);
   line-height: 1.65;
@@ -385,7 +348,7 @@ rgba(239, 181, 47, 0.08); color: var(--ink); box-shadow: none; font-size: 12px; 
   border-radius: 20px;
   background:
     linear-gradient(rgba(222, 232, 224, 0.72), rgba(222, 232, 224, 0.72)),
-    url('/uploads/site/map/coast-map.jpg') center/cover;
+    url('/img/site/map/coast-map.jpg') center/cover;
   box-shadow: var(--shadow-md);
 }
 .local-map > span {
@@ -583,7 +546,7 @@ rgba(239, 181, 47, 0.08); color: var(--ink); box-shadow: none; font-size: 12px; 
     inset: -30px 0 42%;
     background:
       linear-gradient(0deg, var(--deep), transparent 72%),
-      url('/uploads/site/hero/coastal-hero.jpg') center/cover;
+      url('/img/site/hero/coastal-hero.jpg') center/cover;
   }
   .editorial-content {
     position: absolute;
@@ -591,19 +554,8 @@ rgba(239, 181, 47, 0.08); color: var(--ink); box-shadow: none; font-size: 12px; 
     margin: 0;
     padding: 35px 22px;
   }
-  .why-grid,
   .map-luxury {
     grid-template-columns: 1fr;
-  }
-  .why-grid article,
-  .why-grid article + article {
-    min-height: auto;
-    padding: 24px 0;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .why-grid h3 {
-    margin: 20px 0 12px;
   }
   .map-luxury {
     gap: 30px;
@@ -667,38 +619,38 @@ rgba(239, 181, 47, 0.08); color: var(--ink); box-shadow: none; font-size: 12px; 
 /* Modern responsive CSS backgrounds, with the original JPEG retained as fallback. */
 .editorial-photo {
   background-image:
-    linear-gradient(90deg, transparent 62%, var(--deep)), url('/uploads/site/hero/coastal-hero.jpg');
+    linear-gradient(90deg, transparent 62%, var(--deep)), url('/img/site/hero/coastal-hero.jpg');
   background-image:
     linear-gradient(90deg, transparent 62%, var(--deep)),
     image-set(
-      url('/uploads/site/hero/coastal-hero-1600.avif') type('image/avif'),
-      url('/uploads/site/hero/coastal-hero-1600.webp') type('image/webp'),
-      url('/uploads/site/hero/coastal-hero.jpg') type('image/jpeg')
+      url('/img/site/hero/coastal-hero-1600.avif') type('image/avif'),
+      url('/img/site/hero/coastal-hero-1600.webp') type('image/webp'),
+      url('/img/site/hero/coastal-hero.jpg') type('image/jpeg')
     );
 }
 .local-map {
   background-image:
     linear-gradient(rgba(222, 232, 224, 0.72), rgba(222, 232, 224, 0.72)),
-    url('/uploads/site/map/coast-map.jpg');
+    url('/img/site/map/coast-map.jpg');
   background-image:
     linear-gradient(rgba(222, 232, 224, 0.72), rgba(222, 232, 224, 0.72)),
     image-set(
-      url('/uploads/site/map/coast-map-1100.avif') type('image/avif'),
-      url('/uploads/site/map/coast-map-1100.webp') type('image/webp'),
-      url('/uploads/site/map/coast-map.jpg') type('image/jpeg')
+      url('/img/site/map/coast-map-1100.avif') type('image/avif'),
+      url('/img/site/map/coast-map-1100.webp') type('image/webp'),
+      url('/img/site/map/coast-map.jpg') type('image/jpeg')
     );
 }
 @media (max-width: 800px) {
   .editorial-photo {
     background-image:
       linear-gradient(0deg, var(--deep), transparent 72%),
-      url('/uploads/site/hero/coastal-hero.jpg');
+      url('/img/site/hero/coastal-hero.jpg');
     background-image:
       linear-gradient(0deg, var(--deep), transparent 72%),
       image-set(
-        url('/uploads/site/hero/coastal-hero-800.avif') type('image/avif'),
-        url('/uploads/site/hero/coastal-hero-800.webp') type('image/webp'),
-        url('/uploads/site/hero/coastal-hero.jpg') type('image/jpeg')
+        url('/img/site/hero/coastal-hero-800.avif') type('image/avif'),
+        url('/img/site/hero/coastal-hero-800.webp') type('image/webp'),
+        url('/img/site/hero/coastal-hero.jpg') type('image/jpeg')
       );
   }
 }

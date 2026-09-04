@@ -98,7 +98,7 @@ export default function ListingCard({
     if (!premiumInteractions || previewImages.length < 2 || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     previewTimer.current = window.setInterval(
       () => setPreviewIndex((current) => (current + 1) % previewImages.length),
-      1100,
+      1900,
     );
   };
   const stopPreview = () => {

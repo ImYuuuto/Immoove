@@ -5,7 +5,7 @@ import multer from 'multer';
 import sharp from 'sharp';
 import { AppError } from '../utils/errorHandler';
 
-export const MAX_LISTING_IMAGES = 8;
+export const MAX_LISTING_IMAGES = 15;
 export const MAX_LISTING_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGE_PIXELS = 40_000_000;
 const uploadWidths = [320, 640, 960, 1440];

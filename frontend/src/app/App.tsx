@@ -125,7 +125,7 @@ export default function App() {
             preload="metadata"
             width={768}
             height={432}
-            poster="/uploads/site/hero/coastal-hero-1200.webp"
+            poster="/img/site/hero/coastal-hero-1200.webp"
           >
             <source src="/videos/morocco-hero.mp4" type="video/mp4" />
           </video>
@@ -231,7 +231,7 @@ export default function App() {
 
         <section className="host section" id="host">
           <ResponsiveImage
-            src="/uploads/site/hero/coastal-hero.jpg"
+            src="/img/site/hero/coastal-hero.jpg"
             alt={text.coastalLandscape}
             sizes="100vw"
           />

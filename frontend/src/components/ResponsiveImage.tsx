@@ -3,17 +3,17 @@ import type { ImgHTMLAttributes } from 'react';
 type Asset = { width: number; height: number; widths: number[] };
 
 const siteAssets: Record<string, Asset> = {
-  '/uploads/site/categories/beach.jpg': {
+  '/img/site/categories/beach.jpg': {
     width: 900,
     height: 598,
     widths: [320, 480, 640, 800, 900],
   },
-  '/uploads/site/categories/stays.jpg': {
+  '/img/site/categories/stays.jpg': {
     width: 1200,
     height: 675,
     widths: [320, 480, 640, 800, 960, 1200],
   },
-  '/uploads/site/hero/coastal-hero.jpg': {
+  '/img/site/hero/coastal-hero.jpg': {
     width: 2200,
     height: 1467,
     widths: [320, 480, 640, 800, 960, 1200, 1600, 2200],
@@ -33,7 +33,7 @@ const siteAssets: Record<string, Asset> = {
     height: 667,
     widths: [320, 480, 640, 800, 960, 1000],
   },
-  '/uploads/site/map/coast-map.jpg': {
+  '/img/site/map/coast-map.jpg': {
     width: 1100,
     height: 729,
     widths: [320, 480, 640, 800, 960, 1100],

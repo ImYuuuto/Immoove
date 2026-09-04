@@ -39,7 +39,7 @@ export default function AnnouncementModal({
 
   const selectImages = (event: ChangeEvent<HTMLInputElement>) => {
     const images = Array.from(event.target.files || []);
-    if (images.length > 8) {
+    if (images.length > 15) {
       update('images', []);
       onMessage(copy.imageCount);
       event.target.value = '';

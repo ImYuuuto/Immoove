@@ -29,7 +29,7 @@ export default function CategoryGrid() {
     },
 
     {
-      image: '/uploads/site/categories/beach.jpg',
+      image: '/img/site/categories/beach.jpg',
       number: '03 / VILLA',
       icon: '🏊',
       title: labels[2],
