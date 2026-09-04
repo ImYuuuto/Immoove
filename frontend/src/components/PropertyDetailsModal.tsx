@@ -107,7 +107,7 @@ export default function PropertyDetailsModal({
   const image =
     listing.coverImageUrl || listing.images?.[0]?.url || fallbackListings[0].coverImageUrl || '';
 
-  const hasVideo = Boolean(listing.video && listing.video.trim() !== '');
+  const hasVideo = Boolean(listing.video && listing.video.trim() !== '') || Boolean('/videos/poperty-video.mp4');
   const locationName = listing.locationText || listing.location?.name;
   const propertyTypeName = listing.propertyType?.name;
 

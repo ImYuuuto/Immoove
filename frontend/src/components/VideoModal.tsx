@@ -16,7 +16,7 @@ export default function VideoModal({
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
 
-  const videoSrc = listing.video || '/videos/morocco-hero.mp4';
+  const videoSrc = listing.video || '/videos/poperty-video.mp4';
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

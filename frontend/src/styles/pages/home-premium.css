@@ -278,7 +278,7 @@ rgba(239, 181, 47, 0.08); color: var(--ink); box-shadow: none; font-size: 12px; 
   inset: -45px 42% -45px 0;
   background:
     linear-gradient(90deg, transparent 62%, var(--deep)),
-    url('/img/site/hero/coastal-hero.jpg') center calc(50% + var(--shift, 0px)) / cover;
+    url('/img/background-lx.avif') center calc(50% + var(--shift, 0px)) / cover;
 }
 .editorial-content {
   position: relative;
@@ -619,14 +619,8 @@ rgba(239, 181, 47, 0.08); color: var(--ink); box-shadow: none; font-size: 12px; 
 /* Modern responsive CSS backgrounds, with the original JPEG retained as fallback. */
 .editorial-photo {
   background-image:
-    linear-gradient(90deg, transparent 62%, var(--deep)), url('/img/site/hero/coastal-hero.jpg');
-  background-image:
     linear-gradient(90deg, transparent 62%, var(--deep)),
-    image-set(
-      url('/img/site/hero/coastal-hero-1600.avif') type('image/avif'),
-      url('/img/site/hero/coastal-hero-1600.webp') type('image/webp'),
-      url('/img/site/hero/coastal-hero.jpg') type('image/jpeg')
-    );
+    url('/img/background-lx.avif');
 }
 .local-map {
   background-image:
@@ -644,14 +638,7 @@ rgba(239, 181, 47, 0.08); color: var(--ink); box-shadow: none; font-size: 12px; 
   .editorial-photo {
     background-image:
       linear-gradient(0deg, var(--deep), transparent 72%),
-      url('/img/site/hero/coastal-hero.jpg');
-    background-image:
-      linear-gradient(0deg, var(--deep), transparent 72%),
-      image-set(
-        url('/img/site/hero/coastal-hero-800.avif') type('image/avif'),
-        url('/img/site/hero/coastal-hero-800.webp') type('image/webp'),
-        url('/img/site/hero/coastal-hero.jpg') type('image/jpeg')
-      );
+      url('/img/background-lx.avif');
   }
 }
 .listing-view {
