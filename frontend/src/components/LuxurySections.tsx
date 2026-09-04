@@ -92,16 +92,28 @@ export function WhyImmoove() {
           </button>
         </div>
       </section>
-      <section className="testimonials">
-        <Quote />
-        <figure>
-          <blockquote>“{text.testimonial1}”</blockquote>
-          <figcaption>— Sarah, Casablanca</figcaption>
-        </figure>
-        <figure>
-          <blockquote>“{text.testimonial2}”</blockquote>
-          <figcaption>— Adam, Rabat</figcaption>
-        </figure>
+      <section className="testimonials" aria-label="Témoignages">
+        <Quote className="testimonial-quote-icon" />
+        <div className="testimonials-track-wrapper">
+          <div className="testimonials-track">
+            <figure>
+              <blockquote>“{text.testimonial1}”</blockquote>
+              <figcaption>— Sarah, Casablanca</figcaption>
+            </figure>
+            <figure>
+              <blockquote>“{text.testimonial2}”</blockquote>
+              <figcaption>— Adam, Rabat</figcaption>
+            </figure>
+            <figure>
+              <blockquote>“{text.testimonial1}”</blockquote>
+              <figcaption>— Sarah, Casablanca</figcaption>
+            </figure>
+            <figure>
+              <blockquote>“{text.testimonial2}”</blockquote>
+              <figcaption>— Adam, Rabat</figcaption>
+            </figure>
+          </div>
+        </div>
       </section>
     </>
   );

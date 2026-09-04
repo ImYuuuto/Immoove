@@ -12,6 +12,8 @@ export const fallbackListings: Listing[] = [
     basePrice: 1700,
     guestCapacity: 6,
     coverImageUrl: '/uploads/site/listings/maison-bleue.jpg',
+    video: '/videos/morocco-hero.mp4',
+    publishedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
     title: 'Dar El Bahri',
@@ -19,6 +21,8 @@ export const fallbackListings: Listing[] = [
     basePrice: 1250,
     guestCapacity: 4,
     coverImageUrl: '/uploads/site/listings/dar-el-bahri.jpg',
+    video: '/videos/morocco-hero.mp4',
+    publishedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
   {
     title: 'Villa des Dunes',
@@ -26,5 +30,7 @@ export const fallbackListings: Listing[] = [
     basePrice: 2200,
     guestCapacity: 8,
     coverImageUrl: '/uploads/site/listings/villa-des-dunes.jpg',
+    video: '/videos/morocco-hero.mp4',
+    publishedAt: new Date(Date.now() - 14 * 86400000).toISOString(),
   },
 ];

@@ -7,6 +7,9 @@ import HeroSearch from '../components/HeroSearch';
 import ListingCard from '../components/ListingCard';
 import { EditorialSection, Newsletter, WhyImmoove } from '../components/LuxurySections';
 import Navbar from '../components/Navbar';
+import PropertyDetailsModal from '../components/PropertyDetailsModal';
+import PhotoGalleryModal from '../components/PhotoGalleryModal';
+import VideoModal from '../components/VideoModal';
 import type { AuthUser, Listing, SearchFilters } from '../types';
 import { request } from '../utils/request';
 import { useLanguage } from '../i18n/language';
@@ -17,6 +20,9 @@ export default function App() {
   const [open, setOpen] = useState(false);
 
   const [modal, setModal] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [galleryListing, setGalleryListing] = useState<Listing | null>(null);
+  const [videoListing, setVideoListing] = useState<Listing | null>(null);
 
   const [message, setMessage] = useState('');
 
@@ -182,6 +188,7 @@ export default function App() {
               <ListingCard
                 listing={listing}
                 onFavorite={favorite}
+                onSelect={(item) => setSelectedListing(item)}
                 onBook={(item) =>
                   item.listingId && window.location.assign(`/listings/${item.listingId}`)
                 }
@@ -261,6 +268,37 @@ export default function App() {
           <span>{text.madeWithCare}</span>
         </div>
       </footer>
+
+      {/* PROPERTY DETAILS MODAL */}
+      {selectedListing && (
+        <PropertyDetailsModal
+          listing={selectedListing}
+          onClose={() => setSelectedListing(null)}
+          onViewPhotos={() => setGalleryListing(selectedListing)}
+          onViewVideo={() => setVideoListing(selectedListing)}
+          onBook={(item) => {
+            setSelectedListing(null);
+            if (item.listingId) window.location.assign(`/listings/${item.listingId}`);
+          }}
+          onFavorite={favorite}
+        />
+      )}
+
+      {/* PHOTO GALLERY MODAL */}
+      {galleryListing && (
+        <PhotoGalleryModal
+          listing={galleryListing}
+          onClose={() => setGalleryListing(null)}
+        />
+      )}
+
+      {/* VIDEO MODAL */}
+      {videoListing && (
+        <VideoModal
+          listing={videoListing}
+          onClose={() => setVideoListing(null)}
+        />
+      )}
 
       {/* ANNOUNCEMENT MODAL */}
 

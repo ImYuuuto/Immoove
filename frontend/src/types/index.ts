@@ -18,6 +18,7 @@ export type Listing = {
   propertyType?: { propertyTypeId: number; name: string; slug: string };
   coverImageUrl?: string | null;
   images?: { url: string }[];
+  video?: string | null;
   amenities?: Array<{ featureId: number; name: string }>;
   location?: { name: string; lat?: number; lng?: number };
   locationText?: string | null;
@@ -26,6 +27,7 @@ export type Listing = {
   longitude?: number | null;
   rating?: { average: number | null; count: number };
   createdAt?: string;
+  publishedAt?: string | null;
   status?: string;
   isActive?: boolean;
   archivedAt?: string | null;

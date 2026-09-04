@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, CalendarX, Check, Heart, MapPin, Share2, Star, UserRound } from 'lucide-react';
+import { ArrowLeft, CalendarX, Check, Film, Heart, MapPin, Share2, Star, UserRound } from 'lucide-react';
 import { request } from '../utils/request';
 import { useLanguage } from '../i18n/language';
 import { pricingUnitLabel } from './availability';
@@ -7,6 +7,7 @@ import { useListingCopy } from './listingI18n';
 import type { ListingDetail } from './types';
 import './listing.css';
 import ResponsiveImage from '../components/ResponsiveImage';
+import VideoModal from '../components/VideoModal';
 
 export default function ListingPage({
   listingId,
@@ -23,6 +24,7 @@ export default function ListingPage({
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [favorite, setFavorite] = useState(false);
   const [shareLabel, setShareLabel] = useState('');
+  const [videoListing, setVideoListing] = useState<ListingDetail | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -235,11 +237,28 @@ export default function ListingPage({
           <small>{copy.priceFrom}</small>
           <strong>{Number(listing.basePrice || 0).toLocaleString(locale)} MAD</strong>
           <span>/ {unit}</span>
+          <div className="listing-action-buttons">
+            <button className="listing-secondary-action" onClick={() => { if (images.length > 0) { window.scrollTo({ top: 0, behavior: 'smooth' }); } }}>{copy.viewPhotos}</button>
+            {listing.video && listing.video.trim() !== '' && (
+              <button className="listing-secondary-action listing-video-action" onClick={() => setVideoListing(listing)}>
+                <Film size={16} />
+                {copy.viewVideo}
+              </button>
+            )}
+          </div>
           <button onClick={() => void goToCheckout()}>{copy.book}</button>
           <p>{copy.loginToBook}</p>
         </aside>
       </section>
       <footer className="listing-footer"><div><a className="brand" href="/"><b>I</b> immoove<span>.</span></a><p>{copy.footerText}</p></div><nav><small>{copy.exploreFooter}</small><a href="/properties">{copy.stays}</a></nav><div><a href={`/terms?language=${language}`}>{copy.terms}</a><a href={`/privacy?language=${language}`}>{copy.privacy}</a></div><p>© 2026 Immoove · {copy.madeWithCare}</p></footer>
+
+      {/* VIDEO MODAL */}
+      {videoListing && (
+        <VideoModal
+          listing={videoListing}
+          onClose={() => setVideoListing(null)}
+        />
+      )}
     </main>
   );
 }

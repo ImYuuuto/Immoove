@@ -221,6 +221,16 @@ const fr = {
   pending: 'En attente',
   approved: 'Approuvée',
   rejected: 'Refusée',
+  viewPhotos: 'Voir photos',
+  viewVideo: 'Voir vidéo',
+  propertyDetails: 'Détails du logement',
+  videoTour: 'Visite vidéo',
+  nextImage: 'Image suivante',
+  prevImage: 'Image précédente',
+  bedrooms: 'chambres',
+  beds: 'lits',
+  bathrooms: 'salles de bain',
+  amenities: 'Équipements',
 };
 
 type Translation = { [K in keyof typeof fr]: string };
@@ -440,6 +450,16 @@ const en: Translation = {
   pending: 'Pending',
   approved: 'Approved',
   rejected: 'Rejected',
+  viewPhotos: 'View photos',
+  viewVideo: 'View video',
+  propertyDetails: 'Property details',
+  videoTour: 'Video tour',
+  nextImage: 'Next image',
+  prevImage: 'Previous image',
+  bedrooms: 'bedrooms',
+  beds: 'beds',
+  bathrooms: 'bathrooms',
+  amenities: 'Amenities',
 };
 
 const ar: Translation = {
@@ -658,6 +678,16 @@ const ar: Translation = {
   pending: 'قيد الانتظار',
   approved: 'مقبول',
   rejected: 'مرفوض',
+  viewPhotos: 'عرض الصور',
+  viewVideo: 'عرض الفيديو',
+  propertyDetails: 'تفاصيل الإقامة',
+  videoTour: 'جولة بالفيديو',
+  nextImage: 'الصورة التالية',
+  prevImage: 'الصورة السابقة',
+  bedrooms: 'غرف نوم',
+  beds: 'أسرة',
+  bathrooms: 'حمامات',
+  amenities: 'المرافق',
 };
 
 ar.service = 'الخدمة';
