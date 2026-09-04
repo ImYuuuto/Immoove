@@ -108,6 +108,15 @@ describe('ListingService', () => {
     expect(params).toEqual([2, 3, 4, 'riad', 2, 1, 5, 7, 4]);
   });
 
+  it('uses string literals when loading property discovery regions', async () => {
+    mockedQuery.mockResolvedValue({ rows: [] } as never);
+
+    await ListingService.propertyDiscoveryOptions();
+
+    expect(mockedQuery.mock.calls[1][0]).toContain('name <> \'Unassigned\'');
+    expect(mockedQuery.mock.calls[1][0]).not.toContain('name <> "Unassigned"');
+  });
+
   it('hydrates public detail with amenities, reviews, rating, and private availability', async () => {
     mockedQuery
       .mockResolvedValueOnce({
