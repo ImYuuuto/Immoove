@@ -29,6 +29,7 @@ export default function ListingCard({
   onSelect,
   onViewPhotos,
   premiumInteractions = false,
+  compact = false,
   imagePriority = false,
   saved = false,
   saving = false,
@@ -39,6 +40,7 @@ export default function ListingCard({
   onSelect?: (listing: Listing) => void;
   onViewPhotos?: (listing: Listing) => void;
   premiumInteractions?: boolean;
+  compact?: boolean;
   categorySlug?: string;
   imagePriority?: boolean;
   saved?: boolean;
@@ -117,7 +119,7 @@ export default function ListingCard({
 
   return (
     <article
-      className={`listing-card ${onSelect || detailUrl ? 'is-clickable' : ''}`}
+      className={`listing-card ${compact ? 'is-compact' : ''} ${onSelect || detailUrl ? 'is-clickable' : ''}`}
       onClick={(event) => {
         if ((event.target as HTMLElement).closest('button, .favorite-active, .booking-button')) return;
         if (onSelect) {

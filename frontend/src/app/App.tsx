@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowUpRight, Clock3, MapPin, X } from 'lucide-react';
-import AnnouncementModal from '../components/AnnouncementModal';
-import CategoryGrid from '../components/CategoryGrid';
 import Heading from '../components/Heading';
 import HeroSearch from '../components/HeroSearch';
 import ListingCard from '../components/ListingCard';
-import { EditorialSection, Newsletter, WhyImmoove } from '../components/LuxurySections';
+import { JourneySection, Newsletter, TestimonialsSection, TrustStrip } from '../components/LuxurySections';
+import DestinationShowcase from '../components/DestinationShowcase';
+import PropertyTypeShowcase from '../components/PropertyTypeShowcase';
 import Navbar from '../components/Navbar';
 import PropertyDetailsModal from '../components/PropertyDetailsModal';
 import PhotoGalleryModal from '../components/PhotoGalleryModal';
@@ -13,13 +13,11 @@ import VideoModal from '../components/VideoModal';
 import type { AuthUser, Listing, SearchFilters } from '../types';
 import { request } from '../utils/request';
 import { useLanguage } from '../i18n/language';
-import ResponsiveImage from '../components/ResponsiveImage';
 
 export default function App() {
   const { text, language } = useLanguage();
   const [open, setOpen] = useState(false);
 
-  const [modal, setModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [galleryListing, setGalleryListing] = useState<Listing | null>(null);
   const [videoListing, setVideoListing] = useState<Listing | null>(null);
@@ -136,7 +134,7 @@ export default function App() {
           </div>
 
           <div className="hero-copy">
-            <small className="eyebrow">{text.eyebrow}</small>
+            <small className="eyebrow"><span className="home-emoji" aria-hidden="true">✨</span>{text.eyebrow}</small>
 
             <h1>
               {text.heroLine1}
@@ -158,40 +156,40 @@ export default function App() {
           </a>
         </section>
 
+        <TrustStrip />
+
+        <DestinationShowcase />
+
         <section className="premium-stats">
           <article>
             <strong>
               120<span>+</span>
             </strong>
-            <p>{text.statsAddresses}</p>
+            <p><span className="home-emoji" aria-hidden="true">🏡</span>{text.statsAddresses}</p>
           </article>
           <article>
             <strong>
               35<span>+</span>
             </strong>
-            <p>{text.statsExperiences}</p>
+            <p><span className="home-emoji" aria-hidden="true">🧳</span>{text.statsExperiences}</p>
           </article>
           <article>
             <strong>
               4.9<small>/5</small>
             </strong>
-            <p>{text.statsRating}</p>
+            <p><span className="home-emoji" aria-hidden="true">⭐</span>{text.statsRating}</p>
           </article>
         </section>
-
-        {/* CATEGORIES */}
-
-        <CategoryGrid />
 
         {/* ESCAPES */}
 
         <section className="section escapes" id="escapes">
-          <div className="heading-row">
+          <div className="escapes-intro">
             <Heading
               eyebrow={text.selected}
               title={
                 <>
-                  {text.escapesLine1}
+                  <span className="home-emoji" aria-hidden="true">🌊</span>{text.escapesLine1}
                   <br />
                   {text.escapesLine2}
                   <span>.</span>
@@ -199,16 +197,19 @@ export default function App() {
               }
             />
 
+            <p>{text.villasText}</p>
+
             <a href="/properties">
               {text.allAddresses}
               <ArrowUpRight size={16} />
             </a>
           </div>
 
-          <div className="listing-grid">
-            {listings.slice(0, 3).map((listing) => (
+          <div className="escape-listing-track">
+            {listings.slice(0, 5).map((listing) => (
               <ListingCard
                 listing={listing}
+                compact
                 saved={Boolean(listing.listingId && favoriteIds.has(listing.listingId))}
                 saving={Boolean(listing.listingId && savingFavorites.has(listing.listingId))}
                 onFavorite={favorite}
@@ -222,38 +223,12 @@ export default function App() {
           </div>
         </section>
 
-        <EditorialSection />
+        <PropertyTypeShowcase />
 
-        <WhyImmoove />
+        <TestimonialsSection />
 
+        <JourneySection />
 
-        {/* HOST */}
-
-        <section className="host section" id="host">
-          <ResponsiveImage
-            src="/img/site/hero/coastal-hero.jpg"
-            alt={text.coastalLandscape}
-            sizes="100vw"
-          />
-
-          <div>
-            <small className="eyebrow">{text.hosts}</small>
-
-            <h2>
-              {text.hostTitle}
-              <span>?</span>
-            </h2>
-
-            <p>{text.hostText}</p>
-
-            {currentUser && (
-              <button className="light-button" onClick={() => setModal(true)}>
-                {text.addAddress}
-                <ArrowUpRight size={18} />
-              </button>
-            )}
-          </div>
-        </section>
 
         <Newsletter />
       </main>
@@ -323,12 +298,6 @@ export default function App() {
           listing={videoListing}
           onClose={() => setVideoListing(null)}
         />
-      )}
-
-      {/* ANNOUNCEMENT MODAL */}
-
-      {modal && currentUser && (
-        <AnnouncementModal onClose={() => setModal(false)} onMessage={notify} />
       )}
 
       {/* TOAST */}
