@@ -3,7 +3,7 @@ WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci
-COPY tsconfig.json vite.config.ts vite.config.js index.html ./
+COPY tsconfig.json vite.config.js index.html ./
 COPY src ./src
 COPY public ./public
 ARG VITE_API_URL=/api/v1

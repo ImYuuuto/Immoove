@@ -2,13 +2,13 @@
 
 ## Docker setup
 
-Requires Docker Desktop. The compose stack runs PostgreSQL and Redis, applies migrations once, then starts two API replicas behind an Nginx load balancer. Database, cache, and uploaded media are shared by every replica.
+Requires Docker Desktop. The compose stack runs MySQL and Redis, applies migrations once, then starts two API replicas behind an Nginx load balancer. Database, cache, and uploaded media are shared by every replica.
 
 ```sh
 docker compose up --build
 ```
 
-The load-balanced API is available at `http://localhost:4000` and the health endpoint is `http://localhost:4000/health`. The frontend remains available at `http://localhost:5173`. Stop the stack with `docker compose down`; remove all persistent database, Redis, and upload volumes with `docker compose down -v`.
+The load-balanced API is available at `http://localhost:${PORT}` (`4083` in the current development `.env`) and its health endpoint is `/health`. The frontend remains available at `http://localhost:5173`. Stop the stack with `docker compose down`; remove all persistent database, Redis, and upload volumes with `docker compose down -v`.
 
 The load balancer uses least-connections routing, keeps upstream connections open, retries another healthy replica after network and gateway errors, and refreshes Docker DNS as replicas change. Set `API_REPLICAS` in `.env` to change the default of two instances.
 
@@ -22,7 +22,7 @@ Browsers do not accept `Secure` cookies from a plain-HTTP LAN address such as `h
 
 ## Local setup
 
-For a non-Docker setup, requires Node 18+ and PostgreSQL. Create a database, copy `.env.example` to `.env`, and change `DATABASE_URL` to use `localhost`.
+For a non-Docker setup, install Node 18+ and MySQL 8.4+. Create a database, copy `.env.example` to `.env`, and change `DATABASE_URL` to use `127.0.0.1` and the host MySQL port.
 
 ```sh
 npm install
@@ -30,9 +30,17 @@ npm run migrate
 npm run dev
 ```
 
-Public property reads use Redis when `REDIS_URL` is set. Cached entries expire after `CACHE_TTL_SECONDS` and are invalidated after property or booking changes. If Redis is unavailable, the API falls back to PostgreSQL.
+To retain only the development accounts in a fresh database, run the account seed after the migration:
 
-The API listens on `http://localhost:4000` by default. Run `npm test`, `npm run build`, and `npm run lint` for verification. `npm run migrate` or `npm run migrate:node` applies the consolidated baseline through the Node PostgreSQL client.
+```sh
+npm run seed:mysql
+```
+
+The seed intentionally contains no listings, property owners, bookings, reviews, or catalogue content.
+
+Public property reads use Redis when `REDIS_URL` is set. Cached entries expire after `CACHE_TTL_SECONDS` and are invalidated after property or booking changes. If Redis is unavailable, the API continues using MySQL without caching.
+
+The API listens on `http://localhost:4000` by default. Run `npm test`, `npm run build`, and `npm run lint` for verification. `npm run migrate` or `npm run migrate:node` applies the MySQL migrations through the Node MySQL client.
 
 Request, authentication, and password-attempt rate limits are enforced only when `NODE_ENV=production`; development and test environments skip them. Local Docker development can also set `DISABLE_RATE_LIMITS=true`; production deployments should leave it false.
 

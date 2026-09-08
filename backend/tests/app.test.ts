@@ -55,8 +55,21 @@ describe('retired moderator routes', () => {
     await new Promise<void>((resolve) => server.once('listening', resolve));
     const { port } = server.address() as AddressInfo;
     try {
-      const response = await fetch(`http://127.0.0.1:${port}/api/v1/moderation/queue`);
-      expect(response.status).toBe(404);
+      const status = await new Promise<number>((resolve, reject) => {
+        const request = http.get(
+          {
+            hostname: '127.0.0.1',
+            port,
+            path: '/api/v1/moderation/queue',
+          },
+          (response) => {
+            response.resume();
+            response.on('end', () => resolve(response.statusCode || 0));
+          },
+        );
+        request.on('error', reject);
+      });
+      expect(status).toBe(404);
     } finally {
       await new Promise<void>((resolve, reject) =>
         server.close((error) => (error ? reject(error) : resolve())),
