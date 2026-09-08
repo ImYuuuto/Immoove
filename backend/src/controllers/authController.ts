@@ -12,7 +12,6 @@ import {
   ACCESS_COOKIE_NAME,
   JWT_AUDIENCE,
   JWT_ISSUER,
-  LEGACY_ACCESS_COOKIE_NAMES,
 } from '../config/authBrand';
 
 export const COOKIE_NAME = ACCESS_COOKIE_NAME;
@@ -25,7 +24,6 @@ function issueCookie(
   res: Parameters<RequestHandler>[1],
   user: { userId: number; role: string; sessionVersion: number },
 ) {
-  clearLegacyAccessCookies(res);
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new AppError(500, 'JWT_SECRET is not configured');
   const token = jwt.sign(
@@ -50,17 +48,6 @@ function issueCookie(
   });
 }
 
-export function clearLegacyAccessCookies(res: Parameters<RequestHandler>[1]) {
-  for (const name of LEGACY_ACCESS_COOKIE_NAMES) {
-    res.clearCookie(name, {
-      httpOnly: true,
-      secure: cookieSecure,
-      sameSite: 'lax',
-      path: '/',
-    });
-  }
-}
-
 export function clearAccessCookies(res: Parameters<RequestHandler>[1]) {
   for (const name of [COOKIE_NAME]) {
     res.clearCookie(name, {
@@ -70,7 +57,6 @@ export function clearAccessCookies(res: Parameters<RequestHandler>[1]) {
       path: '/',
     });
   }
-  clearLegacyAccessCookies(res);
 }
 
 export const register: RequestHandler = async (req, res, next) => {
