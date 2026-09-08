@@ -10,6 +10,7 @@ if (!Number.isSafeInteger(defaultTtlSeconds) || defaultTtlSeconds <= 0) {
 let client: RedisClientType | null = null;
 let connection: Promise<RedisClientType | null> | null = null;
 const reportedWarnings = new Set<string>();
+const pendingLoads = new Map<string, Promise<unknown>>();
 
 function warnOnce(type: string, message: string) {
   if (reportedWarnings.has(type)) return;
@@ -32,7 +33,7 @@ async function getClient(): Promise<RedisClientType | null> {
   candidate.on('error', (error) => {
     warnOnce(
       'connection',
-      `Redis unavailable; using PostgreSQL directly (${error.message})`,
+      `Redis unavailable; using MySQL directly (${error.message})`,
     );
   });
   connection = candidate
@@ -65,29 +66,42 @@ export async function cached<T>(
   try {
     redis = await getClient();
     const version = redis ? await namespaceVersion(namespace) : null;
-    if (!redis || !version) return load();
-    cacheKey = `cache:${namespace}:${version}:${key}`;
-    const hit = await redis.get(cacheKey);
-    if (hit !== null) return JSON.parse(hit) as T;
+    if (redis && version) {
+      cacheKey = `cache:${namespace}:${version}:${key}`;
+      const hit = await redis.get(cacheKey);
+      if (hit !== null) return JSON.parse(hit) as T;
+    }
   } catch (error) {
     warnOnce(
       'read',
-      `Redis read failed; using PostgreSQL directly (${(error as Error).message})`,
+      `Redis read failed; using MySQL directly (${(error as Error).message})`,
     );
   }
 
-  const value = await load();
-  if (redis && cacheKey) {
-    try {
-      await redis.set(cacheKey, JSON.stringify(value), { EX: ttlSeconds });
-    } catch (error) {
-      warnOnce(
-        'write',
-        `Redis write failed; response was still served (${(error as Error).message})`,
-      );
+  const pendingKey = cacheKey || `direct:${namespace}:${key}`;
+  const pending = pendingLoads.get(pendingKey);
+  if (pending) return pending as Promise<T>;
+
+  const loading = (async () => {
+    const value = await load();
+    if (redis && cacheKey) {
+      try {
+        await redis.set(cacheKey, JSON.stringify(value), { EX: ttlSeconds });
+      } catch (error) {
+        warnOnce(
+          'write',
+          `Redis write failed; response was still served (${(error as Error).message})`,
+        );
+      }
     }
+    return value;
+  })();
+  pendingLoads.set(pendingKey, loading);
+  try {
+    return await loading;
+  } finally {
+    if (pendingLoads.get(pendingKey) === loading) pendingLoads.delete(pendingKey);
   }
-  return value;
 }
 
 export async function invalidateCache(...namespaces: string[]) {

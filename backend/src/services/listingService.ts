@@ -19,7 +19,7 @@ import { getPropertyDiscoveryOptions, searchListings } from './listings/listingD
 export class ListingService {
   static async findMine(userId: number) {
     const result = await query<any>(
-      'SELECT listing_id, provider_id, title, description, base_price, guest_capacity, cover_image_url, service_type, status, created_at FROM listings WHERE provider_id = $1 ORDER BY created_at DESC',
+      'SELECT listing_id, provider_id, title, description, base_price, guest_capacity, cover_image_url, service_type, status, created_at FROM listings WHERE provider_id = ? ORDER BY created_at DESC',
       [userId],
     );
     return result.rows.map((row) => ({
@@ -52,7 +52,7 @@ export class ListingService {
     const params: unknown[] = [];
     const add = (clause: string, value: unknown) => {
       params.push(value);
-      clauses.push(clause.replace('?', `$${params.length}`));
+      clauses.push(clause);
     };
     if (filters.publicOnly)
       clauses.push('l.status = \'approved\' AND l.is_active = true');
@@ -65,9 +65,8 @@ export class ListingService {
       add('l.is_active = ?', filters.featured);
     if (filters.search) {
       params.push(`%${filters.search}%`);
-      clauses.push(
-        `(l.title ILIKE $${params.length} OR l.description ILIKE $${params.length})`,
-      );
+      clauses.push('(l.title LIKE ? OR l.description LIKE ?)');
+      params.push(`%${filters.search}%`);
     }
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
     const count = await query<{ count: string }>(
@@ -76,7 +75,7 @@ export class ListingService {
     );
     const offset = (filters.page - 1) * filters.limit;
     const rows = await query<any>(
-      `SELECT l.* FROM listings l LEFT JOIN categories c ON c.category_id = l.category_id ${where} ORDER BY l.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      `SELECT l.* FROM listings l LEFT JOIN categories c ON c.category_id = l.category_id ${where} ORDER BY l.created_at DESC LIMIT ? OFFSET ?`,
       [...params, filters.limit, offset],
     );
     const items = await Promise.all(
@@ -109,7 +108,9 @@ export class ListingService {
   }
 
   static async propertyDiscoveryOptions() {
-    return getPropertyDiscoveryOptions();
+    return cached('categories', 'property-discovery-v1', () =>
+      getPropertyDiscoveryOptions(),
+    );
   }
 
   static async featured() {
@@ -147,7 +148,7 @@ export class ListingService {
     options: { publicOnly?: boolean } = {},
   ): Promise<ListingWithRelations | null> {
     const result = await query<any>(
-      `SELECT l.* FROM listings l WHERE l.listing_id = $1${options.publicOnly ? ' AND l.status = \'approved\' AND l.is_active = true' : ''}`,
+      `SELECT l.* FROM listings l WHERE l.listing_id = ?${options.publicOnly ? ' AND l.status = \'approved\' AND l.is_active = true' : ''}`,
       [listingId],
     );
     return result.rows[0] ? hydrateListing(mapListing(result.rows[0])) : null;
@@ -156,7 +157,7 @@ export class ListingService {
   static async create(data: CreateListingDto): Promise<ListingWithRelations> {
     const id = await transaction(async (client) => {
       const inserted = await client.query<{ listing_id: number }>(
-        'INSERT INTO listings (provider_id, category_id, location_id, area_id, property_type_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, rental_term, guest_capacity, bedrooms, beds, bathrooms, status, is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,\'pending\',false) RETURNING listing_id',
+        'INSERT INTO listings (provider_id, category_id, location_id, area_id, property_type_id, title, description, base_price, pricing_unit, contact_name, contact_phone, contact_email, cover_image_url, service_type, rental_term, guest_capacity, bedrooms, beds, bathrooms, status, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,\'pending\',false)',
         [
           data.providerId || null,
           data.categoryId,
@@ -179,20 +180,21 @@ export class ListingService {
           data.bathrooms ?? null,
         ],
       );
-      const listingId = inserted.rows[0].listing_id;
+      const listingId = inserted.insertId;
+      if (!listingId) throw new AppError(500, 'Listing insert failed');
       for (const categoryId of data.categoryIds || [])
         await client.query(
-          'INSERT INTO listing_categories (listing_id, category_id) VALUES ($1,$2)',
+          'INSERT INTO listing_categories (listing_id, category_id) VALUES (?,?)',
           [listingId, categoryId],
         );
       for (const [index, url] of (data.imageUrls || []).entries())
         await client.query(
-          'INSERT INTO listing_images (listing_id, url, sort_order) VALUES ($1, $2, $3)',
+          'INSERT INTO listing_images (listing_id, url, sort_order) VALUES (?, ?, ?)',
           [listingId, url, index],
         );
       for (const featureId of data.featureIds || [])
         await client.query(
-          'INSERT INTO listing_features (listing_id, feature_id) VALUES ($1, $2)',
+          'INSERT INTO listing_features (listing_id, feature_id) VALUES (?, ?)',
           [listingId, featureId],
         );
       return listingId;
@@ -245,44 +247,44 @@ export class ListingService {
       );
       if (entries.length)
         await client.query(
-          `UPDATE listings SET ${entries.map(([key], index) => `${key} = $${index + 2}`).join(', ')}, updated_at = now() WHERE listing_id = $1`,
-          [listingId, ...entries.map(([, value]) => value)],
+          `UPDATE listings SET ${entries.map(([key]) => `${key} = ?`).join(', ')}, updated_at = now() WHERE listing_id = ?`,
+          [...entries.map(([, value]) => value), listingId],
         );
       if (!admin)
         await client.query(
           `UPDATE listings SET status = 'pending', is_active = false, updated_at = now()
-           WHERE listing_id = $1`,
+           WHERE listing_id = ?`,
           [listingId],
         );
       if (data.imageUrls) {
-        await client.query('DELETE FROM listing_images WHERE listing_id = $1', [
+        await client.query('DELETE FROM listing_images WHERE listing_id = ?', [
           listingId,
         ]);
         for (const [index, url] of data.imageUrls.entries())
           await client.query(
-            'INSERT INTO listing_images (listing_id, url, sort_order) VALUES ($1,$2,$3)',
+            'INSERT INTO listing_images (listing_id, url, sort_order) VALUES (?,?,?)',
             [listingId, url, index],
           );
       }
       if (data.featureIds) {
         await client.query(
-          'DELETE FROM listing_features WHERE listing_id = $1',
+          'DELETE FROM listing_features WHERE listing_id = ?',
           [listingId],
         );
         for (const featureId of data.featureIds)
           await client.query(
-            'INSERT INTO listing_features (listing_id, feature_id) VALUES ($1,$2)',
+            'INSERT INTO listing_features (listing_id, feature_id) VALUES (?,?)',
             [listingId, featureId],
           );
       }
       if (data.categoryIds) {
         await client.query(
-          'DELETE FROM listing_categories WHERE listing_id = $1',
+          'DELETE FROM listing_categories WHERE listing_id = ?',
           [listingId],
         );
         for (const categoryId of data.categoryIds)
           await client.query(
-            'INSERT INTO listing_categories (listing_id, category_id) VALUES ($1,$2)',
+            'INSERT INTO listing_categories (listing_id, category_id) VALUES (?,?)',
             [listingId, categoryId],
           );
       }
@@ -297,17 +299,17 @@ export class ListingService {
     if (!(await this.findById(listingId))) throw new AppError(404, 'Listing not found');
     await transaction(async client => {
       const offset = await client.query<{ next_order: number }>(
-        'SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM listing_images WHERE listing_id = $1',
+        'SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM listing_images WHERE listing_id = ?',
         [listingId],
       );
       const start = Number(offset.rows[0]?.next_order || 0);
       for (const [index, url] of urls.entries())
         await client.query(
-          'INSERT INTO listing_images(listing_id,url,sort_order) VALUES($1,$2,$3)',
+          'INSERT INTO listing_images(listing_id,url,sort_order) VALUES(?,?,?)',
           [listingId, url, start + index],
         );
       await client.query(
-        'INSERT INTO audit_logs(actor_id,action,entity_type,entity_id) VALUES($1,$2,$3,$4)',
+        'INSERT INTO audit_logs(actor_id,action,entity_type,entity_id) VALUES(?,?,?,?)',
         [actorId, 'images:upload', 'listing', listingId],
       );
     });
@@ -317,17 +319,18 @@ export class ListingService {
 
   static async reorderImages(listingId: number, actorId: number, role: string, imageIds: number[]) {
     if (role !== 'ADMIN') throw new AppError(403, 'Administrator access required');
+    if (!imageIds.length || new Set(imageIds).size !== imageIds.length) throw new AppError(400, 'Image IDs must be nonempty and unique');
     await transaction(async client => {
       const owned = await client.query<{ id: number }>(
-        'SELECT id FROM listing_images WHERE listing_id=$1 AND id=ANY($2::int[])',
-        [listingId, imageIds],
+        `SELECT id FROM listing_images WHERE listing_id=? AND id IN (${imageIds.map(() => '?').join(',')})`,
+        [listingId, ...imageIds],
       );
       if (owned.rows.length !== imageIds.length)
         throw new AppError(400, 'Every image must belong to the listing');
       for (const [sortOrder, imageId] of imageIds.entries())
-        await client.query('UPDATE listing_images SET sort_order=$1 WHERE id=$2', [sortOrder, imageId]);
+        await client.query('UPDATE listing_images SET sort_order=? WHERE id=?', [sortOrder, imageId]);
       await client.query(
-        'INSERT INTO audit_logs(actor_id,action,entity_type,entity_id) VALUES($1,$2,$3,$4)',
+        'INSERT INTO audit_logs(actor_id,action,entity_type,entity_id) VALUES(?,?,?,?)',
         [actorId, 'images:reorder', 'listing', listingId],
       );
     });
@@ -339,22 +342,21 @@ export class ListingService {
     if (role !== 'ADMIN') throw new AppError(403, 'Administrator access required');
     const result = await query<any>(
       `INSERT INTO listing_availability_blocks(listing_id,start_date,end_date,note,created_by)
-       SELECT $1,$2,$3,$4,$5 WHERE EXISTS(SELECT 1 FROM listings WHERE listing_id=$1)
-       RETURNING block_id,start_date,end_date,note`,
-      [listingId, startDate, endDate, sanitizeOptionalText(note) || null, actorId],
+       SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM listings WHERE listing_id=?)`,
+      [listingId, startDate, endDate, sanitizeOptionalText(note) || null, actorId, listingId],
     );
-    if (!result.rows[0]) throw new AppError(404, 'Listing not found');
+    if (!result.rowCount) throw new AppError(404, 'Listing not found');
     await invalidateCache('listings');
-    return { blockId: result.rows[0].block_id, startDate: result.rows[0].start_date, endDate: result.rows[0].end_date, note: result.rows[0].note };
+    return { blockId: result.insertId, startDate, endDate, note: sanitizeOptionalText(note) || null };
   }
 
   static async removeAvailabilityBlock(listingId: number, blockId: number, role: string) {
     if (role !== 'ADMIN') throw new AppError(403, 'Administrator access required');
     const result = await query(
-      'DELETE FROM listing_availability_blocks WHERE block_id=$1 AND listing_id=$2 RETURNING block_id',
+      'DELETE FROM listing_availability_blocks WHERE block_id=? AND listing_id=?',
       [blockId, listingId],
     );
-    if (!result.rows[0]) throw new AppError(404, 'Availability block not found');
+    if (!result.rowCount) throw new AppError(404, 'Availability block not found');
     await invalidateCache('listings');
   }
 
@@ -368,12 +370,12 @@ export class ListingService {
     if (actorRole !== 'ADMIN') throw new AppError(403, 'Administrator access required');
     const result = await transaction(async (client) => {
       const updated = await client.query<any>(
-        'UPDATE listings SET status = $1, is_active = ($1 = \'approved\'), updated_at = now() WHERE listing_id = $2 RETURNING *',
-        [status, listingId],
+        'UPDATE listings SET status = ?, is_active = (? = \'approved\'), updated_at = now() WHERE listing_id = ?',
+        [status, status, listingId],
       );
-      if (!updated.rows[0]) throw new AppError(404, 'Listing not found');
+      if (!updated.rowCount) throw new AppError(404, 'Listing not found');
       await client.query(
-        'INSERT INTO audit_logs (actor_id, action, entity_type, entity_id, reason) VALUES ($1, $2, $3, $4, $5)',
+        'INSERT INTO audit_logs (actor_id, action, entity_type, entity_id, reason) VALUES (?, ?, ?, ?, ?)',
         [
           actorId,
           `status:${status}`,
@@ -396,10 +398,10 @@ export class ListingService {
       throw new AppError(403, 'You can only delete your own property');
     await transaction(async (client) => {
       await client.query(
-        'INSERT INTO audit_logs (actor_id, action, entity_type, entity_id) VALUES ($1, $2, $3, $4)',
+        'INSERT INTO audit_logs (actor_id, action, entity_type, entity_id) VALUES (?, ?, ?, ?)',
         [userId, 'delete', 'listing', listingId],
       );
-      await client.query('DELETE FROM listings WHERE listing_id = $1', [
+      await client.query('DELETE FROM listings WHERE listing_id = ?', [
         listingId,
       ]);
     });

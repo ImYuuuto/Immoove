@@ -17,8 +17,10 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/legal ./legal
 COPY upload ./upload
 COPY src/migrations ./src/migrations
+COPY src/seeds ./src/seeds
 COPY scripts ./scripts
 
 EXPOSE 4000

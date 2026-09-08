@@ -1,4 +1,4 @@
-import { PoolClient } from 'pg';
+import { DatabaseClient } from '../../src/config/db';
 import { query as dbQuery, transaction } from '../../src/config/db';
 import {
   billableUnits,
@@ -21,7 +21,7 @@ const mockedQuery = dbQuery as jest.MockedFunction<typeof dbQuery>;
 
 function useClient(query: jest.Mock) {
   mockedTransaction.mockImplementation(async (callback) =>
-    callback({ query } as unknown as PoolClient),
+    callback({ query } as unknown as DatabaseClient),
   );
 }
 
@@ -45,7 +45,7 @@ describe('BookingService server-side pricing', () => {
       state: 'upcoming', cityId: 1, page: 1, pageSize: 12,
     });
 
-    expect(mockedQuery.mock.calls[0][0]).toContain('b.user_id = $1');
+    expect(mockedQuery.mock.calls[0][0]).toContain('b.user_id = ?');
     expect(mockedQuery.mock.calls[0][0]).toContain('b.start_date > now()');
     expect(mockedQuery.mock.calls[1][1]).toEqual([7, 1, 12, 0]);
     expect(result.items[0].listing?.city?.name).toBe('Casablanca');
@@ -100,6 +100,7 @@ describe('BookingService server-side pricing', () => {
         ],
       })
       .mockResolvedValueOnce({ rowCount: 0 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1, insertId: 10 })
       .mockResolvedValueOnce({
         rows: [
           {
@@ -127,13 +128,14 @@ describe('BookingService server-side pricing', () => {
       total: 0.01,
     } as never);
 
-    expect(query.mock.calls[2][0]).toContain('SELECT base_price * $5');
+    expect(query.mock.calls[2][0]).toContain('SELECT base_price * ?');
     expect(query.mock.calls[2][1]).toEqual([
       4,
       7,
-      '2026-09-01T12:00:00.000Z',
-      '2026-09-03T12:00:00.000Z',
+      new Date('2026-09-01T12:00:00.000Z'),
+      new Date('2026-09-03T12:00:00.000Z'),
       2,
+      4,
       'Yassine',
       'Example',
       'yassine@example.com',
@@ -167,6 +169,7 @@ describe('BookingService server-side pricing', () => {
         ],
       })
       .mockResolvedValueOnce({ rowCount: 0 })
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 })
       .mockResolvedValueOnce({
         rows: [
           {
@@ -187,7 +190,7 @@ describe('BookingService server-side pricing', () => {
       total: 0.01,
     } as never);
 
-    expect(query.mock.calls[3][0]).toContain('SELECT base_price * $5');
+    expect(query.mock.calls[3][0]).toContain('SELECT base_price * ?');
     expect(query.mock.calls[3][1][4]).toBe(3);
   });
 

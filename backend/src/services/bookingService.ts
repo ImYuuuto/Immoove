@@ -85,40 +85,40 @@ export class BookingService {
     const clauses: string[] = [];
     if (userId !== undefined) {
       values.push(userId);
-      clauses.push(`b.user_id = $${values.length}`);
+      clauses.push('b.user_id = ?');
     }
     if (filters.cityId) {
       values.push(filters.cityId);
-      clauses.push(`c.city_id = $${values.length}`);
+      clauses.push('c.city_id = ?');
     }
     if (filters.status) {
       values.push(filters.status);
-      clauses.push(`b.status = $${values.length}`);
+      clauses.push('b.status = ?');
     }
     if (filters.search) {
-      values.push(`%${filters.search}%`);
+      values.push(...Array(7).fill(`%${filters.search}%`));
       clauses.push(`(
-        l.title ILIKE $${values.length}
-        OR b.contact_first_name ILIKE $${values.length}
-        OR b.contact_last_name ILIKE $${values.length}
-        OR CONCAT_WS(' ', b.contact_first_name, b.contact_last_name) ILIKE $${values.length}
-        OR u.first_name ILIKE $${values.length}
-        OR u.last_name ILIKE $${values.length}
-        OR CONCAT_WS(' ', u.first_name, u.last_name) ILIKE $${values.length}
+        l.title LIKE ?
+        OR b.contact_first_name LIKE ?
+        OR b.contact_last_name LIKE ?
+        OR CONCAT_WS(' ', b.contact_first_name, b.contact_last_name) LIKE ?
+        OR u.first_name LIKE ?
+        OR u.last_name LIKE ?
+        OR CONCAT_WS(' ', u.first_name, u.last_name) LIKE ?
       )`);
     }
     if (filters.state === 'cancelled') {
       clauses.push(`b.status IN (${TERMINAL_STATUSES.map((status) => `'${status}'`).join(',')})`);
     } else if (filters.state === 'upcoming') {
-      clauses.push(`b.start_date > now() AND b.status NOT IN ('cancelled','rejected','refunded')`);
+      clauses.push('b.start_date > now() AND b.status NOT IN (\'cancelled\',\'rejected\',\'refunded\')');
     } else if (filters.state === 'current') {
-      clauses.push(`b.start_date <= now() AND b.end_date > now() AND b.status NOT IN ('cancelled','rejected','refunded')`);
+      clauses.push('b.start_date <= now() AND b.end_date > now() AND b.status NOT IN (\'cancelled\',\'rejected\',\'refunded\')');
     } else if (filters.state === 'past') {
-      clauses.push(`b.end_date <= now() AND b.status NOT IN ('cancelled','rejected','refunded')`);
+      clauses.push('b.end_date <= now() AND b.status NOT IN (\'cancelled\',\'rejected\',\'refunded\')');
     }
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
     const count = await query<{ total: number }>(
-      `SELECT COUNT(*)::int AS total FROM bookings b
+      `SELECT COUNT(*) AS total FROM bookings b
        JOIN listings l ON l.listing_id = b.listing_id
        LEFT JOIN users u ON u.user_id = b.user_id
        LEFT JOIN areas a ON a.area_id = l.area_id
@@ -129,7 +129,7 @@ export class BookingService {
     const result = await query<any>(
       `${bookingSelect} ${where}
        ORDER BY CASE WHEN b.end_date > now() THEN 0 ELSE 1 END, b.start_date ASC, b.created_at DESC
-       LIMIT $${values.length - 1} OFFSET $${values.length}`,
+       LIMIT ? OFFSET ?`,
       values,
     );
     return {
@@ -142,7 +142,7 @@ export class BookingService {
 
   static async findById(bookingId: number) {
     const result = await query<any>(
-      `${bookingSelect} WHERE b.booking_id = $1`,
+      `${bookingSelect} WHERE b.booking_id = ?`,
       [bookingId],
     );
     return result.rows[0] ? this.map(result.rows[0]) : null;
@@ -166,15 +166,15 @@ export class BookingService {
         pricing_unit: string | null;
         service_type: string | null;
       }>(
-        'SELECT status, is_active, pricing_unit, service_type FROM listings WHERE listing_id = $1 FOR UPDATE',
+        'SELECT status, is_active, pricing_unit, service_type FROM listings WHERE listing_id = ? FOR UPDATE',
         [data.listingId],
       );
       if (!listing.rows[0]) throw new AppError(404, 'Listing not found');
       if (listing.rows[0].status !== 'approved' || !listing.rows[0].is_active)
         throw new AppError(409, 'Listing is not available for booking');
       const conflict = await client.query(
-        'SELECT 1 FROM bookings WHERE listing_id = $1 AND status NOT IN (\'rejected\',\'cancelled\',\'refunded\') AND start_date < $3 AND end_date > $2 LIMIT 1',
-        [data.listingId, data.startDate, data.endDate],
+        'SELECT 1 FROM bookings WHERE listing_id = ? AND status NOT IN (\'rejected\',\'cancelled\',\'refunded\') AND start_date < ? AND end_date > ? LIMIT 1',
+        [data.listingId, new Date(data.endDate), new Date(data.startDate)],
       );
       if (conflict.rowCount)
         throw new AppError(409, 'Listing is already booked for these dates');
@@ -185,22 +185,23 @@ export class BookingService {
         listing.rows[0].service_type,
       );
       const result = await client.query<any>(
-        'INSERT INTO bookings (listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone) VALUES ($1,$2,$3,$4,(SELECT base_price * $5 FROM listings WHERE listing_id = $1),$6,$7,$8,$9) RETURNING booking_id, listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone, status, payment_status, currency, created_at',
+        'INSERT INTO bookings (listing_id, user_id, start_date, end_date, total, contact_first_name, contact_last_name, contact_email, contact_phone) VALUES (?,?,?,?,(SELECT base_price * ? FROM listings WHERE listing_id = ?),?,?,?,?)',
         [
           data.listingId,
           data.userId,
-          data.startDate,
-          data.endDate,
+          new Date(data.startDate),
+          new Date(data.endDate),
           units,
+          data.listingId,
           sanitizeRequiredText(data.firstName, 'firstName'),
           sanitizeRequiredText(data.lastName, 'lastName'),
           data.email.toLowerCase(),
           sanitizeRequiredText(data.phone, 'phone'),
         ],
       );
-      if (!result.rows[0])
-        throw new AppError(500, 'Booking could not be created');
-      return result.rows[0];
+      if (!result.insertId) throw new AppError(500, 'Booking could not be created');
+      const created = await client.query<any>('SELECT * FROM bookings WHERE booking_id=?', [result.insertId]);
+      return created.rows[0];
     });
     await invalidateCache('listings', 'categories');
     return this.map(row);
@@ -221,7 +222,7 @@ export class BookingService {
   ) {
     const booking = await transaction(async (client) => {
       const currentResult = await client.query<any>(
-        'SELECT * FROM bookings WHERE booking_id = $1 FOR UPDATE',
+        'SELECT * FROM bookings WHERE booking_id = ? FOR UPDATE',
         [bookingId],
       );
       const current = currentResult.rows[0];
@@ -237,8 +238,8 @@ export class BookingService {
         throw new AppError(403, 'Clients may only cancel their own bookings');
       const listingId = data.listingId ?? current.listing_id;
       const userId = data.userId ?? current.user_id;
-      const startDate = data.startDate ?? current.start_date;
-      const endDate = data.endDate ?? current.end_date;
+      const startDate = new Date(data.startDate ?? current.start_date);
+      const endDate = new Date(data.endDate ?? current.end_date);
       if (new Date(endDate) <= new Date(startDate))
         throw new AppError(400, 'endDate must be after startDate');
       const listing = await client.query<{
@@ -247,15 +248,15 @@ export class BookingService {
         pricing_unit: string | null;
         service_type: string | null;
       }>(
-        'SELECT status, is_active, pricing_unit, service_type FROM listings WHERE listing_id = $1 FOR UPDATE',
+        'SELECT status, is_active, pricing_unit, service_type FROM listings WHERE listing_id = ? FOR UPDATE',
         [listingId],
       );
       if (!listing.rows[0]) throw new AppError(404, 'Listing not found');
       if (listing.rows[0].status !== 'approved' || !listing.rows[0].is_active)
         throw new AppError(409, 'Listing is not available for booking');
       const conflict = await client.query(
-        'SELECT 1 FROM bookings WHERE listing_id = $1 AND booking_id <> $2 AND start_date < $4 AND end_date > $3 LIMIT 1',
-        [listingId, bookingId, startDate, endDate],
+        'SELECT 1 FROM bookings WHERE listing_id = ? AND booking_id <> ? AND start_date < ? AND end_date > ? LIMIT 1',
+        [listingId, bookingId, endDate, startDate],
       );
       if (conflict.rowCount)
         throw new AppError(409, 'Listing is already booked for these dates');
@@ -266,24 +267,27 @@ export class BookingService {
         listing.rows[0].service_type,
       );
       const result = await client.query<any>(
-        `UPDATE bookings SET listing_id = $1, user_id = $2, start_date = $3, end_date = $4,
-          total = (SELECT base_price * $5 FROM listings WHERE listing_id = $1),
-          status = COALESCE($6, status), payment_status = COALESCE($7, payment_status),
-          cancelled_at = CASE WHEN $6 = 'cancelled' THEN now() WHEN $6 IS NOT NULL THEN NULL ELSE cancelled_at END
-         WHERE booking_id = $8
-         RETURNING booking_id, listing_id, user_id, start_date, end_date, total, status, payment_status, currency, created_at`,
+        `UPDATE bookings SET listing_id = ?, user_id = ?, start_date = ?, end_date = ?,
+          total = (SELECT base_price * ? FROM listings WHERE listing_id = ?),
+          status = COALESCE(?, status), payment_status = COALESCE(?, payment_status),
+          cancelled_at = CASE WHEN ? = 'cancelled' THEN now() WHEN ? IS NOT NULL THEN NULL ELSE cancelled_at END
+         WHERE booking_id = ?`,
         [
           listingId,
           userId,
           startDate,
           endDate,
           units,
+          listingId,
           data.status || null,
           data.paymentStatus || null,
+          data.status || null,
+          data.status || null,
           bookingId,
         ],
       );
-      return this.map(result.rows[0]);
+      const updated = await client.query<any>('SELECT * FROM bookings WHERE booking_id=?', [bookingId]);
+      return this.map(updated.rows[0]);
     });
     await invalidateCache('listings', 'categories');
     return booking;
@@ -293,7 +297,7 @@ export class BookingService {
     if (actorRole !== 'ADMIN')
       throw new AppError(403, 'Only administrators may delete bookings');
     const result = await query(
-      'DELETE FROM bookings WHERE booking_id = $1 RETURNING booking_id',
+      'DELETE FROM bookings WHERE booking_id = ?',
       [bookingId],
     );
     if (!result.rowCount) throw new AppError(404, 'Booking not found');

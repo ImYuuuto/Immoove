@@ -38,7 +38,7 @@ async function verifyPassword(
 export class AuthService {
   static async verifyCurrentPassword(userId: number, password: string): Promise<void> {
     const result = await query<{ password_hash: string }>(
-      'SELECT password_hash FROM users WHERE user_id = $1',
+      'SELECT password_hash FROM users WHERE user_id = ?',
       [userId],
     );
     if (
@@ -62,6 +62,7 @@ export class AuthService {
     const firstName = sanitizeRequiredText(data.first_name, 'first_name');
     const lastName = sanitizeRequiredText(data.last_name, 'last_name');
     const phone = sanitizeOptionalText(data.phone);
+    const acceptedAt = new Date();
     try {
       const user = await transaction(async (client) => {
         const document = await client.query<{ version: string }>(
@@ -71,21 +72,37 @@ export class AuthService {
         );
         if (!document.rows[0])
           throw new AppError(503, 'Registration is unavailable until Terms of Use are configured');
-        const result = await client.query<any>(
+        const inserted = await client.query(
           `INSERT INTO users
            (first_name, last_name, email, password_hash, phone, role, terms_accepted_at, terms_version)
-           VALUES ($1,$2,$3,$4,$5,'CLIENT',now(),$6)
-           RETURNING user_id, first_name, last_name, email, phone, role, session_version, terms_accepted_at, terms_version`,
-          [firstName, lastName, data.email, passwordHash, phone || null, document.rows[0].version],
+           VALUES (?,?,?,?,?,'CLIENT',?,?)`,
+          [
+            firstName,
+            lastName,
+            data.email,
+            passwordHash,
+            phone || null,
+            acceptedAt,
+            document.rows[0].version,
+          ],
         );
-        const created = result.rows[0];
+        if (!inserted.insertId)
+          throw new AppError(500, 'Account could not be created');
         await client.query(
           `INSERT INTO user_legal_consents
            (user_id, document_type, document_version, accepted_at, accepted_language)
-           VALUES ($1,'terms',$2,$3,$4)`,
-          [created.user_id, created.terms_version, created.terms_accepted_at, data.language],
+           VALUES (?,'terms',?,?,?)`,
+          [inserted.insertId, document.rows[0].version, acceptedAt, data.language],
         );
-        return created;
+        const created = await client.query<any>(
+          `SELECT user_id, first_name, last_name, email, phone, role,
+                  session_version, terms_accepted_at, terms_version
+           FROM users WHERE user_id = ?`,
+          [inserted.insertId],
+        );
+        if (!created.rows[0])
+          throw new AppError(500, 'Created account could not be loaded');
+        return created.rows[0];
       });
       return {
         userId: user.user_id,
@@ -98,7 +115,7 @@ export class AuthService {
         requiresTermsAcceptance: false,
       };
     } catch (error: any) {
-      if (error?.code === '23505')
+      if (error?.code === 'ER_DUP_ENTRY' || error?.errno === 1062)
         throw new AppError(409, 'An account with this email already exists');
       throw error;
     }
@@ -117,7 +134,7 @@ export class AuthService {
                AND c.document_version=d.version
            )
        ) AS requires_terms_acceptance
-       FROM users u WHERE u.email = $1`,
+       FROM users u WHERE u.email = ?`,
       [email],
     );
     const user = result.rows[0];
@@ -150,7 +167,7 @@ export class AuthService {
 
     const passwordHash = await hashPassword(newPassword);
     const updated = await query(
-      'UPDATE users SET password_hash = $1, session_version = session_version + 1 WHERE user_id = $2',
+      'UPDATE users SET password_hash = ?, session_version = session_version + 1 WHERE user_id = ?',
       [passwordHash, userId],
     );
     if (updated.rowCount !== 1) throw new AppError(404, 'User not found');

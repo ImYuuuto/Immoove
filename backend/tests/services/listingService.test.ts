@@ -38,8 +38,8 @@ describe('ListingService', () => {
       totalPages: 1,
     });
     expect(result.items[0].basePrice).toBe(42.5);
-    expect(mockedQuery.mock.calls[0][1]).toEqual([1, '%Stay%']);
-    expect(mockedQuery.mock.calls[1][1]).toEqual([1, '%Stay%', 5, 5]);
+    expect(mockedQuery.mock.calls[0][1]).toEqual([1, '%Stay%', '%Stay%']);
+    expect(mockedQuery.mock.calls[1][1]).toEqual([1, '%Stay%', '%Stay%', 5, 5]);
   });
 
   it('returns only current-user listings in camelCase without status filtering', async () => {
@@ -63,7 +63,7 @@ describe('ListingService', () => {
     const items = await ListingService.findMine(1);
 
     expect(mockedQuery).toHaveBeenCalledWith(
-      expect.stringContaining('provider_id = $1'),
+      expect.stringContaining('provider_id = ?'),
       [1],
     );
     expect(items[0]).toEqual({

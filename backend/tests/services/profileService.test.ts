@@ -1,5 +1,4 @@
-import { PoolClient } from 'pg';
-import { query, transaction } from '../../src/config/db';
+import { DatabaseClient, query, transaction } from '../../src/config/db';
 import { ProfileService } from '../../src/services/profileService';
 import { AuthService } from '../../src/services/authService';
 
@@ -47,6 +46,7 @@ describe('ProfileService', () => {
   });
 
   test('sanitizes names before updating and returns ordinary text', async () => {
+    mockedQuery.mockResolvedValueOnce({ rows: [], rowCount: 1 });
     mockedQuery.mockResolvedValueOnce({
       rows: [
         {
@@ -73,6 +73,7 @@ describe('ProfileService', () => {
 
   test('requires password verification and normalizes email for contact changes', async () => {
     jest.spyOn(AuthService, 'verifyCurrentPassword').mockResolvedValue();
+    mockedQuery.mockResolvedValueOnce({ rows: [], rowCount: 1 });
     mockedQuery.mockResolvedValueOnce({
       rows: [{
         user_id: 1, first_name: 'Yassine', last_name: 'Example',
@@ -85,7 +86,7 @@ describe('ProfileService', () => {
     });
 
     expect(AuthService.verifyCurrentPassword).toHaveBeenCalledWith(1, 'CorrectPassword2026!');
-    expect(mockedQuery.mock.calls[0][1]).toEqual(['new@example.com', '+212612345678', 1]);
+    expect(mockedQuery.mock.calls[0][1]).toEqual(['new@example.com', 'new@example.com', 'new@example.com', '+212612345678', 1]);
     expect(result.email).toBe('new@example.com');
   });
 
@@ -99,7 +100,7 @@ describe('ProfileService', () => {
         .mockResolvedValueOnce({ rowCount: 1 }),
     };
     mockedTransaction.mockImplementation(async (callback) =>
-      callback(client as unknown as PoolClient),
+      callback(client as unknown as DatabaseClient),
     );
 
     await ProfileService.deactivate(1, 'CorrectPassword2026!');
@@ -111,12 +112,12 @@ describe('ProfileService', () => {
 
     expect(client.query).toHaveBeenNthCalledWith(
       1,
-      'SELECT user_id, role FROM users WHERE user_id = $1 FOR UPDATE',
+      'SELECT user_id, role FROM users WHERE user_id = ? FOR UPDATE',
       [1],
     );
     expect(client.query).toHaveBeenNthCalledWith(
       3,
-      expect.stringContaining("account_status = 'suspended'"),
+      expect.stringContaining('account_status = \'suspended\''),
       [1],
     );
   });
@@ -128,7 +129,7 @@ describe('ProfileService', () => {
         .mockResolvedValueOnce({ rowCount: 1, rows: [{ user_id: 1, role: 'CLIENT' }] })
         .mockResolvedValueOnce({ rows: [{ blocked: true }] }),
     };
-    mockedTransaction.mockImplementation(async (callback) => callback(client as unknown as PoolClient));
+    mockedTransaction.mockImplementation(async (callback) => callback(client as unknown as DatabaseClient));
 
     await expect(ProfileService.deactivate(1, 'CorrectPassword2026!')).rejects.toMatchObject({ statusCode: 409 });
     expect(client.query).toHaveBeenCalledTimes(2);
