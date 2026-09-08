@@ -18,18 +18,18 @@ export async function searchListings(filters: ListingSearchParams, loadListing: 
   const params: unknown[] = [];
   const add = (sql: string, value: unknown) => {
     params.push(value);
-    clauses.push(sql.replace('?', `$${params.length}`));
+    clauses.push(sql);
   };
   if (filters.checkIn && filters.checkOut) {
     params.push(filters.checkOut, filters.checkIn);
-    clauses.push(`NOT EXISTS (SELECT 1 FROM bookings b WHERE b.listing_id = l.listing_id AND b.status NOT IN ('cancelled', 'rejected', 'refunded') AND b.start_date < $${params.length - 1} AND b.end_date > $${params.length})`);
+    clauses.push('NOT EXISTS (SELECT 1 FROM bookings b WHERE b.listing_id = l.listing_id AND b.status NOT IN (\'cancelled\', \'rejected\', \'refunded\') AND b.start_date < ? AND b.end_date > ?)');
   }
   if (filters.guests) add('l.guest_capacity >= ?', filters.guests);
   if (filters.minPrice !== undefined) add('l.base_price >= ?', filters.minPrice);
   if (filters.maxPrice !== undefined) add('l.base_price <= ?', filters.maxPrice);
   if (filters.rentalTerm) {
     params.push(filters.rentalTerm);
-    clauses.push(`(l.rental_term = $${params.length} OR l.rental_term = 'both')`);
+    clauses.push('(l.rental_term = ? OR l.rental_term = \'both\')');
   }
   if (filters.regionId) add('EXISTS (SELECT 1 FROM areas a JOIN cities ci ON ci.city_id = a.city_id WHERE a.area_id = l.area_id AND ci.region_id = ?)', filters.regionId);
   if (filters.cityId) add('EXISTS (SELECT 1 FROM areas a WHERE a.area_id = l.area_id AND a.city_id = ?)', filters.cityId);
@@ -55,7 +55,7 @@ export async function searchListings(filters: ListingSearchParams, loadListing: 
   const count = await query<{ count: string }>(`SELECT COUNT(*) AS count FROM listings l ${where}`, params);
   const offset = (filters.page - 1) * filters.limit;
   const rows = await query<{ listing_id: number }>(
-    `SELECT l.listing_id FROM listings l ${where} ORDER BY l.is_featured DESC, l.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    `SELECT l.listing_id FROM listings l ${where} ORDER BY l.is_featured DESC, l.created_at DESC LIMIT ? OFFSET ?`,
     [...params, filters.limit, offset],
   );
   const items = await Promise.all(rows.rows.map((row) => loadListing(row.listing_id)));
@@ -77,7 +77,7 @@ export async function getPropertyDiscoveryOptions() {
       WHERE a.requires_review = false AND a.is_active=true AND ci.is_active=true AND r.is_active=true
         AND ci.name <> 'Unassigned' AND r.name <> 'Unassigned' ORDER BY a.name`),
     query<any>('SELECT feature_id, name FROM features ORDER BY name'),
-    query<any>(`SELECT COALESCE(MIN(base_price), 0)::numeric AS minimum, COALESCE(MAX(base_price), 0)::numeric AS maximum
+    query<any>(`SELECT COALESCE(MIN(base_price), 0) AS minimum, COALESCE(MAX(base_price), 0) AS maximum
       FROM listings WHERE status='approved' AND is_active=true AND archived_at IS NULL`),
   ]);
   return {

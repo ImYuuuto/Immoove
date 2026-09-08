@@ -12,18 +12,20 @@ services:
       retries: 12
 
   db:
-    image: postgres:16-alpine
+    image: mysql:8.4.11
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-sidibouzid}
-      POSTGRES_USER: ${POSTGRES_USER:-sidibouzid}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sidibouzid_dev_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ImmooveDB}
+      MYSQL_USER: ${MYSQL_USER:-immoove-admin}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-Immoove_dev_root_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+      TZ: UTC
     ports:
-      - '127.0.0.1:55432:5432'
+      - '127.0.0.1:${MYSQL_PORT:-53306}:3306'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent']
       interval: 5s
       timeout: 5s
       retries: 12
@@ -38,7 +40,7 @@ services:
         condition: service_healthy
     command: npm run migrate:node
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-sidibouzid}:${POSTGRES_PASSWORD:-sidibouzid_dev_password}@db:5432/${POSTGRES_DB:-sidibouzid}
+      DATABASE_URL: mysql://${MYSQL_USER:-immoove-admin}:${MYSQL_PASSWORD:-Immoove_dev_root_password}@db:3306/${MYSQL_DATABASE:-ImmooveDB}
 
   api:
     build: .
@@ -52,7 +54,8 @@ services:
         condition: service_healthy
     command: npm start
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-sidibouzid}:${POSTGRES_PASSWORD:-sidibouzid_dev_password}@db:5432/${POSTGRES_DB:-sidibouzid}
+      DATABASE_URL: mysql://${MYSQL_USER:-immoove-admin}:${MYSQL_PASSWORD:-Immoove_dev_root_password}@db:3306/${MYSQL_DATABASE:-ImmooveDB}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
       REDIS_URL: redis://redis:6379
       CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-60}
       REDIS_CONNECT_TIMEOUT_MS: ${REDIS_CONNECT_TIMEOUT_MS:-1000}
@@ -104,6 +107,6 @@ services:
       - '5173:80'
 
 volumes:
-  postgres_data:
+  mysql_data:
   redis_data:
   uploads:

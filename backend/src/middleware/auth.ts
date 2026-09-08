@@ -42,7 +42,7 @@ export const auth: RequestHandler = async (req, _res, next) => {
                    AND c.document_version=d.version
                )
            ) AS requires_terms_acceptance
-           FROM users u WHERE u.user_id = $1`,
+           FROM users u WHERE u.user_id = ?`,
           [payload.userId],
         );
         const user = result.rows[0];

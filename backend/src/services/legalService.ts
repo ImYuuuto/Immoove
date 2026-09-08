@@ -19,7 +19,7 @@ export class LegalService {
   static async current(type: LegalDocumentType, requestedLanguage: LegalLanguage) {
     const result = await query<any>(
       `SELECT version,requires_reacceptance,effective_at,published_at
-       FROM legal_documents WHERE document_type=$1 AND is_current=true`,
+       FROM legal_documents WHERE document_type=? AND is_current=true`,
       [type],
     );
     const document = result.rows[0];
@@ -54,17 +54,17 @@ export class LegalService {
       await client.query(
         `INSERT INTO user_legal_consents
          (user_id,document_type,document_version,accepted_language)
-         VALUES ($1,'terms',$2,$3)
-         ON CONFLICT (user_id,document_type,document_version) DO NOTHING`,
+         VALUES (?,'terms',?,?)
+         ON DUPLICATE KEY UPDATE consent_id=consent_id`,
         [userId, current.rows[0].version, language],
       );
       const accepted = await client.query<{ accepted_at: Date }>(
         `SELECT accepted_at FROM user_legal_consents
-         WHERE user_id=$1 AND document_type='terms' AND document_version=$2`,
+         WHERE user_id=? AND document_type='terms' AND document_version=?`,
         [userId, current.rows[0].version],
       );
       await client.query(
-        'UPDATE users SET terms_accepted_at=$1,terms_version=$2 WHERE user_id=$3',
+        'UPDATE users SET terms_accepted_at=?,terms_version=? WHERE user_id=?',
         [accepted.rows[0].accepted_at, current.rows[0].version, userId],
       );
       return { version: current.rows[0].version, acceptedAt: accepted.rows[0].accepted_at };

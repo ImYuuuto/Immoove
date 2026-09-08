@@ -28,7 +28,7 @@ function mapProfile(row: ProfileRow) {
 export class ProfileService {
   static async get(userId: number) {
     const result = await query<ProfileRow>(
-      'SELECT user_id, first_name, last_name, email, phone, role, avatar_url FROM users WHERE user_id = $1',
+      'SELECT user_id, first_name, last_name, email, phone, role, avatar_url FROM users WHERE user_id = ?',
       [userId],
     );
     if (!result.rows[0]) throw new AppError(404, 'Profile not found');
@@ -36,42 +36,41 @@ export class ProfileService {
   }
 
   static async update(userId: number, firstName: string, lastName: string) {
-    const result = await query<ProfileRow>(
-      'UPDATE users SET first_name = $1, last_name = $2 WHERE user_id = $3 RETURNING user_id, first_name, last_name, email, phone, role, avatar_url',
+    const result = await query(
+      'UPDATE users SET first_name = ?, last_name = ? WHERE user_id = ?',
       [
         sanitizeRequiredText(firstName, 'firstName'),
         sanitizeRequiredText(lastName, 'lastName'),
         userId,
       ],
     );
-    if (!result.rows[0]) throw new AppError(404, 'Profile not found');
-    return mapProfile(result.rows[0]);
+    if (!result.rowCount) throw new AppError(404, 'Profile not found');
+    return this.get(userId);
   }
 
   static async updateAvatar(userId: number, avatarUrl: string) {
-    const result = await query<ProfileRow>(
-      `UPDATE users SET avatar_url = $1 WHERE user_id = $2
-       RETURNING user_id, first_name, last_name, email, phone, role, avatar_url`,
+    const result = await query(
+      'UPDATE users SET avatar_url = ? WHERE user_id = ?',
       [avatarUrl, userId],
     );
-    if (!result.rows[0]) throw new AppError(404, 'Profile not found');
-    return mapProfile(result.rows[0]);
+    if (!result.rowCount) throw new AppError(404, 'Profile not found');
+    return this.get(userId);
   }
 
   static async summary(userId: number) {
     const result = await query<any>(
       `SELECT
-        (SELECT COUNT(*)::int FROM bookings WHERE user_id = $1) AS booking_count,
-        (SELECT COUNT(*)::int FROM favorites WHERE user_id = $1) AS favorite_count,
-        (SELECT COUNT(*)::int FROM listings WHERE provider_id = $1 AND archived_at IS NULL) AS listing_count,
-        (SELECT COUNT(*)::int FROM bookings
-          WHERE user_id = $1 AND status NOT IN ('cancelled','rejected','refunded')
+        (SELECT COUNT(*) FROM bookings WHERE user_id = ?) AS booking_count,
+        (SELECT COUNT(*) FROM favorites WHERE user_id = ?) AS favorite_count,
+        (SELECT COUNT(*) FROM listings WHERE provider_id = ? AND archived_at IS NULL) AS listing_count,
+        (SELECT COUNT(*) FROM bookings
+          WHERE user_id = ? AND status NOT IN ('cancelled','rejected','refunded')
             AND end_date > now()) AS active_trip_count,
         (SELECT booking_id FROM bookings
-          WHERE user_id = $1 AND status NOT IN ('cancelled','rejected','refunded')
+          WHERE user_id = ? AND status NOT IN ('cancelled','rejected','refunded')
             AND end_date > now()
           ORDER BY start_date ASC LIMIT 1) AS next_booking_id`,
-      [userId],
+      [userId, userId, userId, userId, userId],
     );
     const row = result.rows[0];
     return {
@@ -89,18 +88,19 @@ export class ProfileService {
   ) {
     await AuthService.verifyCurrentPassword(userId, data.currentPassword);
     try {
-      const result = await query<ProfileRow>(
+      const email = data.email?.toLowerCase() || null;
+      const result = await query(
         `UPDATE users
-         SET email = COALESCE($1, email), phone = COALESCE($2, phone),
-             session_version = session_version + CASE WHEN $1 IS NULL OR $1 = email THEN 0 ELSE 1 END
-         WHERE user_id = $3
-         RETURNING user_id, first_name, last_name, email, phone, role, avatar_url`,
-        [data.email?.toLowerCase() || null, data.phone || null, userId],
+         SET session_version = session_version + CASE WHEN ? IS NULL OR ? = email THEN 0 ELSE 1 END,
+             email = COALESCE(?, email), phone = COALESCE(?, phone)
+         WHERE user_id = ?
+        `,
+        [email, email, email, data.phone || null, userId],
       );
-      if (!result.rows[0]) throw new AppError(404, 'Profile not found');
-      return mapProfile(result.rows[0]);
+      if (!result.rowCount) throw new AppError(404, 'Profile not found');
+      return this.get(userId);
     } catch (error: any) {
-      if (error?.code === '23505')
+      if (error?.code === 'ER_DUP_ENTRY' || error?.errno === 1062)
         throw new AppError(409, 'An account with this email already exists');
       throw error;
     }
@@ -110,13 +110,13 @@ export class ProfileService {
     await AuthService.verifyCurrentPassword(userId, currentPassword);
     await transaction(async (client) => {
       const locked = await client.query(
-        'SELECT user_id, role FROM users WHERE user_id = $1 FOR UPDATE',
+        'SELECT user_id, role FROM users WHERE user_id = ? FOR UPDATE',
         [userId],
       );
       if (!locked.rowCount) throw new AppError(404, 'Profile not found');
       if (locked.rows[0].role === 'ADMIN') {
         const admins = await client.query(
-          `SELECT COUNT(*)::int AS count FROM users
+          `SELECT COUNT(*) AS count FROM users
            WHERE role = 'ADMIN' AND account_status = 'active'`,
         );
         if (Number(admins.rows[0]?.count || 0) <= 1)
@@ -125,20 +125,20 @@ export class ProfileService {
       const obligations = await client.query(
         `SELECT EXISTS (
            SELECT 1 FROM bookings
-           WHERE user_id = $1 AND status NOT IN ('cancelled','rejected','refunded')
+           WHERE user_id = ? AND status NOT IN ('cancelled','rejected','refunded')
              AND end_date > now()
          ) OR EXISTS (
            SELECT 1 FROM bookings b JOIN listings l ON l.listing_id = b.listing_id
-           WHERE l.provider_id = $1 AND b.status IN ('pending','processing','confirmed')
+           WHERE l.provider_id = ? AND b.status IN ('pending','processing','confirmed')
              AND b.end_date > now()
          ) AS blocked`,
-        [userId],
+        [userId, userId],
       );
       if (obligations.rows[0]?.blocked)
         throw new AppError(409, 'Resolve active bookings before deleting your account');
       await client.query(
         `UPDATE users SET account_status = 'suspended', session_version = session_version + 1
-         WHERE user_id = $1`,
+         WHERE user_id = ?`,
         [userId],
       );
     });

@@ -39,14 +39,14 @@ export function mapListing(row: any): ListingWithRelations {
 
 export async function hydrateListing(listing: ListingWithRelations): Promise<ListingWithRelations> {
   const [images, features, bookings, reviews, metadata] = await Promise.all([
-    query<any>('SELECT id, listing_id, url, sort_order FROM listing_images WHERE listing_id = $1 ORDER BY sort_order, id', [listing.listingId]),
-    query<any>('SELECT f.feature_id, f.name FROM features f JOIN listing_features lf ON lf.feature_id = f.feature_id WHERE lf.listing_id = $1 ORDER BY f.name', [listing.listingId]),
+    query<any>('SELECT id, listing_id, url, sort_order FROM listing_images WHERE listing_id = ? ORDER BY sort_order, id', [listing.listingId]),
+    query<any>('SELECT f.feature_id, f.name FROM features f JOIN listing_features lf ON lf.feature_id = f.feature_id WHERE lf.listing_id = ? ORDER BY f.name', [listing.listingId]),
     query<any>(`SELECT booking_id, start_date, end_date, 'booking' AS source
-      FROM bookings WHERE listing_id = $1 AND status NOT IN ('cancelled','rejected','refunded')
+      FROM bookings WHERE listing_id = ? AND status NOT IN ('cancelled','rejected','refunded')
       UNION ALL
-      SELECT NULL::integer AS booking_id, start_date, end_date, 'admin_block' AS source
-      FROM listing_availability_blocks WHERE listing_id = $1 ORDER BY start_date`, [listing.listingId]),
-    query<any>('SELECT r.review_id, r.rating, r.comment, r.created_at, u.user_id, u.first_name, u.last_name FROM reviews r JOIN bookings b ON b.booking_id = r.booking_id LEFT JOIN users u ON u.user_id = b.user_id WHERE b.listing_id = $1 ORDER BY r.created_at DESC', [listing.listingId]),
+      SELECT NULL AS booking_id, start_date, end_date, 'admin_block' AS source
+      FROM listing_availability_blocks WHERE listing_id = ? ORDER BY start_date`, [listing.listingId, listing.listingId]),
+    query<any>('SELECT r.review_id, r.rating, r.comment, r.created_at, u.user_id, u.first_name, u.last_name FROM reviews r JOIN bookings b ON b.booking_id = r.booking_id LEFT JOIN users u ON u.user_id = b.user_id WHERE b.listing_id = ? ORDER BY r.created_at DESC', [listing.listingId]),
     query<any>(`SELECT c.category_id, c.name, c.slug, l.location_id, l.name AS location_name,
       COALESCE(x.latitude,l.lat) AS lat, COALESCE(x.longitude,l.lng) AS lng,
       u.user_id, u.first_name AS provider_first_name, u.last_name AS provider_last_name,
@@ -58,7 +58,7 @@ export async function hydrateListing(listing: ListingWithRelations): Promise<Lis
       LEFT JOIN users u ON u.user_id = x.provider_id LEFT JOIN property_owners po ON po.owner_id = x.owner_id
       LEFT JOIN property_types pt ON pt.property_type_id = x.property_type_id LEFT JOIN areas a ON a.area_id = x.area_id
       LEFT JOIN cities ci ON ci.city_id = a.city_id LEFT JOIN regions r ON r.region_id = ci.region_id
-      WHERE x.listing_id = $1`, [listing.listingId]),
+      WHERE x.listing_id = ?`, [listing.listingId]),
   ]);
   const meta = metadata.rows[0];
   const amenities = features.rows.map((row) => ({ featureId: row.feature_id, name: decodeStoredText(row.name) }));

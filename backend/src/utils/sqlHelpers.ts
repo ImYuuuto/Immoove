@@ -5,15 +5,13 @@ export function parseNumeric(value: unknown): number | undefined {
 }
 export function buildUpdate(
   fields: Record<string, unknown>,
-  startIndex = 1,
+  _startIndex = 1,
 ): { set: string; params: unknown[] } {
   const entries = Object.entries(fields).filter(
     ([, value]) => value !== undefined,
   );
   return {
-    set: entries
-      .map(([key], index) => `${key} = $${startIndex + index}`)
-      .join(', '),
+    set: entries.map(([key]) => `${key} = ?`).join(', '),
     params: entries.map(([, value]) => value),
   };
 }

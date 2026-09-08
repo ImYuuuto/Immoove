@@ -1,5 +1,4 @@
-import { PoolClient } from 'pg';
-import { transaction } from '../../src/config/db';
+import { DatabaseClient, transaction } from '../../src/config/db';
 import { ListingService } from '../../src/services/listingService';
 
 jest.mock('../../src/config/db', () => ({
@@ -18,12 +17,12 @@ describe('profile listing ownership', () => {
     const current = { listingId: 10, providerId: 1 } as never;
     jest.spyOn(ListingService, 'findById').mockResolvedValueOnce(current).mockResolvedValueOnce(current);
     const client = { query: jest.fn().mockResolvedValue({ rows: [] }) };
-    mockedTransaction.mockImplementation(async (callback) => callback(client as unknown as PoolClient));
+    mockedTransaction.mockImplementation(async (callback) => callback(client as unknown as DatabaseClient));
 
     await ListingService.update(10, 1, 'CLIENT', { title: 'Updated' });
 
     expect(client.query).toHaveBeenCalledWith(
-      expect.stringContaining("status = 'pending'"),
+      expect.stringContaining('status = \'pending\''),
       [10],
     );
   });
@@ -36,7 +35,7 @@ describe('profile listing ownership', () => {
       .mockResolvedValueOnce(current);
     const client = { query: jest.fn().mockResolvedValue({ rows: [] }) };
     mockedTransaction.mockImplementation(async (callback) =>
-      callback(client as unknown as PoolClient),
+      callback(client as unknown as DatabaseClient),
     );
 
     await ListingService.update(10, 2, 'ADMIN', { title: 'Staff edit' });

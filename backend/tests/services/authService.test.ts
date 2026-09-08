@@ -1,5 +1,4 @@
-import { PoolClient } from 'pg';
-import { query, transaction } from '../../src/config/db';
+import { DatabaseClient, query, transaction } from '../../src/config/db';
 import { AuthService } from '../../src/services/authService';
 
 jest.mock('../../src/config/db', () => ({ query: jest.fn(), transaction: jest.fn() }));
@@ -32,29 +31,73 @@ describe('AuthService login enumeration protection', () => {
 });
 
 describe('AuthService registration consent', () => {
-  test('creates the account and immutable consent in one transaction using server time', async () => {
+  beforeEach(() => mockedTransaction.mockReset());
+
+  test('creates the account and immutable consent in one transaction using one UTC instant', async () => {
     const acceptedAt = new Date('2026-08-30T12:00:00.000Z');
+    jest.useFakeTimers().setSystemTime(acceptedAt);
     const client = {
       query: jest.fn()
         .mockResolvedValueOnce({ rows: [{ version: '1.0' }] })
+        .mockResolvedValueOnce({ rows: [], rowCount: 1, insertId: 9 })
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 })
         .mockResolvedValueOnce({ rows: [{
           user_id: 9, first_name: 'Yassine', last_name: 'Example',
           email: 'yassine@example.com', phone: null, role: 'CLIENT',
           session_version: 0, terms_accepted_at: acceptedAt, terms_version: '1.0',
-        }] })
-        .mockResolvedValueOnce({ rows: [] }),
+        }] }),
     };
     mockedTransaction.mockImplementationOnce(async (callback) =>
-      callback(client as unknown as PoolClient),
+      callback(client as unknown as DatabaseClient),
     );
 
-    await AuthService.register({
-      first_name: 'Yassine', last_name: 'Example', email: 'yassine@example.com',
-      password: 'a-secure-password', acceptTerms: true, language: 'fr',
-    });
+    try {
+      await AuthService.register({
+        first_name: 'Yassine', last_name: 'Example', email: 'yassine@example.com',
+        password: 'a-secure-password', acceptTerms: true, language: 'fr',
+      });
+    } finally {
+      jest.useRealTimers();
+    }
 
-    expect(client.query.mock.calls[1][0]).toContain('now()');
+    expect(client.query.mock.calls[1][0]).not.toContain('RETURNING');
+    expect(client.query.mock.calls[1][1]).toEqual([
+      'Yassine', 'Example', 'yassine@example.com', expect.stringMatching(/^scrypt:/),
+      null, acceptedAt, '1.0',
+    ]);
     expect(client.query.mock.calls[2][0]).toContain('user_legal_consents');
     expect(client.query.mock.calls[2][1]).toEqual([9, '1.0', acceptedAt, 'fr']);
+    expect(client.query.mock.calls[3][1]).toEqual([9]);
+  });
+
+  test('does not complete registration when the consent insert fails', async () => {
+    const consentError = new Error('consent insert failed');
+    const client = {
+      query: jest.fn()
+        .mockResolvedValueOnce({ rows: [{ version: '1.0' }] })
+        .mockResolvedValueOnce({ rows: [], rowCount: 1, insertId: 9 })
+        .mockRejectedValueOnce(consentError),
+    };
+    mockedTransaction.mockImplementationOnce(async (callback) =>
+      callback(client as unknown as DatabaseClient),
+    );
+
+    await expect(AuthService.register({
+      first_name: 'Yassine', last_name: 'Example', email: 'yassine@example.com',
+      password: 'a-secure-password', acceptTerms: true, language: 'en',
+    })).rejects.toBe(consentError);
+    expect(client.query).toHaveBeenCalledTimes(3);
+  });
+
+  test('maps a MySQL duplicate email error to the existing conflict response', async () => {
+    mockedTransaction.mockRejectedValueOnce({ code: 'ER_DUP_ENTRY', errno: 1062 });
+
+    await expect(AuthService.register({
+      first_name: 'Yassine', last_name: 'Example', email: 'yassine@example.com',
+      password: 'a-secure-password', acceptTerms: true, language: 'en',
+    })).rejects.toMatchObject({
+      statusCode: 409,
+      message: 'An account with this email already exists',
+    });
   });
 });
