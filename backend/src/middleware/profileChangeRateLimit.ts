@@ -1,13 +1,25 @@
 import { Request } from 'express';
 import rateLimit from 'express-rate-limit';
 
+//Time window during which profile changes are counted.
+//Default value :1 hour.
 const windowMs = Number(process.env.PROFILE_CHANGE_RATE_LIMIT_WINDOW_MS || 60 * 60 * 1000);
+
+//Max number of profile changes allowed during the time window.
 const limit = Number(process.env.PROFILE_CHANGE_RATE_LIMIT_MAX || 5);
 
 if (!Number.isSafeInteger(windowMs) || windowMs <= 0 || !Number.isSafeInteger(limit) || limit <= 0) {
   throw new Error('Profile change rate-limit settings must be positive integers');
 }
 
+// Common configuration shared by both rate limiters.
+//
+// The IP-based and account-based limiters use the same:
+// - time window
+// - maximum request count
+// - test environment behavior
+// - response headers
+// - error message
 const common = {
   windowMs,
   limit,
