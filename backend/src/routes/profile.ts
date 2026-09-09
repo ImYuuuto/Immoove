@@ -12,14 +12,27 @@ import {
 } from '../middleware/profileChangeRateLimit';
 
 const router = Router();
+
+//All routes below require Authentification
 router.use(requireAuth);
+
+/**
+ * Prevent browsers and intermediate caches from storing profile data.
+ *
+ * Profile information is private and should always be fetched again
+ * instead of being served from a cache.
+ */
 router.use((_req, res, next) => {
   res.set('Cache-Control', 'no-store, private');
   res.set('Pragma', 'no-cache');
   next();
 });
+
+//Get the profile informations
 router.get('/', controller.get);
+//get a summary of user infos
 router.get('/summary', controller.summary);
+//Change the avatar
 router.post(
   '/avatar',
   profileChangeIpRateLimit,
@@ -27,12 +40,14 @@ router.post(
   avatarUpload,
   controller.updateAvatar,
 );
+//update the user infos
 router.patch(
   '/',
   profileChangeIpRateLimit,
   profileChangeAccountRateLimit,
   controller.update,
 );
+//update the contact infos of the user
 router.patch(
   '/contact',
   profileChangeIpRateLimit,
@@ -41,6 +56,7 @@ router.patch(
   passwordAccountRateLimit,
   controller.updateContact,
 );
+//delete the account
 router.delete(
   '/',
   passwordIpRateLimit,
