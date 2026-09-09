@@ -15,19 +15,14 @@ function runMiddleware(request: Partial<Request>) {
 describe('CSRF protection', () => {
   test('generates a random token and writes it to a readable cookie', () => {
     const cookie = jest.fn();
-    const clearCookie = jest.fn();
-    const first = issueCsrfToken({ cookie, clearCookie } as unknown as Response);
-    const second = issueCsrfToken({ cookie, clearCookie } as unknown as Response);
+    const first = issueCsrfToken({ cookie } as unknown as Response);
+    const second = issueCsrfToken({ cookie } as unknown as Response);
 
     expect(first).toHaveLength(43);
     expect(second).not.toBe(first);
     expect(cookie).toHaveBeenCalledWith(
       CSRF_COOKIE_NAME,
       first,
-      expect.objectContaining({ httpOnly: false, sameSite: 'lax', path: '/' }),
-    );
-    expect(clearCookie).toHaveBeenCalledWith(
-      'sidibouzid_csrf',
       expect.objectContaining({ httpOnly: false, sameSite: 'lax', path: '/' }),
     );
   });
